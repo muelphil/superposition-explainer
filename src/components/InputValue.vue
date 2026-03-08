@@ -4,6 +4,7 @@ import { computed } from 'vue'
 const props = defineProps<{
   modelValue: number
   label?: string
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -16,7 +17,7 @@ function normalPdf(x: number, mu = 0, sigma = 1): number {
 
 const CURVE_WIDTH = 88
 const CURVE_HEIGHT = 36
-const X_MIN = -3
+const X_MIN = 0
 const X_MAX = 3
 
 const strokePath = computed(() => {
@@ -46,23 +47,12 @@ const fillPath = computed(() => {
   return pts.join(' ')
 })
 
-/** CSS color for thumb: matches neuron color logic (white→orange for +, white→blue for −) */
+/** CSS color for thumb: white → orange as value increases from 0 to 3 */
 const thumbColor = computed(() => {
-  const v = props.modelValue
-  const t = Math.min(Math.abs(v) / 2, 1)
-  if (v >= 0) {
-    // white → orange (255,146,60)
-    const r = Math.round(255)
-    const g = Math.round(255 - t * (255 - 146))
-    const b = Math.round(255 - t * 255)
-    return `rgb(${r},${g},${b})`
-  } else {
-    // white → blue (96,165,250)
-    const r = Math.round(255 - t * (255 - 96))
-    const g = Math.round(255 - t * (255 - 165))
-    const b = Math.round(255)
-    return `rgb(${r},${g},${b})`
-  }
+  const t = Math.min(props.modelValue / 3, 1)
+  const g = Math.round(255 - t * (255 - 146))
+  const b = Math.round(255 - t * 255)
+  return `rgb(255,${g},${b})`
 })
 
 function onSliderChange(event: Event) {
@@ -81,8 +71,7 @@ function onSliderChange(event: Event) {
     >
       <defs>
         <linearGradient id="dist-grad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%"   stop-color="#93c5fd" stop-opacity="0.7" />
-          <stop offset="50%"  stop-color="#ffffff" stop-opacity="0.5" />
+          <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.3" />
           <stop offset="100%" stop-color="#fdba74" stop-opacity="0.7" />
         </linearGradient>
       </defs>
@@ -96,6 +85,7 @@ function onSliderChange(event: Event) {
       :max="X_MAX"
       step="0.05"
       :value="modelValue"
+      :disabled="props.disabled"
       class="dist-slider"
       :style="{ '--thumb-color': thumbColor }"
       @input="onSliderChange"
@@ -151,12 +141,17 @@ function onSliderChange(event: Event) {
   -webkit-appearance: none;
   appearance: none;
   height: 3px;
-  background: linear-gradient(to right, #93c5fd, #ffffff, #fdba74);
+  background: linear-gradient(to right, #ffffff, #fdba74);
   border-radius: 2px;
   outline: none;
   cursor: pointer;
   margin: 0;
   padding: 0;
+}
+
+.dist-slider:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .dist-slider::-webkit-slider-thumb {

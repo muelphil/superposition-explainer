@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { inject, ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
+import { INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX } from '../services/AutoencoderService'
 import InputValue from './InputValue.vue'
 
 const svc = inject<AutoencoderServiceType>('autoencoderService')!
@@ -67,10 +68,15 @@ function onInputChange(i: number, val: number) {
 }
 
 // ─── Add / remove ─────────────────────────────────────────────────────────────
-function addInputNeuron() { svc.setInputDim(n.value + 1) }
-function removeInputNeuron() { if (n.value > 2) svc.setInputDim(n.value - 1) }
-function addEmbeddingNeuron() { if (m.value < n.value - 1) svc.setEmbeddingDim(m.value + 1) }
-function removeEmbeddingNeuron() { if (m.value > 1) svc.setEmbeddingDim(m.value - 1) }
+function addInputNeuron()      { svc.setInputDim(n.value + 1) }
+function removeInputNeuron()   { svc.setInputDim(n.value - 1) }
+function addEmbeddingNeuron()  { svc.setEmbeddingDim(m.value + 1) }
+function removeEmbeddingNeuron() { svc.setEmbeddingDim(m.value - 1) }
+
+const canAddInput    = computed(() => n.value < INPUT_DIM_MAX && !svc.isTraining.value)
+const canRemoveInput = computed(() => n.value > INPUT_DIM_MIN && !svc.isTraining.value)
+const canAddEmb      = computed(() => m.value < EMB_DIM_MAX && !svc.isTraining.value)
+const canRemoveEmb   = computed(() => m.value > EMB_DIM_MIN && !svc.isTraining.value)
 
 // ─── SVG connections ──────────────────────────────────────────────────────────
 function getRightEdge(el: HTMLElement | null | undefined) {
@@ -172,6 +178,14 @@ watch([n, m], async () => { await nextTick(); drawConnections() })
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmt(v: number): string { return v.toFixed(2) }
 function isNonZero(v: number): boolean { return Math.abs(v) > 0.005 }
+function absErr(v: number): string { return Math.abs(v).toFixed(2) }
+
+const currentLoss = computed(() => {
+  const x = svc.currentInput.value
+  const xHat = svc.currentOutput.value
+  const imp = svc.featureImportance.value
+  return x.reduce((sum, xi, i) => sum + (imp[i] ?? 1) * (xi - (xHat[i] ?? 0)) ** 2, 0)
+})
 </script>
 
 <template>
@@ -201,6 +215,7 @@ function isNonZero(v: number): boolean { return Math.abs(v) > 0.005 }
       <InputValue
         :modelValue="userInputs[i] ?? 0"
         :label="`x${i + 1}`"
+        :disabled="svc.isTraining.value"
         @update:modelValue="onInputChange(i, $event)"
         :style="{ gridColumn: '1', gridRow: String(i + dataRowStart) }"
       />
@@ -237,7 +252,7 @@ function isNonZero(v: number): boolean { return Math.abs(v) > 0.005 }
       >
         <span class="out-val">{{ fmt(svc.currentOutput.value[i] ?? 0) }}</span>
         <span v-if="isNonZero(svc.currentError.value[i] ?? 0)" class="out-err">
-          {{ fmt(svc.currentError.value[i] ?? 0) }}
+          {{ absErr(svc.currentError.value[i] ?? 0) }}
         </span>
       </div>
     </template>
@@ -269,16 +284,25 @@ function isNonZero(v: number): boolean { return Math.abs(v) > 0.005 }
       class="controls-row"
       :style="{ gridColumn: '3', gridRow: String(controlsRow) }"
     >
-      <button class="dim-btn add" @click="addInputNeuron" title="Add input feature">+</button>
-      <button class="dim-btn rem" @click="removeInputNeuron" :disabled="n <= 2" title="Remove input feature">−</button>
+      <button class="dim-btn add" @click="addInputNeuron" :disabled="!canAddInput" title="Add input feature">+</button>
+      <button class="dim-btn rem" @click="removeInputNeuron" :disabled="!canRemoveInput" title="Remove input feature">−</button>
     </div>
 
     <div
       class="controls-row"
       :style="{ gridColumn: '5', gridRow: String(controlsRow) }"
     >
-      <button class="dim-btn add" @click="addEmbeddingNeuron" :disabled="m >= n - 1" title="Add embedding dim">+</button>
-      <button class="dim-btn rem" @click="removeEmbeddingNeuron" :disabled="m <= 1" title="Remove embedding dim">−</button>
+      <button class="dim-btn add" @click="addEmbeddingNeuron" :disabled="!canAddEmb" title="Add embedding dim">+</button>
+      <button class="dim-btn rem" @click="removeEmbeddingNeuron" :disabled="!canRemoveEmb" title="Remove embedding dim">−</button>
+    </div>
+    <!-- ── Total weighted loss (output column, controls row) ─── -->
+    <div
+      v-if="isNonZero(currentLoss)"
+      class="total-loss"
+      :style="{ gridColumn: '9', gridRow: String(controlsRow) }"
+    >
+      <span class="total-loss-label">L</span>
+      <span class="total-loss-val">{{ currentLoss.toFixed(3) }}</span>
     </div>
   </div>
 </template>
@@ -457,5 +481,29 @@ function isNonZero(v: number): boolean { return Math.abs(v) > 0.005 }
 .dim-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+/* ── Total weighted loss ──────────────────────────────────── */
+.total-loss {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  z-index: 2;
+}
+
+.total-loss-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.total-loss-val {
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-error);
 }
 </style>

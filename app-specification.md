@@ -57,13 +57,19 @@ The App is composed of different views, visualizing different things. The views 
 
 ### Training Configuration
 * allows for setting training parameters
+  * sparsity (going from 0 to 1)
+  * importance of the neurons as a slider going for uniform to "centered" (see Feature importance schedule:[I_i = \alpha^i] in EXPERIMENTS.md)
+  * training batch size
+  * training amount
+  * learning rate
+  * etc.
 * "start/ stop training" button to perform training
   * during training, changes to training configuration are disabled.
-  * for each batch, the first input vector of the batch should be put into the autoencoder visualization 
+  * for each batch, the first input vector of the batch should be put into the autoencoder visualization
   * the absolute difference of the predicted output and the ground truth should be shown right of the output vector in the autoencoder visualization
 
 ### Training View
-* Shows statistics as graphs, one at a time, selectable
+* Shows statistics as graphs, one at a time, selectable via a radio button bar above
   * training loss
-  * amount of embedding directions
-  * average of the minimum angle per vector to any other vector
+  * amount of present features (see Feature presence in EXPERIMENTS.md for explanation on whether feature is present)
+  * average of the minimum angle per vector to any other vector within the embedding directions

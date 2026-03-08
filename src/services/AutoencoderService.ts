@@ -2,6 +2,12 @@ import { ref, reactive, readonly } from 'vue'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+/** Hard limits for interactive dimension controls */
+export const INPUT_DIM_MIN = 2
+export const INPUT_DIM_MAX = 8
+export const EMB_DIM_MIN = 1
+export const EMB_DIM_MAX = 3
+
 export interface AutoencoderConfig {
   inputDim: number        // n: number of features
   embeddingDim: number    // m: latent dimensions (m < n)
@@ -9,6 +15,7 @@ export interface AutoencoderConfig {
   featureDecay: number    // α: importance = α^i
   learningRate: number
   batchSize: number
+  trainingSteps: number   // how many steps per training run
 }
 
 export interface AutoencoderState {
@@ -71,6 +78,7 @@ export function createAutoencoderService() {
     featureDecay: 0.9,
     learningRate: 0.01,
     batchSize: 64,
+    trainingSteps: 10000,
   }
 
   // Reactive state
@@ -87,6 +95,67 @@ export function createAutoencoderService() {
   const loss = ref(0)
   const step = ref(0)
   const isTraining = ref(false)
+  const trainingStartStep = ref(0)
+
+  // ─── Metric history (recorded every HISTORY_INTERVAL steps) ──────────────────
+  const HISTORY_INTERVAL = 20
+  const MAX_HISTORY = 400
+
+  type HistPoint = { s: number; v: number }
+  const lossHistory            = ref<HistPoint[]>([])
+  const featurePresenceHistory = ref<HistPoint[]>([])
+  const minAngleHistory        = ref<HistPoint[]>([])
+
+  function _pushHistory(hist: typeof lossHistory, s: number, v: number) {
+    hist.value.push({ s, v })
+    if (hist.value.length > MAX_HISTORY) hist.value.shift()
+  }
+
+  function _computeFeaturePresence(): number {
+    // sum_i min(|W[:,i]|², 1)  — "effective number of features present"
+    let total = 0
+    for (let i = 0; i < config.inputDim; i++) {
+      let norm2 = 0
+      for (let k = 0; k < config.embeddingDim; k++) {
+        norm2 += (W.value[k]?.[i] ?? 0) ** 2
+      }
+      total += Math.min(norm2, 1)
+    }
+    return total
+  }
+
+  function _computeAvgMinAngle(): number {
+    const n = config.inputDim
+    const m = config.embeddingDim
+    const PRESENCE_NORM_THRESHOLD = 0.1  // |v_i| > 0.1 to be considered "present"
+
+    const vecs = Array.from({ length: n }, (_, i) =>
+      Array.from({ length: m }, (_, k) => W.value[k]?.[i] ?? 0)
+    )
+    const norms = vecs.map(v => Math.sqrt(v.reduce((s, x) => s + x * x, 0)))
+
+    let total = 0, count = 0
+    for (let i = 0; i < n; i++) {
+      if (norms[i] < PRESENCE_NORM_THRESHOLD) continue   // skip absent features
+      let minAngle = Infinity
+      for (let j = 0; j < n; j++) {
+        if (i === j || norms[j] < PRESENCE_NORM_THRESHOLD) continue
+        const dot = vecs[i].reduce((s, x, k) => s + x * vecs[j][k], 0)
+        const cos = Math.max(-1, Math.min(1, dot / (norms[i] * norms[j])))
+        const angle = Math.acos(cos) * (180 / Math.PI)
+        if (angle < minAngle) minAngle = angle
+      }
+      if (isFinite(minAngle)) { total += minAngle; count++ }
+    }
+    return count > 0 ? total / count : 0
+  }
+
+  function _recordMetrics() {
+    const s = step.value
+    _pushHistory(lossHistory, s, loss.value)
+    _pushHistory(featurePresenceHistory, s, _computeFeaturePresence())
+    _pushHistory(minAngleHistory, s, _computeAvgMinAngle())
+  }
 
   // Adam optimizer moments
   let mW: number[][] = []
@@ -125,18 +194,23 @@ export function createAutoencoderService() {
   function initialize() {
     _computeImportance()
     _initWeights()
-    // Initialize with dense normal samples so all neurons are visible on load
-    currentInput.value = Array.from({ length: config.inputDim }, () => randn() * 0.8)
+    // Initialize display with non-negative values, consistent with training data
+    currentInput.value = Array.from({ length: config.inputDim }, () => Math.abs(randn() * 0.8))
     _forwardPass(currentInput.value)
     step.value = 0
     loss.value = 0
+    lossHistory.value = []
+    featurePresenceHistory.value = []
+    minAngleHistory.value = []
   }
 
   // ─── Data generation ─────────────────────────────────────────────────────────
 
   function _generateSample(): number[] {
+    // Features are non-negative (half-normal), matching the Anthropic toy model
+    // assumption that x ∈ ℝ₊ⁿ — required for ReLU to achieve zero reconstruction loss.
     return Array.from({ length: config.inputDim }, () =>
-      Math.random() < config.sparsity ? randn() : 0
+      Math.random() < config.sparsity ? Math.abs(randn()) : 0
     )
   }
 
@@ -243,14 +317,15 @@ export function createAutoencoderService() {
   // ─── Public API ──────────────────────────────────────────────────────────────
 
   function setInputDim(n: number) {
-    if (n < 2) return
+    if (n < INPUT_DIM_MIN || n > INPUT_DIM_MAX) return
+    stopTraining()
     config.inputDim = n
-    if (config.embeddingDim >= n) config.embeddingDim = n - 1
     initialize()
   }
 
   function setEmbeddingDim(m: number) {
-    if (m < 1 || m >= config.inputDim) return
+    if (m < EMB_DIM_MIN || m > EMB_DIM_MAX) return
+    stopTraining()
     config.embeddingDim = m
     initialize()
   }
@@ -266,21 +341,53 @@ export function createAutoencoderService() {
     _adamUpdate(dW, db)
     step.value++
 
-    // Update loss on first sample of batch
+    // Update visualization with first sample of the batch
     const x0 = batch[0]
-    const { xHat } = _forwardPass(x0)
-    loss.value = _computeLoss(x0, xHat)
+    const { xHat: xHat0 } = _forwardPass(x0)
+
+    // Display batch-averaged loss (less noisy than single-sample)
+    let batchLoss = 0
+    for (const x of batch) {
+      const h = matVecMul(W.value, x)
+      const Wth = matTransVecMul(W.value, h)
+      const xHat = Wth.map((val, i) => relu(val + b.value[i]))
+      batchLoss += _computeLoss(x, xHat)
+    }
+    loss.value = batchLoss / batch.length
+
+    if (step.value % HISTORY_INTERVAL === 0) _recordMetrics()
+  }
+
+  function updateConfig(partial: Partial<Pick<AutoencoderConfig,
+    'sparsity' | 'featureDecay' | 'learningRate' | 'batchSize' | 'trainingSteps'
+  >>) {
+    if (partial.sparsity !== undefined) config.sparsity = partial.sparsity
+    if (partial.featureDecay !== undefined) {
+      config.featureDecay = partial.featureDecay
+      _computeImportance()
+    }
+    if (partial.learningRate !== undefined) config.learningRate = partial.learningRate
+    if (partial.batchSize !== undefined) config.batchSize = partial.batchSize
+    if (partial.trainingSteps !== undefined) config.trainingSteps = partial.trainingSteps
+    resetTraining()
   }
 
   function startTraining() {
     if (isTraining.value) return
     isTraining.value = true
+    trainingStartStep.value = step.value
+    const targetStep = step.value + config.trainingSteps
 
     const tick = () => {
       if (!isTraining.value) return
-      // Run several steps per tick for speed
-      for (let i = 0; i < 5; i++) stepTrain()
-      trainingHandle = setTimeout(tick, 16) // ~60fps
+      for (let i = 0; i < 5; i++) {
+        stepTrain()
+        if (step.value >= targetStep) {
+          stopTraining()
+          return
+        }
+      }
+      trainingHandle = setTimeout(tick, 16)
     }
     tick()
   }
@@ -291,6 +398,22 @@ export function createAutoencoderService() {
       clearTimeout(trainingHandle)
       trainingHandle = null
     }
+  }
+
+  /** Stop training and clear all history/counters (keeps current weights). */
+  function resetTraining() {
+    stopTraining()
+    step.value = 0
+    loss.value = 0
+    trainingStartStep.value = 0
+    lossHistory.value = []
+    featurePresenceHistory.value = []
+    minAngleHistory.value = []
+    // Reset Adam moments so new run starts with clean optimizer state
+    const { embeddingDim: m, inputDim: n } = config
+    mW = zeros(m, n); vW = zeros(m, n)
+    mb = Array(n).fill(0); vb = Array(n).fill(0)
+    adamT = 0
   }
 
   // ─── Initialization on creation ──────────────────────────────────────────────
@@ -313,14 +436,19 @@ export function createAutoencoderService() {
     loss,
     step,
     isTraining,
+    lossHistory,
+    featurePresenceHistory,
+    minAngleHistory,
     // Methods
     setInputDim,
     setEmbeddingDim,
+    updateConfig,
     runForward,
     stepTrain,
     startTraining,
     stopTraining,
     initialize,
+    trainingStartStep,
   }
 }
 
