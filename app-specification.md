@@ -12,7 +12,7 @@ Users will then be able to train the autoencoder in its specific configuration o
 see EXPERIMENT.md
 
 ## The Views
-The App is composed of different views, visualizing different things. The views must be captured by components, making it easy to rearrange them later based on responsiveness.
+The App is composed of different views, visualizing different things. The views must be captured by components, making it easy to rearrange them later based on responsiveness. Using a MainView component for the task of positioning, housing the other components is highly encouraged.
 
 ### Autoencoder
 * visualizes the different neurons and layers of the tiny autoencoder
@@ -23,13 +23,15 @@ The App is composed of different views, visualizing different things. The views 
 * uses plain HTML5 for the elements of the neural network
 * uses svg backdrop to visualize the connections between the neurons 
 * Network is going left to right:
-  * inputs: a vertical vector of numeric values
-  * input neurons: a vertical array of neurons, visualized as circular elements, that must vertically align with the elements of the input vectors
-  * embedding layer: again, neurons
+  * inputs: numeric values, with a normal distribution as background and a slider directly on the x-axis of said distribution. Make this a custom reusable input component.
+  * input neurons: a vertical array of neurons, visualized as circular elements, that must vertically align with the elements of the input vectors. The importance of the neurons as defined in the EXPERIMENT.md file, should be visualized by making neurons with less than 1.0 importance slightly smaller, up to a defined minimum (maybe around 0.6 in scale) for close to 0.
+  * embedding layer: again, neurons, but showing their numeric value inside them (different to input and output neurons)
   * output neurons: as many as there are input neurons
   * outputs: again, a vertical vector of numeric values
+* Hint: For implementing this, use nested grids for things that are required to align, such as the numeric input values and the input neurons.
 * For the input neurons and embedding layer neurons, there must be another faded neuron underneath with dotted border and a plus inside, allowing the user to add that neuron. Similarly, the last present neuron must have a small red circle with a - in it in the upper right corner, allowing removal of the neuron/ reduction of embedding dimension.
 * The connections of the neurons must be implemented via the SVG backdrop, connecting the neurons. Higher absolute weights should be visualized with thicker connections. Negative weights should be blue, while positive ones should be orange.
+* Neurons should be colored respective to their value: white for close to 0, fading to orange for positive and to blue for negative values. 
 * Each of the parts of the autoencoder requires a heading at the top
 
 ### Embedding visualization
