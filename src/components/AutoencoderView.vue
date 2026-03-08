@@ -9,47 +9,48 @@ const svc = inject<AutoencoderServiceType>('autoencoderService')!
 const containerRef = ref<HTMLElement | null>(null)
 const svgRef = ref<SVGElement | null>(null)
 
-// ─── Neuron refs (arrays of refs by section) ──────────────────────────────────
 const inputNeuronRefs = ref<(HTMLElement | null)[]>([])
 const embNeuronRefs = ref<(HTMLElement | null)[]>([])
 const outputNeuronRefs = ref<(HTMLElement | null)[]>([])
 
-// ─── Computed helpers ─────────────────────────────────────────────────────────
-
+// ─── Dimensions ───────────────────────────────────────────────────────────────
 const n = computed(() => svc.config.inputDim)
 const m = computed(() => svc.config.embeddingDim)
 
-/** Normalize a value to [0,1] range for coloring, clamped at ±2 */
-function normalizeValue(v: number): number {
+// Dynamic grid template rows: header row + n data rows + controls row
+const gridTemplateRows = computed(
+  () => `auto repeat(${n.value}, var(--row-height)) auto`
+)
+
+// Row index helpers (1-based for CSS grid)
+const dataRowStart = 2
+const dataRowEnd = computed(() => n.value + 2)   // exclusive end for span
+const controlsRow = computed(() => n.value + 2)
+
+// ─── Color helpers ────────────────────────────────────────────────────────────
+function normalizeVal(v: number): number {
   return Math.max(-1, Math.min(1, v / 2))
 }
 
-/** Map a numeric value to a CSS color interpolating white → orange (pos) or white → blue (neg) */
 function neuronColor(v: number): string {
-  const t = Math.abs(normalizeValue(v))
+  const t = Math.abs(normalizeVal(v))
   if (v >= 0) {
-    // white → orange
-    const r = Math.round(255)
     const g = Math.round(255 - t * (255 - 146))
     const b = Math.round(255 - t * (255 - 60))
-    return `rgb(${r},${g},${b})`
+    return `rgb(255,${g},${b})`
   } else {
-    // white → blue
     const r = Math.round(255 - t * (255 - 96))
     const g = Math.round(255 - t * (255 - 165))
-    const b = Math.round(255)
-    return `rgb(${r},${g},${b})`
+    return `rgb(${r},${g},255)`
   }
 }
 
-/** Scale for input neurons by feature importance */
 function neuronScale(i: number): number {
   const imp = svc.featureImportance.value[i] ?? 1
   return 0.6 + imp * 0.4
 }
 
-// ─── User input handling ──────────────────────────────────────────────────────
-
+// ─── User input ───────────────────────────────────────────────────────────────
 const userInputs = ref<number[]>([])
 
 watch(n, (newN) => {
@@ -65,145 +66,86 @@ function onInputChange(i: number, val: number) {
   svc.runForward([...userInputs.value])
 }
 
-// ─── Add / remove neurons ─────────────────────────────────────────────────────
+// ─── Add / remove ─────────────────────────────────────────────────────────────
+function addInputNeuron() { svc.setInputDim(n.value + 1) }
+function removeInputNeuron() { if (n.value > 2) svc.setInputDim(n.value - 1) }
+function addEmbeddingNeuron() { if (m.value < n.value - 1) svc.setEmbeddingDim(m.value + 1) }
+function removeEmbeddingNeuron() { if (m.value > 1) svc.setEmbeddingDim(m.value - 1) }
 
-function addInputNeuron() {
-  svc.setInputDim(n.value + 1)
-}
-
-function removeInputNeuron() {
-  if (n.value > 2) svc.setInputDim(n.value - 1)
-}
-
-function addEmbeddingNeuron() {
-  if (m.value < n.value - 1) svc.setEmbeddingDim(m.value + 1)
-}
-
-function removeEmbeddingNeuron() {
-  if (m.value > 1) svc.setEmbeddingDim(m.value - 1)
-}
-
-// ─── SVG connection drawing ───────────────────────────────────────────────────
-
-function getCenter(el: HTMLElement | null | undefined): { x: number; y: number } | null {
+// ─── SVG connections ──────────────────────────────────────────────────────────
+function getRightEdge(el: HTMLElement | null | undefined) {
   if (!el || !containerRef.value) return null
-  const elRect = el.getBoundingClientRect()
-  const containerRect = containerRef.value.getBoundingClientRect()
-  return {
-    x: elRect.left - containerRect.left + elRect.width / 2,
-    y: elRect.top - containerRect.top + elRect.height / 2,
-  }
+  const er = el.getBoundingClientRect()
+  const cr = containerRef.value.getBoundingClientRect()
+  return { x: er.right - cr.left, y: er.top - cr.top + er.height / 2 }
 }
 
-function getRightEdge(el: HTMLElement | null | undefined): { x: number; y: number } | null {
+function getLeftEdge(el: HTMLElement | null | undefined) {
   if (!el || !containerRef.value) return null
-  const elRect = el.getBoundingClientRect()
-  const containerRect = containerRef.value.getBoundingClientRect()
-  return {
-    x: elRect.right - containerRect.left,
-    y: elRect.top - containerRect.top + elRect.height / 2,
-  }
+  const er = el.getBoundingClientRect()
+  const cr = containerRef.value.getBoundingClientRect()
+  return { x: er.left - cr.left, y: er.top - cr.top + er.height / 2 }
 }
 
-function getLeftEdge(el: HTMLElement | null | undefined): { x: number; y: number } | null {
-  if (!el || !containerRef.value) return null
-  const elRect = el.getBoundingClientRect()
-  const containerRect = containerRef.value.getBoundingClientRect()
-  return {
-    x: elRect.left - containerRect.left,
-    y: elRect.top - containerRect.top + elRect.height / 2,
-  }
-}
-
-/** Cubic bezier path from (x1,y1) to (x2,y2) entering/leaving horizontally */
-function bezierPath(
-  x1: number, y1: number,
-  x2: number, y2: number,
-): string {
-  const dx = Math.abs(x2 - x1)
-  const curve = Math.min(dx * 0.5, 80)
+function bezierPath(x1: number, y1: number, x2: number, y2: number): string {
+  const curve = Math.min(Math.abs(x2 - x1) * 0.5, 80)
   return `M ${x1} ${y1} C ${x1 + curve} ${y1} ${x2 - curve} ${y2} ${x2} ${y2}`
 }
 
-function weightToStroke(w: number): { color: string; width: number; opacity: number } {
+function weightStyle(w: number): { color: string; width: number; opacity: number } {
   const abs = Math.abs(w)
-  const width = 0.5 + abs * 4  // 0.5 to 4.5px
-  const opacity = 0.15 + Math.min(abs, 1) * 0.7
-  const color = w >= 0 ? 'var(--color-positive)' : 'var(--color-negative)'
-  return { color, width, opacity }
+  return {
+    color: w >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
+    width: 0.5 + Math.min(abs, 1.5) * 3,
+    opacity: 0.15 + Math.min(abs, 1) * 0.65,
+  }
 }
 
-const svgPaths = ref<string>('')
+function spreadOffset(idx: number, total: number, diameter: number): number {
+  if (total <= 1) return 0
+  return (idx - (total - 1) / 2) * (diameter * 0.55 / Math.max(total - 1, 1))
+}
+
+const svgPaths = ref('')
 
 async function drawConnections() {
   if (!svgRef.value || !containerRef.value) return
   await nextTick()
 
-  const lines: string[] = []
   const W = svc.W.value
+  const neuronDiam = 36   // approx --neuron-size in px (2.2rem @ 17px base ≈ 37px)
+  const lines: string[] = []
 
-  // Helper to spread sources/targets vertically across neuron diameter
-  function spreadOffset(idx: number, total: number, diameter: number): number {
-    if (total <= 1) return 0
-    const spacing = diameter * 0.6 / (total - 1)
-    return (idx - (total - 1) / 2) * spacing
-  }
-
-  const neuronSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--neuron-size')) || 35
-
-  // ── Encoder: input neurons → embedding neurons ─────────────────────────────
+  // Encoder: input neurons → embedding neurons
   for (let k = 0; k < m.value; k++) {
-    const embEl = embNeuronRefs.value[k]
-    const embLeft = getLeftEdge(embEl)
+    const embLeft = getLeftEdge(embNeuronRefs.value[k])
     if (!embLeft) continue
-
     for (let j = 0; j < n.value; j++) {
-      const inEl = inputNeuronRefs.value[j]
-      const inRight = getRightEdge(inEl)
+      const inRight = getRightEdge(inputNeuronRefs.value[j])
       if (!inRight) continue
-
       const w = W[k]?.[j] ?? 0
-      const { color, width, opacity } = weightToStroke(w)
-
-      const spreadSrc = spreadOffset(k, m.value, neuronSize)
-      const spreadTgt = spreadOffset(j, n.value, neuronSize)
-
-      const pathSpread = bezierPath(
-        inRight.x, inRight.y + spreadSrc,
-        embLeft.x, embLeft.y + spreadTgt,
-      )
-
+      const { color, width, opacity } = weightStyle(w)
+      const sy = inRight.y + spreadOffset(k, m.value, neuronDiam)
+      const ty = embLeft.y + spreadOffset(j, n.value, neuronDiam)
       lines.push(
-        `<path d="${pathSpread}" fill="none" stroke="${color}" stroke-width="${width.toFixed(1)}" opacity="${opacity.toFixed(2)}" />`
+        `<path d="${bezierPath(inRight.x, sy, embLeft.x, ty)}" fill="none" stroke="${color}" stroke-width="${width.toFixed(1)}" opacity="${opacity.toFixed(2)}" />`
       )
     }
   }
 
-  // ── Decoder: embedding neurons → output neurons ────────────────────────────
+  // Decoder: embedding neurons → output neurons
   for (let k = 0; k < m.value; k++) {
-    const embEl = embNeuronRefs.value[k]
-    const embRight = getRightEdge(embEl)
+    const embRight = getRightEdge(embNeuronRefs.value[k])
     if (!embRight) continue
-
     for (let j = 0; j < n.value; j++) {
-      const outEl = outputNeuronRefs.value[j]
-      const outLeft = getLeftEdge(outEl)
+      const outLeft = getLeftEdge(outputNeuronRefs.value[j])
       if (!outLeft) continue
-
-      // Decoder uses W^T, so weight is W[k][j]
       const w = W[k]?.[j] ?? 0
-      const { color, width, opacity } = weightToStroke(w)
-
-      const spreadSrc = spreadOffset(j, n.value, neuronSize)
-      const spreadTgt = spreadOffset(k, m.value, neuronSize)
-
-      const pathSpread = bezierPath(
-        embRight.x, embRight.y + spreadTgt,
-        outLeft.x, outLeft.y + spreadSrc,
-      )
-
+      const { color, width, opacity } = weightStyle(w)
+      const sy = embRight.y + spreadOffset(j, n.value, neuronDiam)
+      const ty = outLeft.y + spreadOffset(k, m.value, neuronDiam)
       lines.push(
-        `<path d="${pathSpread}" fill="none" stroke="${color}" stroke-width="${width.toFixed(1)}" opacity="${opacity.toFixed(2)}" />`
+        `<path d="${bezierPath(embRight.x, sy, outLeft.x, ty)}" fill="none" stroke="${color}" stroke-width="${width.toFixed(1)}" opacity="${opacity.toFixed(2)}" />`
       )
     }
   }
@@ -211,40 +153,34 @@ async function drawConnections() {
   svgPaths.value = lines.join('\n')
 }
 
-// ─── ResizeObserver ───────────────────────────────────────────────────────────
-
 let resizeObserver: ResizeObserver | null = null
 
 onMounted(async () => {
   await nextTick()
   drawConnections()
-
   if (containerRef.value) {
     resizeObserver = new ResizeObserver(() => drawConnections())
     resizeObserver.observe(containerRef.value)
   }
 })
 
-onUnmounted(() => {
-  resizeObserver?.disconnect()
-})
+onUnmounted(() => resizeObserver?.disconnect())
 
-// Redraw when weights change
 watch(() => svc.W.value, () => drawConnections(), { deep: true })
-watch([n, m], async () => {
-  await nextTick()
-  drawConnections()
-})
+watch([n, m], async () => { await nextTick(); drawConnections() })
 
-// ─── Format helpers ───────────────────────────────────────────────────────────
-function fmt(v: number): string {
-  return v.toFixed(2)
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function fmt(v: number): string { return v.toFixed(2) }
+function isNonZero(v: number): boolean { return Math.abs(v) > 0.005 }
 </script>
 
 <template>
-  <div class="autoencoder-view" ref="containerRef">
-    <!-- SVG overlay for connections -->
+  <div
+    class="ae-grid"
+    ref="containerRef"
+    :style="{ gridTemplateRows }"
+  >
+    <!-- SVG overlay -->
     <svg
       ref="svgRef"
       class="connections-svg"
@@ -252,56 +188,69 @@ function fmt(v: number): string {
       v-html="svgPaths"
     />
 
-    <!-- ── Inputs ─────────────────────────────────────── -->
-    <div class="ae-section">
-      <h4 class="section-heading">Input</h4>
-      <div class="ae-column inputs-column">
-        <InputValue
-          v-for="(val, i) in userInputs"
-          :key="i"
-          :modelValue="val"
-          :label="`x${i + 1}`"
-          @update:modelValue="onInputChange(i, $event)"
-        />
-      </div>
-    </div>
+    <!-- ── Column headings (row 1) ───────────────────────── -->
+    <div class="col-heading" style="grid-column: 1; grid-row: 1">Input</div>
+    <div class="col-heading" style="grid-column: 3; grid-row: 1">Encoder</div>
+    <div class="col-heading" style="grid-column: 5; grid-row: 1">Embedding</div>
+    <div class="col-heading" style="grid-column: 7; grid-row: 1">Decoder</div>
+    <div class="col-heading" style="grid-column: 9; grid-row: 1">Output</div>
 
-    <!-- ── Input Neurons ──────────────────────────────── -->
-    <div class="ae-section">
-      <h4 class="section-heading">Encoder</h4>
-      <div class="ae-column neurons-column">
-        <div
-          v-for="(_, i) in n"
-          :key="i"
-          :ref="(el) => { inputNeuronRefs[i] = el as HTMLElement }"
-          class="neuron input-neuron"
-          :style="{
-            background: neuronColor(svc.currentInput.value[i] ?? 0),
-            transform: `scale(${neuronScale(i)})`,
-          }"
-          :title="`x${i + 1} = ${fmt(svc.currentInput.value[i] ?? 0)}, importance = ${fmt(svc.featureImportance.value[i] ?? 1)}`"
-        />
-        <!-- Add/Remove buttons for input dim -->
-        <div class="neuron-controls">
-          <button
-            class="neuron-btn add-btn"
-            @click="addInputNeuron"
-            title="Add input feature"
-          >+</button>
-          <button
-            class="neuron-btn remove-btn"
-            @click="removeInputNeuron"
-            :disabled="n <= 2"
-            title="Remove input feature"
-          >−</button>
-        </div>
-      </div>
-    </div>
+    <!-- ── Per-feature rows (rows 2 … n+1) ───────────────── -->
+    <template v-for="(_, i) in n" :key="i">
+      <!-- Input value: col 1 -->
+      <InputValue
+        :modelValue="userInputs[i] ?? 0"
+        :label="`x${i + 1}`"
+        @update:modelValue="onInputChange(i, $event)"
+        :style="{ gridColumn: '1', gridRow: String(i + dataRowStart) }"
+      />
 
-    <!-- ── Embedding Neurons ──────────────────────────── -->
-    <div class="ae-section">
-      <h4 class="section-heading">Embedding</h4>
-      <div class="ae-column neurons-column embedding-column">
+      <!-- Input neuron: col 3 -->
+      <div
+        :ref="(el) => { inputNeuronRefs[i] = el as HTMLElement }"
+        class="neuron"
+        :style="{
+          gridColumn: '3',
+          gridRow: String(i + dataRowStart),
+          background: neuronColor(svc.currentInput.value[i] ?? 0),
+          transform: `scale(${neuronScale(i)})`,
+        }"
+        :title="`x${i + 1} = ${fmt(svc.currentInput.value[i] ?? 0)}, importance = ${fmt(svc.featureImportance.value[i] ?? 1)}`"
+      />
+
+      <!-- Output neuron: col 7 -->
+      <div
+        :ref="(el) => { outputNeuronRefs[i] = el as HTMLElement }"
+        class="neuron"
+        :style="{
+          gridColumn: '7',
+          gridRow: String(i + dataRowStart),
+          background: neuronColor(svc.currentOutput.value[i] ?? 0),
+        }"
+        :title="`x̂${i + 1} = ${fmt(svc.currentOutput.value[i] ?? 0)}`"
+      />
+
+      <!-- Output value: col 9 -->
+      <div
+        class="output-value"
+        :style="{ gridColumn: '9', gridRow: String(i + dataRowStart) }"
+      >
+        <span class="out-val">{{ fmt(svc.currentOutput.value[i] ?? 0) }}</span>
+        <span v-if="isNonZero(svc.currentError.value[i] ?? 0)" class="out-err">
+          {{ fmt(svc.currentError.value[i] ?? 0) }}
+        </span>
+      </div>
+    </template>
+
+    <!-- ── Embedding column: col 5, spans all data rows ──── -->
+    <div
+      class="emb-column"
+      :style="{
+        gridColumn: '5',
+        gridRow: `${dataRowStart} / ${dataRowEnd}`,
+      }"
+    >
+      <div class="emb-neurons">
         <div
           v-for="(_, k) in m"
           :key="k"
@@ -312,69 +261,61 @@ function fmt(v: number): string {
         >
           <span class="emb-value">{{ fmt(svc.currentEmbedding.value[k] ?? 0) }}</span>
         </div>
-        <!-- Add/Remove buttons for embedding dim -->
-        <div class="neuron-controls">
-          <button
-            class="neuron-btn add-btn"
-            @click="addEmbeddingNeuron"
-            :disabled="m >= n - 1"
-            title="Add embedding dimension"
-          >+</button>
-          <button
-            class="neuron-btn remove-btn"
-            @click="removeEmbeddingNeuron"
-            :disabled="m <= 1"
-            title="Remove embedding dimension"
-          >−</button>
-        </div>
       </div>
     </div>
 
-    <!-- ── Output Neurons ─────────────────────────────── -->
-    <div class="ae-section">
-      <h4 class="section-heading">Decoder</h4>
-      <div class="ae-column neurons-column">
-        <div
-          v-for="(_, i) in n"
-          :key="i"
-          :ref="(el) => { outputNeuronRefs[i] = el as HTMLElement }"
-          class="neuron output-neuron"
-          :style="{ background: neuronColor(svc.currentOutput.value[i] ?? 0) }"
-          :title="`x̂${i + 1} = ${fmt(svc.currentOutput.value[i] ?? 0)}`"
-        />
-      </div>
+    <!-- ── Controls row ───────────────────────────────────── -->
+    <div
+      class="controls-row"
+      :style="{ gridColumn: '3', gridRow: String(controlsRow) }"
+    >
+      <button class="dim-btn add" @click="addInputNeuron" title="Add input feature">+</button>
+      <button class="dim-btn rem" @click="removeInputNeuron" :disabled="n <= 2" title="Remove input feature">−</button>
     </div>
 
-    <!-- ── Outputs ────────────────────────────────────── -->
-    <div class="ae-section">
-      <h4 class="section-heading">Output</h4>
-      <div class="ae-column outputs-column">
-        <div
-          v-for="(_, i) in n"
-          :key="i"
-          class="output-value"
-        >
-          <span class="out-val">{{ fmt(svc.currentOutput.value[i] ?? 0) }}</span>
-          <span class="out-err">Δ {{ fmt(svc.currentError.value[i] ?? 0) }}</span>
-        </div>
-      </div>
+    <div
+      class="controls-row"
+      :style="{ gridColumn: '5', gridRow: String(controlsRow) }"
+    >
+      <button class="dim-btn add" @click="addEmbeddingNeuron" :disabled="m >= n - 1" title="Add embedding dim">+</button>
+      <button class="dim-btn rem" @click="removeEmbeddingNeuron" :disabled="m <= 1" title="Remove embedding dim">−</button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.autoencoder-view {
+/* ── Main grid ────────────────────────────────────────────── */
+/*
+ * 9-column layout with explicit spacer columns:
+ * col 1  [inputs]        content
+ * col 2  [gap-s-left]    tight gap — input values ↔ input neurons
+ * col 3  [input-neurons] content
+ * col 4  [gap-conn-l]    wide gap — SVG connections space
+ * col 5  [embedding]     content
+ * col 6  [gap-conn-r]    wide gap — SVG connections space
+ * col 7  [output-neurons]content
+ * col 8  [gap-s-right]   tight gap — output neurons ↔ output values
+ * col 9  [outputs]       content
+ */
+.ae-grid {
   position: relative;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 2.5rem;
-  padding: 1.5rem 1.5rem 1.5rem 1rem;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  overflow: visible;
-  min-width: 700px;
+  display: grid;
+  grid-template-columns:
+    [inputs]          90px
+    [gap-s-left]      1.2rem
+    [input-neurons]   var(--neuron-size)
+    [gap-conn-l]      6rem
+    [embedding]       calc(var(--neuron-size) * 1.4)
+    [gap-conn-r]      6rem
+    [output-neurons]  var(--neuron-size)
+    [gap-s-right]     1.2rem
+    [outputs]         82px;
+  column-gap: 0;
+  row-gap: var(--row-gap);
+  align-items: center;
+  justify-items: center;
+  --row-height: 72px;
+  padding: 0.25rem 0;
 }
 
 /* SVG overlay */
@@ -388,138 +329,133 @@ function fmt(v: number): string {
   z-index: 1;
 }
 
-/* Each named section */
-.ae-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  position: relative;
+/* Column headings */
+.col-heading {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-title);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-bottom: 0.25rem;
+  align-self: end;
   z-index: 2;
 }
 
-.section-heading {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--color-text-title);
-  text-align: center;
-  height: var(--title-height);
-  display: flex;
-  align-items: center;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-/* Column of items in a section */
-.ae-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--row-gap);
-}
-
-/* Neurons */
+/* ── Neurons ──────────────────────────────────────────────── */
 .neuron {
   width: var(--neuron-size);
   height: var(--neuron-size);
   border-radius: 50%;
-  border: 1.5px solid var(--color-border);
+  border: 2px solid #9ca3af;   /* gray-400: clearly visible even on white bg */
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.2s, transform 0.2s;
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .emb-neuron {
-  border-color: var(--color-text-secondary);
+  border-color: #6b7280;  /* gray-500 for slightly more prominent embedding neurons */
 }
 
 .emb-value {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-variant-numeric: tabular-nums;
-  color: var(--color-text-primary);
-  font-weight: 600;
-  pointer-events: none;
-  mix-blend-mode: multiply;
-}
-
-/* Add / remove buttons */
-.neuron-controls {
-  display: flex;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.neuron-btn {
-  width: 1.3rem;
-  height: 1.3rem;
-  border-radius: 50%;
-  border: 1.5px solid;
-  padding: 0;
-  font-size: 0.9rem;
+  color: #374151;
   font-weight: 700;
+  pointer-events: none;
+  text-shadow: 0 0 3px rgba(255,255,255,0.8);
+}
+
+/* ── Embedding column (spans all data rows) ───────────────── */
+.emb-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;   /* override grid's align-items: center — must fill full height */
+  z-index: 2;
+}
+
+.emb-neurons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  height: 100%;
+  width: 100%;
+}
+
+/* ── Output values ────────────────────────────────────────── */
+.output-value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  z-index: 2;
+}
+
+.out-val {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.out-err {
+  font-size: 0.75rem;
+  color: var(--color-error);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* ── Dimension controls ───────────────────────────────────── */
+.controls-row {
+  display: flex;
+  gap: 5px;
+  z-index: 2;
+  padding-top: 4px;
+}
+
+.dim-btn {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  border: 1px solid #d1d5db;
+  padding: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s, background 0.15s;
 }
 
-.add-btn {
-  border-color: var(--color-add-btn);
-  color: var(--color-add-btn);
-  background: transparent;
+.dim-btn.add {
+  background: #f1f5f9;   /* slate-100 */
+  color: #64748b;        /* slate-500 */
 }
 
-.add-btn:hover:not(:disabled) {
-  background: var(--color-add-btn);
-  color: white;
+.dim-btn.add:hover:not(:disabled) {
+  background: #e2e8f0;   /* slate-200 */
 }
 
-.remove-btn {
-  border-color: var(--color-remove-btn);
-  color: var(--color-remove-btn);
-  background: transparent;
+.dim-btn.rem {
+  background: #f1f5f9;   /* slate-100 */
+  color: #64748b;        /* slate-500 */
 }
 
-.remove-btn:hover:not(:disabled) {
-  background: var(--color-remove-btn);
-  color: white;
+.dim-btn.rem:hover:not(:disabled) {
+  background: #e2e8f0;   /* slate-200 */
 }
 
-.neuron-btn:disabled {
+.dim-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
-  border-color: var(--color-interactive-disabled);
-  color: var(--color-interactive-disabled);
-}
-
-/* Output values */
-.outputs-column {
-  min-width: 70px;
-}
-
-.output-value {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  height: var(--neuron-size);
-  justify-content: center;
-  line-height: 1.2;
-}
-
-.out-val {
-  font-size: 0.82rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-primary);
-  font-weight: 500;
-}
-
-.out-err {
-  font-size: 0.7rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-error);
 }
 </style>

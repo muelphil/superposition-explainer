@@ -125,8 +125,8 @@ export function createAutoencoderService() {
   function initialize() {
     _computeImportance()
     _initWeights()
-    // Set a sample input
-    currentInput.value = _generateSample()
+    // Initialize with dense normal samples so all neurons are visible on load
+    currentInput.value = Array.from({ length: config.inputDim }, () => randn() * 0.8)
     _forwardPass(currentInput.value)
     step.value = 0
     loss.value = 0

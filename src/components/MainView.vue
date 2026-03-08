@@ -22,21 +22,19 @@ provide('autoencoderService', autoencoderService)
     </header>
 
     <main class="app-content">
-      <!-- Primary row: Autoencoder + Embedding side by side -->
-      <div class="primary-row">
-        <section class="panel autoencoder-panel">
-          <h2 class="panel-title">Autoencoder</h2>
-          <AutoencoderView />
-        </section>
+      <!-- Autoencoder: rendered directly on the background (no card) -->
+      <section class="autoencoder-section">
+        <h2 class="section-title">Autoencoder</h2>
+        <AutoencoderView />
+      </section>
 
+      <!-- Secondary row: Embedding + Weights + Training config + Training stats -->
+      <div class="secondary-row">
         <section class="panel embedding-panel">
           <h2 class="panel-title">Embedding Space</h2>
           <EmbeddingView />
         </section>
-      </div>
 
-      <!-- Secondary row: Weights + Training config + Training stats -->
-      <div class="secondary-row">
         <section class="panel weight-panel">
           <h2 class="panel-title">Weights</h2>
           <WeightView />
@@ -87,8 +85,24 @@ provide('autoencoderService', autoencoderService)
   padding: 1.5rem 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
   flex: 1;
+}
+
+/* Autoencoder renders directly on the page — no card wrapper */
+.autoencoder-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
 }
 
 .primary-row {
@@ -123,11 +137,6 @@ provide('autoencoderService', autoencoderService)
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0;
-}
-
-.autoencoder-panel {
-  flex: 1 1 auto;
-  min-width: 700px;
 }
 
 .embedding-panel {

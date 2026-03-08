@@ -11,3 +11,20 @@ The following issues are immediately apparent:
 * make the input and output values use 1rem
 * display error under output values centered and conditionally on whether it is not 0
 * drop the background border and color for the autoencoder component, it should be directly rendered on the background, no extra background or card styling, as opposed to the other components.
+
+Looks better, but still a lot of issues:
+* The input numerical value must appear **over** the slider on top of the normal distribution as a backdrop. There should not be a vertical blue line from the slider emerging -- this is unnecessary.
+* The SVG connections dont fully connect anymore
+* The network needs more spacing between the neuron columns, allowing more spacing 
+* scrap the "Δ" symbol
+* the embedding neurons should be spaced across their column using space-around instead of just a gap, spreading them out.
+
+Slightly better. Now:
+* .value-label: use bottom: 0px, no background color
+* .dist-svg: hide the line of the graph, only use area under graph. Use linear gradient for area under graph, from light blue to white to orange
+* similarly, color the slider background line with a gradient
+* color the slider knob depending on the value, matching the neurons color
+* .controls-row: make the buttons round and make them use light grey for both buttons, no greed/red color.
+
+
+---
