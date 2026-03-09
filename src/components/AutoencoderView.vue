@@ -251,7 +251,7 @@ const currentLoss = computed(() => {
         :style="{ gridColumn: '9', gridRow: String(i + dataRowStart) }"
       >
         <span class="out-val">{{ fmt(svc.currentOutput.value[i] ?? 0) }}</span>
-        <span v-if="isNonZero(svc.currentError.value[i] ?? 0)" class="out-err">
+        <span class="out-err" :class="{ zero: !isNonZero(svc.currentError.value[i] ?? 0) }">
           {{ absErr(svc.currentError.value[i] ?? 0) }}
         </span>
       </div>
@@ -297,12 +297,11 @@ const currentLoss = computed(() => {
     </div>
     <!-- ── Total weighted loss (output column, controls row) ─── -->
     <div
-      v-if="isNonZero(currentLoss)"
       class="total-loss"
       :style="{ gridColumn: '9', gridRow: String(controlsRow) }"
     >
       <span class="total-loss-label">L</span>
-      <span class="total-loss-val">{{ currentLoss.toFixed(3) }}</span>
+      <span class="total-loss-val" :class="{ zero: !isNonZero(currentLoss) }">{{ currentLoss.toFixed(3) }}</span>
     </div>
   </div>
 </template>
@@ -324,19 +323,21 @@ const currentLoss = computed(() => {
 .ae-grid {
   position: relative;
   display: grid;
+
   grid-template-columns:
     [inputs]          90px
     [gap-s-left]      1.2rem
     [input-neurons]   var(--neuron-size)
-    [gap-conn-l]      6rem
+    [gap-conn-l]      1fr
     [embedding]       calc(var(--neuron-size) * 1.4)
-    [gap-conn-r]      6rem
+    [gap-conn-r]      1fr
     [output-neurons]  var(--neuron-size)
     [gap-s-right]     1.2rem
     [outputs]         82px;
   column-gap: 0;
   row-gap: var(--row-gap);
   align-items: center;
+  justify-content: space-around;
   justify-items: center;
   --row-height: 72px;
   padding: 0.25rem 0;
@@ -436,6 +437,10 @@ const currentLoss = computed(() => {
   text-align: center;
 }
 
+.out-err.zero {
+  color: #d1d5db; /* light grey */
+}
+
 /* ── Dimension controls ───────────────────────────────────── */
 .controls-row {
   display: flex;
@@ -505,5 +510,9 @@ const currentLoss = computed(() => {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--color-error);
+}
+
+.total-loss-val.zero {
+  color: #d1d5db; /* light grey */
 }
 </style>

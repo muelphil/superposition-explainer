@@ -120,9 +120,8 @@ function onSliderChange(event: Event) {
 
 .value-label {
   position: absolute;
-  bottom: 0.6em;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 1em;
+  right: 0;
   font-size: 1rem;
   font-weight: 500;
   color: var(--color-text-primary);

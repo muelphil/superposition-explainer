@@ -22,19 +22,21 @@ provide('autoencoderService', autoencoderService)
     </header>
 
     <main class="app-content">
-      <!-- Autoencoder: rendered directly on the background (no card) -->
-      <section class="autoencoder-section">
-        <h2 class="section-title">Autoencoder</h2>
-        <AutoencoderView />
-      </section>
+      <!-- Top row: Autoencoder (left) + Embedding space (right) -->
+      <div class="top-row">
+        <section class="autoencoder-section">
+          <h2 class="section-title">Autoencoder</h2>
+          <AutoencoderView />
+        </section>
 
-      <!-- Secondary row: Embedding + Weights + Training config + Training stats -->
-      <div class="secondary-row">
         <section class="panel embedding-panel">
           <h2 class="panel-title">Embedding Space</h2>
           <EmbeddingView />
         </section>
+      </div>
 
+      <!-- Secondary row: Weights + Training config + Training stats -->
+      <div class="secondary-row">
         <section class="panel weight-panel">
           <h2 class="panel-title">Weights</h2>
           <WeightView />
@@ -89,34 +91,26 @@ provide('autoencoderService', autoencoderService)
   flex: 1;
 }
 
+/* Top row: Autoencoder left, Embedding right */
+.top-row {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
 /* Autoencoder renders directly on the page — no card wrapper */
 .autoencoder-section {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-.section-title {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin: 0;
-}
-
-.primary-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  align-items: flex-start;
-}
-
-.secondary-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  align-items: flex-start;
+.embedding-panel {
+  flex: 1 1;
+  min-width: 220px;
 }
 
 .panel {
@@ -139,14 +133,26 @@ provide('autoencoderService', autoencoderService)
   margin: 0;
 }
 
-.embedding-panel {
-  flex: 0 1 320px;
-  min-width: 260px;
+.section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.secondary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
 }
 
 .weight-panel {
-  flex: 0 1 260px;
-  min-width: 200px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
 }
 
 .training-config-panel {

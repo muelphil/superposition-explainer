@@ -41,5 +41,20 @@ Changing Training parameters or layer dimensions should reset the training. Also
 
 ---
 
+Next, please implement the embedding space view using Three.js. It should have a mathematical look and feel. Hovering a vector should grey out the others. Make each vector have a different color. Three.js coordinate system should use transparent background color.
 
+### Embedding visualization
+* visualize the embedding vectors used to embed the input data
+* embedding dimension is restricted to have dimension 1, 2 or 3.
+* uses Three.js for visualization of a coordinate system with x,y and z depending on the dimension (2D: only x and y, 1D: only x)
+    * axes should be visualized but non-intrusive. The main value lies in visualizing the different embedding vectors and their relationship to one another
+* allows for dynamically showing vectors in the coordinate system, where vectors may be assigned different colors
+* allows for triggering highlighting of specific vector, making the others greyscale and 0.5 opacity
+* the dimension of the visualization should be equal to the dimension of the embeddings: 3D embeddings -> use 3D coordinate system
+* centered on the coordinate system center
+* users should be able to rotate the coordinate system by dragging and zooming using scroll wheel, though restricted to a maximum zoom out and in
 
+---
+Now, implement the Weight visualization that should be a matrix (Weights W) and the bias vector (if applicable). The matrix again should be shown in a mathematical way. Columns and rows should be annotated with input and embedding dimension including feature vector, embedding vector etc. It is
+important that the user can hover the columns, rows and individual cells of the matrix to highlight them. For now, cells may use the same background color highlighting in orange and blue as the connections in the autoencoder visualization. Make it look mathematical, use vector brackets (square
+brakets).

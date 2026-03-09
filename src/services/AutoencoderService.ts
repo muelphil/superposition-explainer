@@ -74,7 +74,7 @@ export function createAutoencoderService() {
   const defaultConfig: AutoencoderConfig = {
     inputDim: 5,
     embeddingDim: 2,
-    sparsity: 0.1,
+    sparsity: 0.7,
     featureDecay: 0.9,
     learningRate: 0.01,
     batchSize: 64,
@@ -416,6 +416,19 @@ export function createAutoencoderService() {
     adamT = 0
   }
 
+  /** Re-initialise weights (Xavier) + bias = 0, stop & clear training. */
+  function resetWeights() {
+    stopTraining()
+    step.value = 0
+    loss.value = 0
+    trainingStartStep.value = 0
+    lossHistory.value = []
+    featurePresenceHistory.value = []
+    minAngleHistory.value = []
+    _initWeights()
+    _forwardPass(currentInput.value)
+  }
+
   // ─── Initialization on creation ──────────────────────────────────────────────
 
   initialize()
@@ -448,6 +461,7 @@ export function createAutoencoderService() {
     startTraining,
     stopTraining,
     initialize,
+    resetWeights,
     trainingStartStep,
   }
 }
