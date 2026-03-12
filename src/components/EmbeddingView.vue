@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
 import type { SelectionServiceType } from '../services/SelectionService'
+import { featureColorRGB, featureColorCss } from '../utils/featureColor'
 
 const svc    = inject<AutoencoderServiceType>('autoencoderService')!
 const selSvc = inject<SelectionServiceType>('selectionService')!
@@ -14,12 +15,6 @@ const canvasRef    = ref<HTMLCanvasElement | null>(null)
 const hoveredIdx   = ref<number | null>(null)        // feature vec hover (local visual)
 const hoveredEmbAxisIdx = ref<number | null>(null)   // axis hover (for click dispatch)
 
-// ── Color palette (up to 8 features) ─────────────────────────
-const PALETTE_HEX = [
-  '#f97316', '#3b82f6', '#22c55e', '#ec4899',
-  '#a855f7', '#06b6d4', '#eab308', '#6366f1',
-]
-const PALETTE  = PALETTE_HEX.map(h => new THREE.Color(h))
 const GREY_COL = new THREE.Color(0.68, 0.68, 0.68)
 
 // ── Derived dims ─────────────────────────────────────────────
@@ -58,20 +53,24 @@ function featureVec(i: number): THREE.Vector3 {
   )
 }
 
-function makeAxisLabel(text: string, color = '#b0bec5'): THREE.Sprite {
+function makeAxisLabel(text: string): THREE.Sprite {
+  // High-resolution canvas for crisp text; scale kept small in 3D
+  const SIZE = 256
   const c = document.createElement('canvas')
-  c.width = 64; c.height = 64
+  c.width = SIZE; c.height = SIZE
   const ctx = c.getContext('2d')!
-  ctx.fillStyle = color
-  ctx.font = 'bold 44px system-ui, sans-serif'
+  ctx.clearRect(0, 0, SIZE, SIZE)
+  ctx.fillStyle = '#000000'
+  ctx.font = 'bold 160px Arial, Helvetica, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(text, 32, 32)
+  ctx.fillText(text, SIZE / 2, SIZE / 2)
   const tex = new THREE.CanvasTexture(c)
+  tex.needsUpdate = true
   const sprite = new THREE.Sprite(
     new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })
   )
-  sprite.scale.set(0.22, 0.22, 0.22)
+  sprite.scale.set(0.28, 0.28, 0.28)
   return sprite
 }
 
@@ -142,7 +141,8 @@ function init() {
 }
 
 // ── Axes ──────────────────────────────────────────────────────
-const AXIS_LEN = 1.6
+const AXIS_LEN          = 1.3    // configurable: distance from origin to axis tip
+const AXIS_LABEL_OFFSET = 0.22   // extra distance beyond AXIS_LEN for label centre
 
 function buildAxes() {
   if (!scene) return
@@ -162,8 +162,9 @@ function buildAxes() {
   axisGroup = grp
 
   const AXIS_COL  = 0xd1d5db   // slate-300 — subtle
-  const labels    = ['x', 'y', 'z']
-  const axisDirs  = [
+  // h₁, h₂, h₃ using Unicode subscript digits
+  const labels   = ['h\u2081', 'h\u2082', 'h\u2083']
+  const axisDirs = [
     new THREE.Vector3(1, 0, 0),
     new THREE.Vector3(0, 1, 0),
     new THREE.Vector3(0, 0, 1),
@@ -171,8 +172,9 @@ function buildAxes() {
   const numAxes = Math.min(Math.max(embDim.value, 1), 3)
 
   for (let a = 0; a < numAxes; a++) {
-    const dir = axisDirs[a]
-    const axMat = new THREE.LineBasicMaterial({ color: AXIS_COL, opacity: 0.55, transparent: true })
+    const dir    = axisDirs[a]
+    const negDir = dir.clone().negate()
+    const axMat  = new THREE.LineBasicMaterial({ color: AXIS_COL, opacity: 0.55, transparent: true })
 
     // Bidirectional axis line
     const lineGeom = new THREE.BufferGeometry().setFromPoints([
@@ -181,12 +183,19 @@ function buildAxes() {
     ])
     grp.add(new THREE.Line(lineGeom, axMat.clone()))
 
-    // Arrow tip at positive end
-    const tip = new THREE.ArrowHelper(
+    // Arrowhead at positive end
+    const posTip = new THREE.ArrowHelper(
       dir, dir.clone().multiplyScalar(AXIS_LEN - 0.18),
       0.22, AXIS_COL, 0.16, 0.07,
     )
-    grp.add(tip)
+    grp.add(posTip)
+
+    // Arrowhead at negative end
+    const negTip = new THREE.ArrowHelper(
+      negDir, negDir.clone().multiplyScalar(AXIS_LEN - 0.18),
+      0.22, AXIS_COL, 0.16, 0.07,
+    )
+    grp.add(negTip)
 
     // Tick marks at ±1 unit
     const perp = a === 0 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0)
@@ -199,9 +208,9 @@ function buildAxes() {
       grp.add(new THREE.Line(tg, new THREE.LineBasicMaterial({ color: AXIS_COL, opacity: 0.4, transparent: true })))
     }
 
-    // Axis label at tip
+    // Axis label at positive tip
     const lbl = makeAxisLabel(labels[a])
-    lbl.position.copy(dir.clone().multiplyScalar(AXIS_LEN + 0.22))
+    lbl.position.copy(dir.clone().multiplyScalar(AXIS_LEN + AXIS_LABEL_OFFSET))
     grp.add(lbl)
 
     // Invisible hit cylinder for hover/click on axis (maps to embedding dim a)
@@ -210,7 +219,6 @@ function buildAxes() {
     // CylinderGeometry is along Y by default — rotate to match axis direction
     if (a === 0) hitMesh.rotation.z = Math.PI / 2   // align to X
     if (a === 2) hitMesh.rotation.x = Math.PI / 2   // align to Z
-    // a === 1 (Y axis) needs no rotation
     hitMesh.userData.aIdx = a
     scene!.add(hitMesh)
     axisHitMeshes.push(hitMesh)
@@ -231,7 +239,8 @@ function buildVecs() {
   vecs = []
 
   for (let i = 0; i < inputDim.value; i++) {
-    const col = PALETTE[i % PALETTE.length].clone()
+    const [cr, cg, cb] = featureColorRGB(i, inputDim.value)
+    const col = new THREE.Color(cr, cg, cb)
     const v   = featureVec(i)
     const len = v.length()
     const vis = len > 0.01
@@ -443,7 +452,7 @@ watch(() => svc.W.value, () => { needsVecUpdate = true }, { deep: true })
         @mouseleave="onLegendLeave"
         @click="onLegendClick(i)"
       >
-        <span class="legend-swatch" :style="{ background: PALETTE_HEX[i % PALETTE_HEX.length] }" />
+        <span class="legend-swatch" :style="{ background: featureColorCss(i, inputDim) }" />
         <span class="legend-text">f{{ i + 1 }}</span>
       </div>
     </div>

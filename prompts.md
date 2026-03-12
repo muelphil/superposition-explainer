@@ -77,9 +77,19 @@ For debugging purposes, the current hover and selection info should be shown as 
 Do only implement the highlighting/ selection logic via clicks and hovers right now, to not yet apply any visual styling indicating hovering or selection to the elements yet. We will apply these per component later on, as this takes great care of getting it right visually.
 You may use incorrect/incomplete SelectionService.ts to correct it with the correct possible things that are selectable as basis, adjusting it to match the above description.
 
+---
 
 
-    * hover and selection for certain input features/ embedding features
-    * hovering or selecting (clicking) certain input features or embedding features in the different views (autoencoder/embedding vectors/weights) should mark them selected in a new service, that gets injected into all the views
-    * all views should be able to select/hover things (i.e. Embedding Vector view should be able to select a feature vector by clicking the vector and hovering one by hovering the vector)
-    * for debugging purposes, the current hover and selection info should be shown as a small text at the very bottom of the main view
+Great. Let's start reworking the Embedding Space View:
+* replace the feature colors with a color gradient green to yellow, with green being the feature used for the most important/ first feature. Use src/utils/featureColor.ts. However, adjust the file so it also exports a function that will return a css color from the gradient for the feature, taking parameters `idx` and `amount_features` and returning a color-mix css color that mixes the yellow and green appropriatley. The beginning of the file should have 2 arrays of rgb values for green/yellow, then one variable each for the css rgb colors thereof, then used in the function color mix template.
+* replace x, y, z with h_1, h_2 and h_3 for the axes where appropriate
+* make sure that the font is looking crisp, the x,y,z labels look pixelated right now. Make axis labels use black font color.
+* for the axes, put the arrow head, the axis line and the axes label closer to the center, maybe at 1.3 of the individual axes -- make this value configurable in the code. also put arrowheads on the end of the axes (in the other direction).
+
+---
+
+This is good, but:
+* place the h_1, h_2, h_3 labels next to the axes arrows, not on top of them
+* increase the initial zoom in three.js so that it automatically perfectly fits the coordinate system
+* make the feature arrows slightly thicker
+* make sure that the color mix color space is correct in featureColor -- currently the three js and the css colors are not looking the same.
