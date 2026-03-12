@@ -2,9 +2,11 @@
 import { inject, ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
 import { INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX } from '../services/AutoencoderService'
+import type { SelectionServiceType } from '../services/SelectionService'
 import InputValue from './InputValue.vue'
 
-const svc = inject<AutoencoderServiceType>('autoencoderService')!
+const svc    = inject<AutoencoderServiceType>('autoencoderService')!
+const selSvc = inject<SelectionServiceType>('selectionService')!
 
 // ─── Template refs ────────────────────────────────────────────────────────────
 const containerRef = ref<HTMLElement | null>(null)
@@ -79,6 +81,17 @@ const canAddEmb      = computed(() => m.value < EMB_DIM_MAX && !svc.isTraining.v
 const canRemoveEmb   = computed(() => m.value > EMB_DIM_MIN && !svc.isTraining.value)
 
 // ─── SVG connections ──────────────────────────────────────────────────────────
+
+interface SvgPath {
+  d: string
+  color: string
+  width: number
+  opacity: number
+  row: number   // embedding index k  → W[k][*]
+  col: number   // feature index j    → W[*][j]
+}
+
+const svgPathsData = ref<SvgPath[]>([])
 function getRightEdge(el: HTMLElement | null | undefined) {
   if (!el || !containerRef.value) return null
   const er = el.getBoundingClientRect()
@@ -112,15 +125,13 @@ function spreadOffset(idx: number, total: number, diameter: number): number {
   return (idx - (total - 1) / 2) * (diameter * 0.55 / Math.max(total - 1, 1))
 }
 
-const svgPaths = ref('')
-
 async function drawConnections() {
   if (!svgRef.value || !containerRef.value) return
   await nextTick()
 
   const W = svc.W.value
-  const neuronDiam = 36   // approx --neuron-size in px (2.2rem @ 17px base ≈ 37px)
-  const lines: string[] = []
+  const neuronDiam = 36
+  const paths: SvgPath[] = []
 
   // Encoder: input neurons → embedding neurons
   for (let k = 0; k < m.value; k++) {
@@ -132,10 +143,8 @@ async function drawConnections() {
       const w = W[k]?.[j] ?? 0
       const { color, width, opacity } = weightStyle(w)
       const sy = inRight.y + spreadOffset(k, m.value, neuronDiam)
-      const ty = embLeft.y + spreadOffset(j, n.value, neuronDiam)
-      lines.push(
-        `<path d="${bezierPath(inRight.x, sy, embLeft.x, ty)}" fill="none" stroke="${color}" stroke-width="${width.toFixed(1)}" opacity="${opacity.toFixed(2)}" />`
-      )
+      const ty = embLeft.y  + spreadOffset(j, n.value, neuronDiam)
+      paths.push({ d: bezierPath(inRight.x, sy, embLeft.x, ty), color, width, opacity, row: k, col: j })
     }
   }
 
@@ -149,14 +158,12 @@ async function drawConnections() {
       const w = W[k]?.[j] ?? 0
       const { color, width, opacity } = weightStyle(w)
       const sy = embRight.y + spreadOffset(j, n.value, neuronDiam)
-      const ty = outLeft.y + spreadOffset(k, m.value, neuronDiam)
-      lines.push(
-        `<path d="${bezierPath(embRight.x, sy, outLeft.x, ty)}" fill="none" stroke="${color}" stroke-width="${width.toFixed(1)}" opacity="${opacity.toFixed(2)}" />`
-      )
+      const ty = outLeft.y  + spreadOffset(k, m.value, neuronDiam)
+      paths.push({ d: bezierPath(embRight.x, sy, outLeft.x, ty), color, width, opacity, row: k, col: j })
     }
   }
 
-  svgPaths.value = lines.join('\n')
+  svgPathsData.value = paths
 }
 
 let resizeObserver: ResizeObserver | null = null
@@ -186,6 +193,26 @@ const currentLoss = computed(() => {
   const imp = svc.featureImportance.value
   return x.reduce((sum, xi, i) => sum + (imp[i] ?? 1) * (xi - (xHat[i] ?? 0)) ** 2, 0)
 })
+
+// ─── Selection / hover handlers ───────────────────────────────────────────────
+
+function onWeightEnter(row: number, col: number) {
+  selSvc.setHover({ kind: 'weight', row, col }, 'autoencoder')
+}
+function onWeightLeave()                          { selSvc.clearHover() }
+function onWeightClick(row: number, col: number)  { selSvc.setSelected({ kind: 'weight', row, col }, 'autoencoder') }
+
+function onFeatureEnter(i: number) { selSvc.setHover({ kind: 'feature', idx: i }, 'autoencoder') }
+function onFeatureLeave()          { selSvc.clearHover() }
+function onFeatureClick(i: number) { selSvc.setSelected({ kind: 'feature', idx: i }, 'autoencoder') }
+
+function onEmbNeuronEnter(k: number) { selSvc.setHover({ kind: 'emb', idx: k }, 'autoencoder') }
+function onEmbNeuronLeave()          { selSvc.clearHover() }
+function onEmbNeuronClick(k: number) { selSvc.setSelected({ kind: 'emb', idx: k }, 'autoencoder') }
+
+function onOutputEnter(i: number) { selSvc.setHover({ kind: 'output', idx: i }, 'autoencoder') }
+function onOutputLeave()          { selSvc.clearHover() }
+function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i }, 'autoencoder') }
 </script>
 
 <template>
@@ -194,13 +221,26 @@ const currentLoss = computed(() => {
     ref="containerRef"
     :style="{ gridTemplateRows }"
   >
-    <!-- SVG overlay -->
+    <!-- SVG overlay — paths are interactive for weight hover/click -->
     <svg
       ref="svgRef"
       class="connections-svg"
       aria-hidden="true"
-      v-html="svgPaths"
-    />
+    >
+      <path
+        v-for="(p, pi) in svgPathsData"
+        :key="pi"
+        :d="p.d"
+        fill="none"
+        :stroke="p.color"
+        :stroke-width="p.width"
+        :opacity="p.opacity"
+        style="pointer-events: stroke; cursor: pointer"
+        @mouseenter="onWeightEnter(p.row, p.col)"
+        @mouseleave="onWeightLeave"
+        @click.stop="onWeightClick(p.row, p.col)"
+      />
+    </svg>
 
     <!-- ── Column headings (row 1) ───────────────────────── -->
     <div class="col-heading" style="grid-column: 1; grid-row: 1">Input</div>
@@ -231,6 +271,9 @@ const currentLoss = computed(() => {
           transform: `scale(${neuronScale(i)})`,
         }"
         :title="`x${i + 1} = ${fmt(svc.currentInput.value[i] ?? 0)}, importance = ${fmt(svc.featureImportance.value[i] ?? 1)}`"
+        @mouseenter="onFeatureEnter(i)"
+        @mouseleave="onFeatureLeave"
+        @click="onFeatureClick(i)"
       />
 
       <!-- Output neuron: col 7 -->
@@ -243,6 +286,9 @@ const currentLoss = computed(() => {
           background: neuronColor(svc.currentOutput.value[i] ?? 0),
         }"
         :title="`x̂${i + 1} = ${fmt(svc.currentOutput.value[i] ?? 0)}`"
+        @mouseenter="onOutputEnter(i)"
+        @mouseleave="onOutputLeave"
+        @click="onOutputClick(i)"
       />
 
       <!-- Output value: col 9 -->
@@ -273,6 +319,9 @@ const currentLoss = computed(() => {
           class="neuron emb-neuron"
           :style="{ background: neuronColor(svc.currentEmbedding.value[k] ?? 0) }"
           :title="`h${k + 1} = ${fmt(svc.currentEmbedding.value[k] ?? 0)}`"
+          @mouseenter="onEmbNeuronEnter(k)"
+          @mouseleave="onEmbNeuronLeave"
+          @click="onEmbNeuronClick(k)"
         >
           <span class="emb-value">{{ fmt(svc.currentEmbedding.value[k] ?? 0) }}</span>
         </div>
@@ -343,15 +392,14 @@ const currentLoss = computed(() => {
   padding: 0.25rem 0;
 }
 
-/* SVG overlay */
+/* SVG overlay — pointer-events enabled on individual paths via inline style */
 .connections-svg {
   position: absolute;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
-  z-index: 1;
+  /*z-index: 1;*/
 }
 
 /* Column headings */

@@ -3,13 +3,16 @@ import { inject, ref, computed, watch, onMounted, onUnmounted, nextTick } from '
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
+import type { SelectionServiceType } from '../services/SelectionService'
 
-const svc = inject<AutoencoderServiceType>('autoencoderService')!
+const svc    = inject<AutoencoderServiceType>('autoencoderService')!
+const selSvc = inject<SelectionServiceType>('selectionService')!
 
 // ── Template refs ────────────────────────────────────────────
 const containerRef = ref<HTMLDivElement | null>(null)
 const canvasRef    = ref<HTMLCanvasElement | null>(null)
-const hoveredIdx   = ref<number | null>(null)
+const hoveredIdx   = ref<number | null>(null)        // feature vec hover (local visual)
+const hoveredEmbAxisIdx = ref<number | null>(null)   // axis hover (for click dispatch)
 
 // ── Color palette (up to 8 features) ─────────────────────────
 const PALETTE_HEX = [
@@ -39,9 +42,11 @@ interface VecVis {
   color:   THREE.Color
   idx:     number
 }
-let vecs:      VecVis[]     = []
+let vecs:          VecVis[]     = []
+let axisHitMeshes: THREE.Mesh[] = []
 let axisGroup: THREE.Group | null = null
 let needsVecUpdate = false
+let lastHoverKey   = ''       // tracks selSvc hover to avoid redundant calls
 
 // ── Helpers ──────────────────────────────────────────────────
 function featureVec(i: number): THREE.Vector3 {
@@ -76,9 +81,17 @@ function teardown() {
   controls?.dispose()
   vecs.forEach(vv => disposeVec(vv))
   vecs = []
+  axisHitMeshes.forEach(m => {
+    scene?.remove(m)
+    m.geometry.dispose()
+    ;(m.material as THREE.Material).dispose()
+  })
+  axisHitMeshes = []
   axisGroup = null
   renderer?.dispose()
   scene = null; camera = null; renderer = null; controls = null
+  lastHoverKey = ''
+  hoveredEmbAxisIdx.value = null
 }
 
 function disposeVec(vv: VecVis) {
@@ -129,15 +142,25 @@ function init() {
 }
 
 // ── Axes ──────────────────────────────────────────────────────
+const AXIS_LEN = 1.6
+
 function buildAxes() {
   if (!scene) return
+
+  // Clean up previous axis hit meshes
+  axisHitMeshes.forEach(m => {
+    scene?.remove(m)
+    m.geometry.dispose()
+    ;(m.material as THREE.Material).dispose()
+  })
+  axisHitMeshes = []
+
   if (axisGroup) { scene.remove(axisGroup) }
 
   const grp = new THREE.Group()
   scene.add(grp)
   axisGroup = grp
 
-  const AXIS_LEN  = 1.6
   const AXIS_COL  = 0xd1d5db   // slate-300 — subtle
   const labels    = ['x', 'y', 'z']
   const axisDirs  = [
@@ -180,6 +203,17 @@ function buildAxes() {
     const lbl = makeAxisLabel(labels[a])
     lbl.position.copy(dir.clone().multiplyScalar(AXIS_LEN + 0.22))
     grp.add(lbl)
+
+    // Invisible hit cylinder for hover/click on axis (maps to embedding dim a)
+    const hitGeom = new THREE.CylinderGeometry(0.08, 0.08, AXIS_LEN * 2, 8)
+    const hitMesh = new THREE.Mesh(hitGeom, new THREE.MeshBasicMaterial({ visible: false }))
+    // CylinderGeometry is along Y by default — rotate to match axis direction
+    if (a === 0) hitMesh.rotation.z = Math.PI / 2   // align to X
+    if (a === 2) hitMesh.rotation.x = Math.PI / 2   // align to Z
+    // a === 1 (Y axis) needs no rotation
+    hitMesh.userData.aIdx = a
+    scene!.add(hitMesh)
+    axisHitMeshes.push(hitMesh)
   }
 
   // Small origin sphere
@@ -279,11 +313,31 @@ function renderLoop() {
 
   // Hover detection via raycaster
   raycaster.setFromCamera(mouseNDC, camera)
-  const hits  = raycaster.intersectObjects(vecs.map(vv => vv.hitMesh))
-  const newH  = hits.length > 0 ? (hits[0].object.userData.vIdx as number) : null
-  if (newH !== hoveredIdx.value) {
-    hoveredIdx.value = newH
+
+  const vecHits  = raycaster.intersectObjects(vecs.map(vv => vv.hitMesh))
+  const axisHits = raycaster.intersectObjects(axisHitMeshes)
+
+  const newFeatureH = vecHits.length  > 0 ? (vecHits[0].object.userData.vIdx as number) : null
+  const newAxisH    = axisHits.length > 0 ? (axisHits[0].object.userData.aIdx as number) : null
+
+  // Update local visual hover (feature vector dimming)
+  if (newFeatureH !== hoveredIdx.value) {
+    hoveredIdx.value = newFeatureH
     applyHover()
+  }
+  hoveredEmbAxisIdx.value = newAxisH
+
+  // Update selectionService hover — only when the target actually changes
+  const newHoverKey = newFeatureH !== null ? `f:${newFeatureH}` : newAxisH !== null ? `e:${newAxisH}` : ''
+  if (newHoverKey !== lastHoverKey) {
+    lastHoverKey = newHoverKey
+    if (newFeatureH !== null) {
+      selSvc.setHover({ kind: 'feature', idx: newFeatureH }, 'embedding')
+    } else if (newAxisH !== null) {
+      selSvc.setHover({ kind: 'emb', idx: newAxisH }, 'embedding')
+    } else {
+      selSvc.clearHover()
+    }
   }
 
   renderer.render(scene, camera)
@@ -301,11 +355,40 @@ function onMouseMove(e: MouseEvent) {
 function onMouseLeave() {
   mouseNDC.set(-9999, -9999)
   if (hoveredIdx.value !== null) { hoveredIdx.value = null; applyHover() }
+  hoveredEmbAxisIdx.value = null
+  if (lastHoverKey !== '') { lastHoverKey = ''; selSvc.clearHover() }
+}
+
+let mouseDownPos = { x: 0, y: 0 }
+
+function onCanvasMouseDown(e: MouseEvent) {
+  mouseDownPos = { x: e.clientX, y: e.clientY }
+}
+
+function onCanvasClick(e: MouseEvent) {
+  // Ignore drags — OrbitControls fires a click at end of drag
+  if (Math.hypot(e.clientX - mouseDownPos.x, e.clientY - mouseDownPos.y) > 4) return
+  if (hoveredIdx.value !== null) {
+    selSvc.setSelected({ kind: 'feature', idx: hoveredIdx.value }, 'embedding')
+  } else if (hoveredEmbAxisIdx.value !== null) {
+    selSvc.setSelected({ kind: 'emb', idx: hoveredEmbAxisIdx.value }, 'embedding')
+  }
 }
 
 // ── Legend hover ─────────────────────────────────────────────
-function onLegendEnter(i: number) { hoveredIdx.value = i; applyHover() }
-function onLegendLeave()          { hoveredIdx.value = null; applyHover() }
+function onLegendEnter(i: number) {
+  hoveredIdx.value = i
+  applyHover()
+  selSvc.setHover({ kind: 'feature', idx: i }, 'embedding')
+}
+function onLegendLeave() {
+  hoveredIdx.value = null
+  applyHover()
+  selSvc.clearHover()
+}
+function onLegendClick(i: number) {
+  selSvc.setSelected({ kind: 'feature', idx: i }, 'embedding')
+}
 
 // ── Resize ────────────────────────────────────────────────────
 let ro: ResizeObserver | null = null
@@ -346,6 +429,8 @@ watch(() => svc.W.value, () => { needsVecUpdate = true }, { deep: true })
       class="emb-canvas"
       @mousemove="onMouseMove"
       @mouseleave="onMouseLeave"
+      @mousedown="onCanvasMouseDown"
+      @click="onCanvasClick"
     />
     <!-- Feature legend -->
     <div class="emb-legend">
@@ -356,6 +441,7 @@ watch(() => svc.W.value, () => { needsVecUpdate = true }, { deep: true })
         :class="{ dimmed: hoveredIdx !== null && hoveredIdx !== i }"
         @mouseenter="onLegendEnter(i)"
         @mouseleave="onLegendLeave"
+        @click="onLegendClick(i)"
       >
         <span class="legend-swatch" :style="{ background: PALETTE_HEX[i % PALETTE_HEX.length] }" />
         <span class="legend-text">f{{ i + 1 }}</span>

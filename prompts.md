@@ -58,3 +58,28 @@ Next, please implement the embedding space view using Three.js. It should have a
 Now, implement the Weight visualization that should be a matrix (Weights W) and the bias vector (if applicable). The matrix again should be shown in a mathematical way. Columns and rows should be annotated with input and embedding dimension including feature vector, embedding vector etc. It is
 important that the user can hover the columns, rows and individual cells of the matrix to highlight them. For now, cells may use the same background color highlighting in orange and blue as the connections in the autoencoder visualization. Make it look mathematical, use vector brackets (square
 brakets).
+
+---
+
+We next need to implement a Hover and Selection System. This should be implemented as a separate service that is injected in all of the main visualization components (Autoencoder View, Embedding Space View, Weights View). In the view, hovering or selecting certain things should update the reactive selection and hover objects stored in the service. The View components should then react to it and highlight the thing joinly in all Views. Also include which view was origin of the hover/ selection.
+We will implement the highlighting for each of the View components later. For now, we only need to implement:
+* the service with the reactive refs for selection and hover to the SelectionTarget. The different things that should be selectable and hoverable for now are:
+  * feature (think input/ input layer neuron) -- selected when clicking on the neuron
+    * by hovering/clicking the associated input neuron in Autoencoder, the column in Weights view or the feature vector in embedding space view 
+  * embedding (embedding neurons)
+    * by hovering/ clicking the axes in Embedding View, the rows in weights matrix or the neurons in the embedding layer in the Autoencoder
+  * output (think output layer neuron/ outputs)
+    * by hovering/ clicking the output neurons
+  * weight (singular weight, think weight connection in the autoencoder)
+    * by hovering/ clicking the individual weights in the svg backdrop of the autoencoder or the weigth cells in W in the weights view
+
+For debugging purposes, the current hover and selection info should be shown as a small bar with small height at the very bottom of the view height as sticky/ absolute positioned. This may make it necessary to import the service in a higher up component like MainView or even App for now. The info should include a small deselect button for now. 
+Do only implement the highlighting/ selection logic via clicks and hovers right now, to not yet apply any visual styling indicating hovering or selection to the elements yet. We will apply these per component later on, as this takes great care of getting it right visually.
+You may use incorrect/incomplete SelectionService.ts to correct it with the correct possible things that are selectable as basis, adjusting it to match the above description.
+
+
+
+    * hover and selection for certain input features/ embedding features
+    * hovering or selecting (clicking) certain input features or embedding features in the different views (autoencoder/embedding vectors/weights) should mark them selected in a new service, that gets injected into all the views
+    * all views should be able to select/hover things (i.e. Embedding Vector view should be able to select a feature vector by clicking the vector and hovering one by hovering the vector)
+    * for debugging purposes, the current hover and selection info should be shown as a small text at the very bottom of the main view

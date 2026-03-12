@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { inject, computed, ref } from 'vue'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
+import type { SelectionServiceType } from '../services/SelectionService'
 
-const svc = inject<AutoencoderServiceType>('autoencoderService')!
+const svc    = inject<AutoencoderServiceType>('autoencoderService')!
+const selSvc = inject<SelectionServiceType>('selectionService')!
 
 const m = computed(() => svc.config.embeddingDim)  // rows  (h₁…hₘ)
 const n = computed(() => svc.config.inputDim)       // cols  (f₁…fₙ)
@@ -49,6 +51,40 @@ function clearHover() {
   hoverCol.value  = null
   hoverCell.value = null
   hoverBias.value = null
+  selSvc.clearHover()
+}
+
+// ── Selection service wrappers ─────────────────────────────────
+function onColEnter(c: number) {
+  hoverCol.value = c; hoverCell.value = null; hoverBias.value = null
+  selSvc.setHover({ kind: 'feature', idx: c }, 'weights')
+}
+function onColClick(c: number) {
+  selSvc.setSelected({ kind: 'feature', idx: c }, 'weights')
+}
+
+function onRowEnter(r: number) {
+  hoverRow.value = r; hoverCell.value = null
+  selSvc.setHover({ kind: 'emb', idx: r }, 'weights')
+}
+function onRowClick(r: number) {
+  selSvc.setSelected({ kind: 'emb', idx: r }, 'weights')
+}
+
+function onCellEnter(r: number, c: number) {
+  hoverCell.value = { r, c }; hoverRow.value = null; hoverCol.value = null; hoverBias.value = null
+  selSvc.setHover({ kind: 'weight', row: r, col: c }, 'weights')
+}
+function onCellClick(r: number, c: number) {
+  selSvc.setSelected({ kind: 'weight', row: r, col: c }, 'weights')
+}
+
+function onBiasEnter(c: number) {
+  hoverBias.value = c; hoverRow.value = null; hoverCell.value = null
+  selSvc.setHover({ kind: 'feature', idx: c }, 'weights')
+}
+function onBiasClick(c: number) {
+  selSvc.setSelected({ kind: 'feature', idx: c }, 'weights')
 }
 
 // ── Color matching AutoencoderView neuron colors ──────────────
@@ -117,8 +153,9 @@ function sub(i: number): string {
             v-for="c in n" :key="c"
             class="col-header"
             :class="{ highlighted: colHeaderHighlighted(c - 1), dimmed: isActive() && !colHeaderHighlighted(c - 1) }"
-            @mouseenter="hoverCol = c - 1; hoverCell = null; hoverBias = null"
+            @mouseenter="onColEnter(c - 1)"
             @mouseleave="clearHover"
+            @click="onColClick(c - 1)"
           >
             <span class="ann-bold">f</span><span class="ann-sub">{{ sub(c - 1) }}</span>
           </div>
@@ -133,8 +170,9 @@ function sub(i: number): string {
               v-for="r in m" :key="r"
               class="row-header"
               :class="{ highlighted: rowHeaderHighlighted(r - 1), dimmed: isActive() && !rowHeaderHighlighted(r - 1) }"
-              @mouseenter="hoverRow = r - 1; hoverCell = null"
+              @mouseenter="onRowEnter(r - 1)"
               @mouseleave="clearHover"
+              @click="onRowClick(r - 1)"
             >
               <span class="ann-bold">h</span><span class="ann-sub">{{ sub(r - 1) }}</span>
             </div>
@@ -157,8 +195,9 @@ function sub(i: number): string {
                   dimmed: isActive() && !cellHighlighted(r - 1, c - 1),
                 }"
                 :style="{ background: valColor(wVal(r - 1, c - 1)) }"
-                @mouseenter="hoverCell = { r: r - 1, c: c - 1 }; hoverRow = null; hoverCol = null; hoverBias = null"
+                @mouseenter="onCellEnter(r - 1, c - 1)"
                 @mouseleave="clearHover"
+                @click="onCellClick(r - 1, c - 1)"
               >
                 <span class="cell-val">{{ fmt(wVal(r - 1, c - 1)) }}</span>
               </div>
@@ -205,8 +244,9 @@ function sub(i: number): string {
                 dimmed: isActive() && !biasHighlighted(c - 1),
               }"
               :style="{ background: valColor(bVal(c - 1)) }"
-              @mouseenter="hoverBias = c - 1; hoverRow = null; hoverCell = null"
+              @mouseenter="onBiasEnter(c - 1)"
               @mouseleave="clearHover"
+              @click="onBiasClick(c - 1)"
             >
               <span class="cell-val">{{ fmt(bVal(c - 1)) }}</span>
             </div>
