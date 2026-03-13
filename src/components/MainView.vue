@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { provide } from 'vue'
+import { ref, computed, provide } from 'vue'
 import { createAutoencoderService } from '../services/AutoencoderService'
 import { createSelectionService } from '../services/SelectionService'
 import AutoencoderView from './AutoencoderView.vue'
@@ -8,13 +8,27 @@ import WeightView from './WeightView.vue'
 import TrainingConfigView from './TrainingConfigView.vue'
 import TrainingStatsView from './TrainingStatsView.vue'
 
-// Create and provide the autoencoder service to all descendants
 const autoencoderService = createAutoencoderService()
 provide('autoencoderService', autoencoderService)
 
-// Create and provide the selection service to all descendants
 const selSvc = createSelectionService()
 provide('selectionService', selSvc)
+
+// ── Combined panel tabs ───────────────────────────────────────
+type PanelTab = 'training' | 'statistics' | 'weights'
+const activeTab = ref<PanelTab>('training')
+
+// ── Training footer (progress + button) ───────────────────────
+const svc = autoencoderService
+
+const progressFrac = computed(() => {
+  const done = svc.step.value - svc.trainingStartStep.value
+  return Math.min(1, Math.max(0, done / svc.config.trainingSteps))
+})
+const stepsCompleted = computed(() =>
+  Math.max(0, svc.step.value - svc.trainingStartStep.value)
+)
+const lossDisplay = computed(() => svc.loss.value.toFixed(4))
 </script>
 
 <template>
@@ -24,35 +38,74 @@ provide('selectionService', selSvc)
     </header>
 
     <main class="app-content">
-      <!-- Top row: Autoencoder (left) + Embedding space (right) -->
-      <div class="top-row">
-        <section class="autoencoder-section">
+      <div class="app-layout">
+
+        <!-- ── Left column: Autoencoder (65%) ─────────────── -->
+        <section class="left-col">
           <h2 class="section-title">Autoencoder</h2>
           <AutoencoderView />
         </section>
 
-        <section class="panel embedding-panel">
-          <h2 class="panel-title">Embedding Space</h2>
-          <EmbeddingView />
-        </section>
-      </div>
+        <!-- ── Right column: Embedding + Combined panel (35%) -->
+        <div class="right-col">
 
-      <!-- Secondary row: Weights + Training config + Training stats -->
-      <div class="secondary-row">
-        <section class="panel weight-panel">
-          <h2 class="panel-title">Weights</h2>
-          <WeightView />
-        </section>
+          <!-- Embedding Space -->
+          <section class="panel embedding-panel">
+            <h2 class="panel-title">Embedding Space</h2>
+            <EmbeddingView />
+          </section>
 
-        <section class="panel training-config-panel">
-          <h2 class="panel-title">Training</h2>
-          <TrainingConfigView />
-        </section>
+          <!-- Combined tabbed panel -->
+          <div class="panel combined-panel">
 
-        <section class="panel training-stats-panel">
-          <h2 class="panel-title">Statistics</h2>
-          <TrainingStatsView />
-        </section>
+            <!-- Tab bar -->
+            <div class="combined-tab-bar">
+              <button
+                v-for="tab in (['training', 'statistics', 'weights'] as PanelTab[])"
+                :key="tab"
+                class="combined-tab-btn"
+                :class="{ active: activeTab === tab }"
+                @click="activeTab = tab"
+              >
+                {{ tab === 'training' ? 'Training' : tab === 'statistics' ? 'Statistics' : 'Weights' }}
+              </button>
+            </div>
+
+            <!-- Tab panes — keep all mounted so state is preserved -->
+            <div class="tab-pane" v-show="activeTab === 'training'">
+              <TrainingConfigView />
+            </div>
+            <div class="tab-pane" v-show="activeTab === 'statistics'">
+              <TrainingStatsView />
+            </div>
+            <div class="tab-pane tab-pane--weights" v-show="activeTab === 'weights'">
+              <WeightView />
+            </div>
+
+            <!-- Always-visible training footer -->
+            <div class="training-footer">
+              <div class="footer-progress">
+                <div class="progress-meta">
+                  <span class="progress-steps">
+                    {{ stepsCompleted.toLocaleString() }} / {{ svc.config.trainingSteps.toLocaleString() }}
+                  </span>
+                  <span v-if="svc.step.value > 0" class="progress-loss">loss {{ lossDisplay }}</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" :style="{ width: `${progressFrac * 100}%` }" />
+                </div>
+              </div>
+              <button
+                class="train-btn"
+                :class="{ 'train-btn--stop': svc.isTraining.value }"
+                @click="svc.isTraining.value ? svc.stopTraining() : svc.startTraining()"
+              >
+                {{ svc.isTraining.value ? '■ Stop Training' : '▶ Start Training' }}
+              </button>
+            </div>
+
+          </div>
+        </div>
       </div>
     </main>
 
@@ -102,7 +155,6 @@ provide('selectionService', selSvc)
   background: var(--color-bg-secondary);
   display: flex;
   flex-direction: column;
-  /* leave room for the fixed debug bar */
   padding-bottom: 2rem;
 }
 
@@ -119,45 +171,38 @@ provide('selectionService', selSvc)
   margin: 0 0 0.25rem;
 }
 
-.app-subtitle {
-  font-size: 0.88rem;
-  color: var(--color-text-secondary);
-  margin: 0;
-}
-
 .app-content {
   padding: 1.5rem 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
   flex: 1;
-
-  max-width: 1400px;
+  width: 100%;
+  max-width: 1200px;
   align-self: center;
+  box-sizing: border-box;
 }
 
-/* Top row: Autoencoder left, Embedding right */
-.top-row {
-  display: flex;
+/* ── Two-column layout ───────────────────────────────────────── */
+.app-layout {
+  display: grid;
+  grid-template-columns: 65fr 35fr;
   gap: 2rem;
   align-items: flex-start;
-  flex-wrap: wrap;
 }
 
-/* Autoencoder renders directly on the page — no card wrapper */
-.autoencoder-section {
+.left-col {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  flex: 1 1 auto;
   min-width: 0;
 }
 
-.embedding-panel {
-  flex: 1 1;
-  min-width: 220px;
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
 }
 
+/* ── Shared panel style ──────────────────────────────────────── */
 .panel {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
@@ -187,35 +232,118 @@ provide('selectionService', selSvc)
   margin: 0;
 }
 
-.secondary-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  align-items: flex-start;
+/* ── Combined panel tabs ─────────────────────────────────────── */
+.combined-panel {
+  gap: 0;
 }
 
-.weight-panel {
-  flex: 1 1 auto;
-  min-width: 0;
+.combined-tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  margin: 0 -1.25rem 0.75rem;
+  padding: 0 1.25rem;
+}
+
+.combined-tab-btn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: color 0.12s, border-color 0.12s;
+  text-transform: capitalize;
+}
+.combined-tab-btn:hover {
+  color: var(--color-text-primary);
+}
+.combined-tab-btn.active {
+  color: var(--color-interactive);
+  border-bottom-color: var(--color-interactive);
+}
+
+.tab-pane {
+  padding: 0.25rem 0 0.5rem;
+}
+
+.tab-pane--weights {
   overflow-x: auto;
 }
 
-.training-config-panel {
-  flex: 0 1 260px;
-  min-width: 200px;
+/* ── Training footer ─────────────────────────────────────────── */
+.training-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-top: 0.75rem;
+  margin-top: auto;
+  border-top: 1px solid var(--color-border);
 }
 
-.training-stats-panel {
-  flex: 1 1 300px;
-  min-width: 250px;
+.footer-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
-/* ── Selection debug bar ──────────────────────────────── */
+.progress-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.progress-steps {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-label);
+}
+
+.progress-loss {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+
+.progress-track {
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--color-interactive);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+.train-btn {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  background: var(--color-interactive);
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+.train-btn:hover { background: var(--color-interactive-hover); }
+.train-btn--stop { background: #64748b; }
+.train-btn--stop:hover { background: #475569; }
+
+/* ── Selection debug bar ─────────────────────────────────────── */
 .debug-bar {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 0; left: 0; right: 0;
   z-index: 100;
   display: flex;
   align-items: center;
@@ -231,11 +359,7 @@ provide('selectionService', selSvc)
   user-select: none;
 }
 
-.debug-section {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
+.debug-section { display: flex; align-items: center; gap: 0.3rem; }
 
 .debug-label {
   font-weight: 600;
@@ -245,27 +369,11 @@ provide('selectionService', selSvc)
   font-size: 0.62rem;
 }
 
-.debug-kind {
-  color: #e2e8f0;
-  font-weight: 600;
-}
-
-.debug-coords {
-  color: #7dd3fc;
-}
-
-.debug-origin {
-  color: #64748b;
-  font-style: italic;
-}
-
-.debug-none {
-  color: #334155;
-}
-
-.debug-divider {
-  color: #334155;
-}
+.debug-kind   { color: #e2e8f0; font-weight: 600; }
+.debug-coords { color: #7dd3fc; }
+.debug-origin { color: #64748b; font-style: italic; }
+.debug-none   { color: #334155; }
+.debug-divider { color: #334155; }
 
 .debug-deselect {
   margin-left: auto;
@@ -279,7 +387,6 @@ provide('selectionService', selSvc)
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
-
 .debug-deselect:hover {
   background: rgba(255,255,255,0.12);
   color: #e2e8f0;

@@ -100,3 +100,15 @@ We last made great adjustments to the EmbeddingView.vue component, which uses Th
 We will need to further advance it, but my concern is that the file is already very big (580 lines of code) and this is not modular/ easily adjustable.
 Please review the EmbeddingView.vue component and think of ways on how to make this more modular, e.g. by creating a subfolder embeddingView and putting the component in there, then putting the constants into constants.ts, the styling into style.css, etc.
 Also review if the code can generally by made easier; for example by reusing vectors and only changing their length/ direction, etc. Assume the role of an expert Three.js and Vue.js developer who cares about modularity and clean code and review the code on how to adjust it so that it is easily maintainable and adjustable. Create a plan on how to implement the changes.
+
+---
+
+
+Lets next update the MainView layout for desktop.
+Right now, it has 2 rows: .top-row and .secondary-row. This is too much information at once. I want to restructure it: 
+* divide main view into left and right
+  * left: AutoEncoder component, taking up 65% of the width
+  * right: 2 stacked rows, taking up the other 35%
+    * first row: Embedding Space View
+    * second row: combined view with 3 tabs: Training (showing the configuration inputs), Statistics and Weights
+    * at the bottom of the combined view, there should be the Start Training Button and the progress bar (no matter which tab is selected)

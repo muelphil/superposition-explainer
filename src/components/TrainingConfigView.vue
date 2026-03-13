@@ -24,16 +24,6 @@ function fmtLR(lr: number) {
   if (lr < 0.01)  return lr.toFixed(4)
   return lr.toFixed(3)
 }
-
-// Progress
-const progressFrac = computed(() => {
-  const done = svc.step.value - svc.trainingStartStep.value
-  return Math.min(1, Math.max(0, done / svc.config.trainingSteps))
-})
-const stepsCompleted = computed(() =>
-  Math.max(0, svc.step.value - svc.trainingStartStep.value)
-)
-const lossDisplay = computed(() => svc.loss.value.toFixed(4))
 </script>
 
 <template>
@@ -74,26 +64,6 @@ const lossDisplay = computed(() => svc.loss.value.toFixed(4))
       <span class="cfg-val">{{ svc.config.trainingSteps.toLocaleString() }}</span>
 
     </div>
-
-    <!-- ── Progress ──────────────────────────────────────── -->
-    <div class="progress-section">
-      <div class="progress-meta">
-        <span class="progress-steps">{{ stepsCompleted.toLocaleString() }} / {{ svc.config.trainingSteps.toLocaleString() }}</span>
-        <span v-if="svc.step.value > 0" class="progress-loss">loss {{ lossDisplay }}</span>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill" :style="{ width: `${progressFrac * 100}%` }" />
-      </div>
-    </div>
-
-    <!-- ── Start / Stop ───────────────────────────────────── -->
-    <button
-      class="train-btn"
-      :class="{ 'train-btn--stop': isTraining }"
-      @click="isTraining ? svc.stopTraining() : svc.startTraining()"
-    >
-      {{ isTraining ? '■ Stop Training' : '▶ Start Training' }}
-    </button>
 
   </div>
 </template>
@@ -190,69 +160,6 @@ const lossDisplay = computed(() => svc.loss.value.toFixed(4))
 }
 
 /* ── Progress ──────────────────────────────────────────────── */
-.progress-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.progress-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
-.progress-steps {
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-label);
-}
-
-.progress-loss {
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-secondary);
-}
-
-.progress-track {
-  height: 4px;
-  background: var(--color-border);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--color-interactive);
-  border-radius: 2px;
-  transition: width 0.1s linear;
-}
-
-/* ── Start / Stop button ──────────────────────────────────── */
-.train-btn {
-  width: 100%;
-  padding: 0.5rem 1rem;
-  font-size: 0.88rem;
-  font-weight: 600;
-  font-family: inherit;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
-  background: var(--color-interactive);
-  color: #fff;
-  letter-spacing: 0.02em;
-}
-.train-btn:hover {
-  background: var(--color-interactive-hover);
-  border-color: transparent;
-}
-.train-btn--stop {
-  background: #64748b;
-}
-.train-btn--stop:hover {
-  background: #475569;
-  border-color: transparent;
-}
+/* (progress bar and start/stop button live in MainView's combined panel footer) */
 </style>
 
