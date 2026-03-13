@@ -74,7 +74,7 @@ export function createAutoencoderService() {
   const defaultConfig: AutoencoderConfig = {
     inputDim: 5,
     embeddingDim: 2,
-    sparsity: 0.7,
+    sparsity: 0.2,
     featureDecay: 0.9,
     learningRate: 0.01,
     batchSize: 64,
@@ -463,6 +463,7 @@ export function createAutoencoderService() {
     initialize,
     resetWeights,
     trainingStartStep,
+    generateSample: _generateSample,
   }
 }
 

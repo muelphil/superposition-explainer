@@ -112,3 +112,36 @@ Right now, it has 2 rows: .top-row and .secondary-row. This is too much informat
     * first row: Embedding Space View
     * second row: combined view with 3 tabs: Training (showing the configuration inputs), Statistics and Weights
     * at the bottom of the combined view, there should be the Start Training Button and the progress bar (no matter which tab is selected)
+
+---
+
+Lets next advance and improve the Autoencoder Component visualization and UX. Lets start by adjusting the weight visualization:
+* Replace the weights, which are currently one filled line by dashed lines. While training is in progress, the dashes of the lines should appear to be moving forward, by animating the stroke-dashoffset
+* The dashes need to cleanly be cut off at the neuron. They are currently starting/ stopping at the beginning/end of neurons (left or right side of neurons), but they should be going in an being cut off from the circle using clipPath/mask
+* make the spread of the lines going into the neurons dependent on the neurons size
+* scale the neurons size so that the area is scaling linearly with the importance of the neuron
+* make the .dist-svg svgs width be dependent on the container. Currently, when decreasing .input-value width, the slider and svg backdrop do not correctly scale with it
+* make the sliders/ backdrop normal distribution colors use the individual feature colors instead of orange (see `src\utils\featureColors`)
+* Place the +/- buttons  beneath Encoder/ Embedding with a neuron count label on top (so small label (i.e. "5 neurons", directly underneath the 2 small buttons +/-))
+* Equally, put the total loss above the outputs, directly under the "Output" header
+
+---
+
+This is okay, but you ignored some constraints and we need to make some adjustments:
+* put the neuron +/- input directly under the Encoder/Embedding header
+* Make the weights only dashed during traing, remove the dashes by disabling `stroke-dasharray` when not training
+* put a small button with a reload under the input that will sample new input values
+* when clicking the input features number, when it is non 0, make it 0, when it is 0, sample from the distribution for a value, basically making it a toggle between on and off.
+* put a small label above the total loss "weighted loss"
+* directly under the decoder header put Bias/RELU
+* This way, under each header of the autoencoder architecture there is something for info or configuration
+
+---
+
+* dont show progress bar
+* remove steps concept, just put reset and start/stop training next to each other
+* reset training statistics when the weights reset
+* reset weights button in training configuration
+
+* RELU+ bias
+* 

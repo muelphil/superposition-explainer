@@ -1,31 +1,62 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { featureColorHex } from '../utils/featureColor'
 
 const props = defineProps<{
-  modelValue: number
-  label?: string
-  disabled?: boolean
+  modelValue:   number
+  label?:       string
+  disabled?:    boolean
+  featureIdx:   number
+  featureCount: number
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: number]
+  'resample': []
 }>()
+
+/** Toggle: if non-zero → set to 0; if zero → ask parent to resample */
+function onToggleClick() {
+  if (props.modelValue > 0.005) {
+    emit('update:modelValue', 0)
+  } else {
+    emit('resample')
+  }
+}
 
 function normalPdf(x: number, mu = 0, sigma = 1): number {
   return (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((x - mu) / sigma) ** 2)
 }
 
-const CURVE_WIDTH = 88
+const CURVE_WIDTH  = 88
 const CURVE_HEIGHT = 36
 const X_MIN = 0
 const X_MAX = 3
 
+// ── Feature color ──────────────────────────────────────────────
+const featureHex = computed(() => featureColorHex(props.featureIdx, props.featureCount))
+const gradId     = computed(() => `dist-grad-${props.featureIdx}`)
+
+/** Thumb color: white → feature color as value increases 0→3 */
+const thumbColor = computed(() => {
+  const hex = featureHex.value
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  const t = Math.min(props.modelValue / X_MAX, 1)
+  return `rgb(${Math.round(255 + (r - 255) * t)},${Math.round(255 + (g - 255) * t)},${Math.round(255 + (b - 255) * t)})`
+})
+
+/** Slider track gradient: white → feature color */
+const sliderGradient = computed(() => `linear-gradient(to right, #ffffff, ${featureHex.value})`)
+
+// ── SVG paths (coordinate system: 0 0 88 36 via viewBox) ──────
 const strokePath = computed(() => {
   const steps = 80
   const pts: string[] = []
   for (let i = 0; i <= steps; i++) {
-    const x = X_MIN + (i / steps) * (X_MAX - X_MIN)
-    const pdf = normalPdf(x)
+    const x    = X_MIN + (i / steps) * (X_MAX - X_MIN)
+    const pdf  = normalPdf(x)
     const svgX = ((x - X_MIN) / (X_MAX - X_MIN)) * CURVE_WIDTH
     const svgY = CURVE_HEIGHT - pdf * CURVE_HEIGHT * 2.5
     pts.push(`${i === 0 ? 'M' : 'L'} ${svgX.toFixed(1)} ${svgY.toFixed(1)}`)
@@ -35,10 +66,10 @@ const strokePath = computed(() => {
 
 const fillPath = computed(() => {
   const steps = 80
-  const pts = [`M 0 ${CURVE_HEIGHT}`]
+  const pts   = [`M 0 ${CURVE_HEIGHT}`]
   for (let i = 0; i <= steps; i++) {
-    const x = X_MIN + (i / steps) * (X_MAX - X_MIN)
-    const pdf = normalPdf(x)
+    const x    = X_MIN + (i / steps) * (X_MAX - X_MIN)
+    const pdf  = normalPdf(x)
     const svgX = ((x - X_MIN) / (X_MAX - X_MIN)) * CURVE_WIDTH
     const svgY = CURVE_HEIGHT - pdf * CURVE_HEIGHT * 2.5
     pts.push(`L ${svgX.toFixed(1)} ${svgY.toFixed(1)}`)
@@ -47,38 +78,33 @@ const fillPath = computed(() => {
   return pts.join(' ')
 })
 
-/** CSS color for thumb: white → orange as value increases from 0 to 3 */
-const thumbColor = computed(() => {
-  const t = Math.min(props.modelValue / 3, 1)
-  const g = Math.round(255 - t * (255 - 146))
-  const b = Math.round(255 - t * 255)
-  return `rgb(255,${g},${b})`
-})
-
 function onSliderChange(event: Event) {
-  const val = parseFloat((event.target as HTMLInputElement).value)
-  emit('update:modelValue', val)
+  emit('update:modelValue', parseFloat((event.target as HTMLInputElement).value))
 }
 </script>
 
 <template>
   <div class="input-value">
     <svg
-      :width="CURVE_WIDTH"
-      :height="CURVE_HEIGHT"
+      :viewBox="`0 0 ${CURVE_WIDTH} ${CURVE_HEIGHT}`"
+      preserveAspectRatio="none"
       class="dist-svg"
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="dist-grad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.3" />
-          <stop offset="100%" stop-color="#fdba74" stop-opacity="0.7" />
+        <linearGradient :id="gradId" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%"   stop-color="#ffffff"      stop-opacity="0.3" />
+          <stop offset="100%" :stop-color="featureHex"  stop-opacity="0.7" />
         </linearGradient>
       </defs>
-      <path :d="fillPath" class="dist-fill" />
+      <path :d="fillPath"   :fill="`url(#${gradId})`" />
       <path :d="strokePath" class="dist-stroke" />
     </svg>
-    <span class="value-label">{{ modelValue.toFixed(2) }}</span>
+    <span
+      class="value-label"
+      @click="onToggleClick"
+      :title="modelValue > 0.005 ? 'Click to zero' : 'Click to sample'"
+    >{{ modelValue.toFixed(2) }}</span>
     <input
       type="range"
       :min="X_MIN"
@@ -87,7 +113,7 @@ function onSliderChange(event: Event) {
       :value="modelValue"
       :disabled="props.disabled"
       class="dist-slider"
-      :style="{ '--thumb-color': thumbColor }"
+      :style="{ '--thumb-color': thumbColor, background: sliderGradient }"
       @input="onSliderChange"
       :aria-label="label ?? 'Input value'"
     />
@@ -97,7 +123,7 @@ function onSliderChange(event: Event) {
 <style scoped>
 .input-value {
   position: relative;
-  width: 88px;
+  width: 100%;
   height: 42px;
 }
 
@@ -105,13 +131,10 @@ function onSliderChange(event: Event) {
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 36px;
   display: block;
 }
-
-.dist-fill {
-  fill: url(#dist-grad);
-}
-
 .dist-stroke {
   fill: none;
   stroke: #cbd5e1;
@@ -126,21 +149,22 @@ function onSliderChange(event: Event) {
   font-weight: 500;
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
-  pointer-events: none;
+  cursor: pointer;
   z-index: 3;
   white-space: nowrap;
   line-height: 1.2;
+  user-select: none;
 }
+.value-label:hover { color: var(--color-interactive, #6366f1); }
 
 .dist-slider {
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 88px;
+  width: 100%;
   -webkit-appearance: none;
   appearance: none;
   height: 3px;
-  background: linear-gradient(to right, #ffffff, #fdba74);
   border-radius: 2px;
   outline: none;
   cursor: pointer;
