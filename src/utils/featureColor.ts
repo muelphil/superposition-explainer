@@ -5,11 +5,15 @@ const YELLOW_RGB = [234, 179,  8]   // #eab308
 const CSS_GREEN  = `rgb(${GREEN_RGB.join(', ')})`
 const CSS_YELLOW = `rgb(${YELLOW_RGB.join(', ')})`
 
-/** CSS color-mix() blending green→yellow for feature i out of n total features */
+/**
+ * CSS color for feature i out of n total features.
+ * Uses `color(srgb-linear ...)` so the browser applies sRGB gamma encoding,
+ * matching Three.js r152+ which stores `new THREE.Color(r, g, b)` as linear
+ * and also applies sRGB gamma via outputColorSpace = SRGBColorSpace.
+ */
 export function featureColorCss(idx: number, amount_features: number): string {
-  if (amount_features <= 1) return CSS_GREEN
-  const pct = (idx / (amount_features - 1)) * 100
-  return `color-mix(in srgb, ${CSS_YELLOW} ${pct.toFixed(1)}%, ${CSS_GREEN})`
+  const [r, g, b] = featureColorRGB(idx, amount_features)
+  return `color(srgb-linear ${r.toFixed(4)} ${g.toFixed(4)} ${b.toFixed(4)})`
 }
 
 /** CSS rgb() string for feature i out of n total features */

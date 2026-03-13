@@ -91,5 +91,5 @@ Great. Let's start reworking the Embedding Space View:
 This is good, but:
 * place the h_1, h_2, h_3 labels next to the axes arrows, not on top of them
 * increase the initial zoom in three.js so that it automatically perfectly fits the coordinate system
-* make the feature arrows slightly thicker
-* make sure that the color mix color space is correct in featureColor -- currently the three js and the css colors are not looking the same.
+* make the feature arrows slightly thicker -- make this change surgically, dont implement tons of new code or functions for this. Only extract the arrow head min/max values into constant variables that I can adjust and make them slightly higher.
+* make sure that the color mix color space is correct in featureColor -- currently the three js and the css colors are not looking the same. The three js colors are the correct ones, the color mix css colors are wrong.
