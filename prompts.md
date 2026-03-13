@@ -93,3 +93,10 @@ This is good, but:
 * increase the initial zoom in three.js so that it automatically perfectly fits the coordinate system
 * make the feature arrows slightly thicker -- make this change surgically, dont implement tons of new code or functions for this. Only extract the arrow head min/max values into constant variables that I can adjust and make them slightly higher.
 * make sure that the color mix color space is correct in featureColor -- currently the three js and the css colors are not looking the same. The three js colors are the correct ones, the color mix css colors are wrong.
+
+---
+
+We last made great adjustments to the EmbeddingView.vue component, which uses Three.js to interactively show the Embedding Space Feature Vectors.
+We will need to further advance it, but my concern is that the file is already very big (580 lines of code) and this is not modular/ easily adjustable.
+Please review the EmbeddingView.vue component and think of ways on how to make this more modular, e.g. by creating a subfolder embeddingView and putting the component in there, then putting the constants into constants.ts, the styling into style.css, etc.
+Also review if the code can generally by made easier; for example by reusing vectors and only changing their length/ direction, etc. Assume the role of an expert Three.js and Vue.js developer who cares about modularity and clean code and review the code on how to adjust it so that it is easily maintainable and adjustable. Create a plan on how to implement the changes.

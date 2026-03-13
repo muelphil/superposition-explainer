@@ -3,7 +3,7 @@ import { provide } from 'vue'
 import { createAutoencoderService } from '../services/AutoencoderService'
 import { createSelectionService } from '../services/SelectionService'
 import AutoencoderView from './AutoencoderView.vue'
-import EmbeddingView from './EmbeddingView.vue'
+import EmbeddingView from './embeddingView/EmbeddingView.vue'
 import WeightView from './WeightView.vue'
 import TrainingConfigView from './TrainingConfigView.vue'
 import TrainingStatsView from './TrainingStatsView.vue'
@@ -131,6 +131,9 @@ provide('selectionService', selSvc)
   flex-direction: column;
   gap: 2rem;
   flex: 1;
+
+  max-width: 1400px;
+  align-self: center;
 }
 
 /* Top row: Autoencoder left, Embedding right */
