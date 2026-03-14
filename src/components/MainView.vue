@@ -95,13 +95,21 @@ const lossDisplay = computed(() => svc.loss.value.toFixed(4))
                   <div class="progress-fill" :style="{ width: `${progressFrac * 100}%` }" />
                 </div>
               </div>
-              <button
-                class="train-btn"
-                :class="{ 'train-btn--stop': svc.isTraining.value }"
-                @click="svc.isTraining.value ? svc.stopTraining() : svc.startTraining()"
-              >
-                {{ svc.isTraining.value ? '■ Stop Training' : '▶ Start Training' }}
-              </button>
+              <div class="footer-btns">
+                <button
+                  class="reset-btn"
+                  :disabled="svc.isTraining.value"
+                  @click="svc.resetWeights()"
+                  title="Re-initialise weights (Xavier normal, bias = 0)"
+                >↺ Reset</button>
+                <button
+                  class="train-btn"
+                  :class="{ 'train-btn--stop': svc.isTraining.value }"
+                  @click="svc.isTraining.value ? svc.stopTraining() : svc.startTraining()"
+                >
+                  {{ svc.isTraining.value ? '■ Stop Training' : '▶ Start Training' }}
+                </button>
+              </div>
             </div>
 
           </div>
@@ -322,8 +330,29 @@ const lossDisplay = computed(() => svc.loss.value.toFixed(4))
   transition: width 0.1s linear;
 }
 
+.footer-btns {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.reset-btn {
+  flex: 0 0 auto;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  background: #f1f5f9;
+  color: #475569;
+}
+.reset-btn:hover:not(:disabled) { background: #e2e8f0; }
+.reset-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
 .train-btn {
-  width: 100%;
+  flex: 1;
   padding: 0.5rem 1rem;
   font-size: 0.88rem;
   font-weight: 600;

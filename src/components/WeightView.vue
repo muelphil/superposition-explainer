@@ -118,6 +118,15 @@ function bVal(c: number): number {
   return svc.b.value[c] ?? 0
 }
 
+function featureVecLength(c: number): number {
+  let sum = 0
+  for (let k = 0; k < m.value; k++) {
+    const w = svc.W.value[k]?.[c] ?? 0
+    sum += w * w
+  }
+  return Math.sqrt(sum)
+}
+
 // Subscript helpers
 function sub(i: number): string {
   return String(i + 1)
@@ -130,16 +139,6 @@ function sub(i: number): string {
 <template>
   <div class="wv-root" @mouseleave="clearHover">
 
-    <!-- Reset button -->
-    <button
-      class="reset-btn"
-      :disabled="svc.isTraining.value"
-      @click="svc.resetWeights()"
-      title="Re-initialise weights with Xavier normal, bias = 0"
-    >
-      ↺ Reset weights
-    </button>
-
     <!-- ══ Weight matrix W ══════════════════════════════════════ -->
     <div class="matrix-section">
       <div class="matrix-title">W</div>
@@ -147,24 +146,24 @@ function sub(i: number): string {
       <div class="matrix-layout">
         <!-- Column headers row -->
         <div class="col-headers-row">
-          <div class="corner" /><!-- aligns with row labels -->
-          <div class="col-header-spacer" /><!-- aligns with bracket -->
+          <div class="corner" />
+          <div class="col-header-spacer" />
           <div
             v-for="c in n" :key="c"
             class="col-header"
             :class="{ highlighted: colHeaderHighlighted(c - 1), dimmed: isActive() && !colHeaderHighlighted(c - 1) }"
+            :title="`f${sub(c - 1)}  |f| = ${featureVecLength(c - 1).toFixed(3)}`"
             @mouseenter="onColEnter(c - 1)"
             @mouseleave="clearHover"
             @click="onColClick(c - 1)"
           >
             <span class="ann-bold">f</span><span class="ann-sub">{{ sub(c - 1) }}</span>
           </div>
-          <div class="col-header-spacer" /><!-- aligns with right bracket -->
+          <div class="col-header-spacer" />
         </div>
 
-        <!-- Matrix body row: row-labels | [ | cells | ] -->
+        <!-- Matrix body: row-labels | [ | cells | ] -->
         <div class="matrix-body-row">
-          <!-- Row labels -->
           <div class="row-labels">
             <div
               v-for="r in m" :key="r"
@@ -177,15 +176,8 @@ function sub(i: number): string {
               <span class="ann-bold">h</span><span class="ann-sub">{{ sub(r - 1) }}</span>
             </div>
           </div>
-
-          <!-- Left bracket -->
           <div class="bracket bracket-left" />
-
-          <!-- Cell grid -->
-          <div
-            class="cell-grid"
-            :style="{ gridTemplateColumns: `repeat(${n}, 1fr)` }"
-          >
+          <div class="cell-grid" :style="{ gridTemplateColumns: `repeat(${n}, 1fr)` }">
             <template v-for="r in m" :key="r">
               <div
                 v-for="c in n" :key="`${r}-${c}`"
@@ -203,39 +195,22 @@ function sub(i: number): string {
               </div>
             </template>
           </div>
-
-          <!-- Right bracket -->
           <div class="bracket bracket-right" />
         </div>
       </div>
     </div>
 
     <!-- ══ Bias vector b ════════════════════════════════════════ -->
-    <div class="matrix-section bias-section">
+    <div class="matrix-section">
       <div class="matrix-title">b</div>
 
       <div class="matrix-layout">
-        <!-- Spacer to align with W column headers -->
-        <div class="col-headers-row">
-          <div class="corner" />
-          <div class="col-header-spacer" />
-          <div
-            v-for="c in n" :key="c"
-            class="col-header col-header-ghost"
-          />
-          <div class="col-header-spacer" />
-        </div>
-
-        <!-- Bias body -->
         <div class="matrix-body-row">
           <div class="row-labels">
             <div class="row-header row-header-ghost" />
           </div>
           <div class="bracket bracket-left" />
-          <div
-            class="cell-grid"
-            :style="{ gridTemplateColumns: `repeat(${n}, 1fr)` }"
-          >
+          <div class="cell-grid" :style="{ gridTemplateColumns: `repeat(${n}, 1fr)` }">
             <div
               v-for="c in n" :key="c"
               class="matrix-cell"
@@ -272,22 +247,18 @@ function sub(i: number): string {
 /* ── Section ──────────────────────────────────────────────────── */
 .matrix-section {
   display: flex;
-  align-items: flex-start;
-  gap: 0.4rem;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .matrix-title {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-style: italic;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text-primary);
-  margin-top: 1.7rem; /* align with matrix body, clearing col headers */
-  min-width: 1rem;
-  text-align: center;
-}
-
-.bias-section .matrix-title {
-  margin-top: 1.35rem;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  line-height: 1;
+  padding-left: 2.5rem; /* indent past corner + bracket so it aligns above cells */
 }
 
 /* ── Layout grid (col-headers + body stacked) ─────────────────── */
@@ -443,26 +414,5 @@ function sub(i: number): string {
   opacity: 0.35;
 }
 
-/* ── Reset button ─────────────────────────────────────────────── */
-.reset-btn {
-  align-self: flex-start;
-  font-size: 0.78rem;
-  font-family: inherit;
-  font-weight: 500;
-  color: #475569;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 0.3rem 0.75rem;
-  cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
-}
-.reset-btn:hover:not(:disabled) {
-  background: #e2e8f0;
-}
-.reset-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-</style>
 
+</style>
