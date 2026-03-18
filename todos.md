@@ -47,6 +47,9 @@ Future:
 * Autoencoder View
 * increase max features to 12?
 
+* add Embedding Vector View as Tab on Embedding Space visualization
+  * show current embedding vector for input as linear combination of embedding vectors
+* add gradient in the background of embedding vector to visualize what is classified and how much as that feature
 
 
 # What I still need to figure out

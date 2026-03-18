@@ -76,7 +76,7 @@ export function createAutoencoderService() {
     embeddingDim: 2,
     sparsity: 0.2,
     featureDecay: 0.9,
-    learningRate: 0.01,
+    learningRate: 0.015,
     batchSize: 64,
     trainingSteps: 10000,
   }

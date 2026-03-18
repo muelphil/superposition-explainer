@@ -312,8 +312,8 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
     <div class="sub-header-ctrl" style="grid-column: 3; grid-row: 2">
       <span class="neuron-count">{{ n }} neurons</span>
       <div class="dim-btns">
-        <button class="dim-btn" @click="addInputNeuron"    :disabled="!canAddInput"    title="Add input feature">+</button>
         <button class="dim-btn" @click="removeInputNeuron" :disabled="!canRemoveInput" title="Remove input feature">−</button>
+        <button class="dim-btn" @click="addInputNeuron"    :disabled="!canAddInput"    title="Add input feature">+</button>
       </div>
     </div>
 
@@ -321,8 +321,8 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
     <div class="sub-header-ctrl" style="grid-column: 5; grid-row: 2">
       <span class="neuron-count">{{ m }} neurons</span>
       <div class="dim-btns">
-        <button class="dim-btn" @click="addEmbeddingNeuron"    :disabled="!canAddEmb"    title="Add embedding dim">+</button>
         <button class="dim-btn" @click="removeEmbeddingNeuron" :disabled="!canRemoveEmb" title="Remove embedding dim">−</button>
+        <button class="dim-btn" @click="addEmbeddingNeuron"    :disabled="!canAddEmb"    title="Add embedding dim">+</button>
       </div>
     </div>
 
