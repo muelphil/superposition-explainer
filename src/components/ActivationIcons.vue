@@ -27,8 +27,8 @@ function valColor(val: number): string {
 
 const biasBackground = computed(() => valColor(props.biasVal))
 
-/** opacity 0.5 when ReLU is a no-op (pre > 0), 1.0 when it clips (pre ≤ 0) */
-const reluOpacity = computed(() => props.preActivation > 0 ? 0.5 : 1.0)
+/** true when ReLU is clipping the output (pre-activation ≤ 0) */
+const reluClipping = computed(() => props.preActivation <= 0)
 </script>
 
 <template>
@@ -45,10 +45,10 @@ const reluOpacity = computed(() => props.preActivation > 0 ? 0.5 : 1.0)
     <!-- ReLU icon -->
     <div
       class="act-icon relu-icon"
-      :style="{ opacity: reluOpacity }"
-      :title="preActivation > 0
-        ? `ReLU: active (pre = ${preActivation.toFixed(3)})`
-        : `ReLU: clipped (pre = ${preActivation.toFixed(3)})`"
+      :class="{ 'relu-clipping': reluClipping }"
+      :title="reluClipping
+        ? `ReLU: clipped (pre = ${preActivation.toFixed(3)})`
+        : `ReLU: active (pre = ${preActivation.toFixed(3)})`"
     >
       <span class="relu-svg" v-html="reluIconSvg" />
     </div>
@@ -57,6 +57,7 @@ const reluOpacity = computed(() => props.preActivation > 0 ? 0.5 : 1.0)
 
 <style scoped>
 .act-icons {
+  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -64,15 +65,14 @@ const reluOpacity = computed(() => props.preActivation > 0 ? 0.5 : 1.0)
 }
 
 .act-icon {
-  width: 26px;
-  height: 26px;
+  width: 19px;
+  height: 19px;
   border: 1px solid #d1d5db;
   border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: opacity 0.2s;
   overflow: hidden;
 }
 
@@ -90,7 +90,7 @@ const reluOpacity = computed(() => props.preActivation > 0 ? 0.5 : 1.0)
 }
 
 .bias-label :deep(.katex) {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: #374151;
 }
 
@@ -103,8 +103,8 @@ const reluOpacity = computed(() => props.preActivation > 0 ? 0.5 : 1.0)
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 14px;
+  width: 14px;
+  height: 11px;
   color: #6b7280;
   pointer-events: none;
 }
@@ -113,5 +113,16 @@ const reluOpacity = computed(() => props.preActivation > 0 ? 0.5 : 1.0)
   width: 100%;
   height: 100%;
   display: block;
+}
+
+/* Default: both segments use currentColor (#6b7280) */
+.relu-svg :deep(.relu-flat),
+.relu-svg :deep(.relu-rise) {
+  stroke: currentColor;
+}
+
+/* When ReLU is clipping (pre ≤ 0): flat segment turns blue */
+.relu-clipping .relu-svg :deep(.relu-flat) {
+  stroke: #3b82f6;
 }
 </style>

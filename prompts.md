@@ -169,4 +169,7 @@ Regarding the bias/RELU representation I would like you to implement the followi
 
 This is good but needs 2 adjustments:
 * Make the icons width: 19px; height: 19px; instead of 26px
-* I'd prefer'
+* I reviewed it and the opacity makes it hard to read. Both icons should be fully opaque. When relu is changing the output (non-negative input into relu) the left side of the grap of the relu icon should change colors from the dark grey to blue representing negative values. This may be achieved via css classes and adjustment of the css icon 
+* 
+
+I would  like to keep the symmetry of the AutoEncoder. By introducing an extra column for the bias/relu icons, this is lost. Can you instead place the icons to the left 
