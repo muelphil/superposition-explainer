@@ -371,6 +371,7 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
       <ActivationIcons
         :biasVal="svc.b.value[i] ?? 0"
         :preActivation="svc.currentPreActivation.value[i] ?? 0"
+        :featureIdx="i"
         :style="{ gridColumn: '7', gridRow: String(i + dataRowStart) }"
       />
 

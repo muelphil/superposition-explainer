@@ -4,8 +4,9 @@ import { renderLatexHtml } from '../utils/latex'
 import reluIconSvg from '../assets/relu-icon.svg?raw'
 
 const props = defineProps<{
-  biasVal:        number
-  preActivation:  number
+  biasVal:       number
+  preActivation: number
+  featureIdx:    number
 }>()
 
 /** Same colour scale as WeightView — positive→orange, negative→blue, zero→white */
@@ -26,29 +27,30 @@ function valColor(val: number): string {
 }
 
 const biasBackground = computed(() => valColor(props.biasVal))
+const biasLabel      = computed(() => renderLatexHtml(`b_{${props.featureIdx + 1}}`))
 
-/** true when ReLU is clipping the output (pre-activation ≤ 0) */
+/** ReLU clips when pre-activation ≤ 0 */
 const reluClipping = computed(() => props.preActivation <= 0)
 </script>
 
 <template>
   <div class="act-icons">
-    <!-- Bias icon -->
+    <!-- Bias icon: background encodes bias value, label shows b_i -->
     <div
       class="act-icon bias-icon"
       :style="{ background: biasBackground }"
-      :title="`bias b = ${biasVal.toFixed(3)}`"
+      :title="`b${featureIdx + 1} = ${biasVal.toFixed(3)}`"
     >
-      <span class="bias-label" v-html="renderLatexHtml('b')" />
+      <span class="bias-label" v-html="biasLabel" />
     </div>
 
-    <!-- ReLU icon -->
+    <!-- ReLU icon: white = passthrough, light blue = clipping -->
     <div
       class="act-icon relu-icon"
       :class="{ 'relu-clipping': reluClipping }"
       :title="reluClipping
-        ? `ReLU: clipped (pre = ${preActivation.toFixed(3)})`
-        : `ReLU: active (pre = ${preActivation.toFixed(3)})`"
+        ? `ReLU clipped (pre = ${preActivation.toFixed(3)})`
+        : `ReLU active  (pre = ${preActivation.toFixed(3)})`"
     >
       <span class="relu-svg" v-html="reluIconSvg" />
     </div>
@@ -57,11 +59,11 @@ const reluClipping = computed(() => props.preActivation <= 0)
 
 <style scoped>
 .act-icons {
-  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  z-index: 2;
 }
 
 .act-icon {
@@ -77,10 +79,6 @@ const reluClipping = computed(() => props.preActivation <= 0)
 }
 
 /* ── Bias icon ────────────────────────────────────────────── */
-.bias-icon {
-  /* background set via inline style */
-}
-
 .bias-label {
   display: flex;
   align-items: center;
@@ -90,13 +88,18 @@ const reluClipping = computed(() => props.preActivation <= 0)
 }
 
 .bias-label :deep(.katex) {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: #374151;
 }
 
 /* ── ReLU icon ────────────────────────────────────────────── */
 .relu-icon {
-  background: #f8fafc;
+  background: #ffffff;
+  transition: background 0.2s;
+}
+
+.relu-icon.relu-clipping {
+  background: #dbeafe;
 }
 
 .relu-svg {
@@ -113,16 +116,5 @@ const reluClipping = computed(() => props.preActivation <= 0)
   width: 100%;
   height: 100%;
   display: block;
-}
-
-/* Default: both segments use currentColor (#6b7280) */
-.relu-svg :deep(.relu-flat),
-.relu-svg :deep(.relu-rise) {
-  stroke: currentColor;
-}
-
-/* When ReLU is clipping (pre ≤ 0): flat segment turns blue */
-.relu-clipping .relu-svg :deep(.relu-flat) {
-  stroke: #3b82f6;
 }
 </style>
