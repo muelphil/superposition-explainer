@@ -170,6 +170,8 @@ Regarding the bias/RELU representation I would like you to implement the followi
 This is good but needs 2 adjustments:
 * Make the icons width: 19px; height: 19px; instead of 26px
 * I reviewed it and the opacity makes it hard to read. Both icons should be fully opaque. When relu is changing the output (non-negative input into relu) the left side of the grap of the relu icon should change colors from the dark grey to blue representing negative values. This may be achieved via css classes and adjustment of the css icon 
-* 
 
-I would  like to keep the symmetry of the AutoEncoder. By introducing an extra column for the bias/relu icons, this is lost. Can you instead place the icons to the left 
+---
+
+I dislike that how the icons are currently included is messing up the grid symmetry. The width of the column with the gap icons should be of the same width as the icons itself (19px). Keeping the gap-act column for later reintroduction, it should be set to 0 width. There should be a gap introduced
+right of the input neurons that is of the same width as act-icons + gap-act (may be hard coded if necessary), so that it is symmetric again

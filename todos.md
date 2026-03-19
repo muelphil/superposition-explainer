@@ -20,7 +20,6 @@
     * Experiment presets
         * There should be several experiment presets that should be loadable via buttons in the training configuration view, setting all parameters including input and embedding dimensions
 * Embedding Vectors View:
-    * make vectors thinker, replace x y z with h1 h2 h3 (matching weights W dimension)
     * it should be zoomed in so that the view shows only slightly more than the area spanned by the orthonormal vectors of the dimension (1,2,3 depending on embedding dimension)
     * the coordinate system axes arrow heads should be put at 1.15 instead of 1.5 as currently done
     * needs a view reset button
@@ -34,7 +33,8 @@
     * feature vector length should be provided as tooltip
 
 * maybe replace batch loss with "validation" data loss? (all combinations and their respective probabilities)
-    * maybe not all, but so that 99% of cases are present
+  * issue is that batch loss will have strong variation across batches
+  * maybe not all, but so that 99% of cases are present
 
 
 * bias/RELU visualisierung
