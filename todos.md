@@ -12,14 +12,9 @@
         * hovering them should show a tip tool element underneath that details the calculation and highlights relevant embedding space vectors
     * The view needs to be smaller in general, more reminiscent of tools like the transformer playground or the CNN explainer or Transformer Explainer, to fit on the screen
         * make input normal distribution more narrow, make it go from 0 to 2 only
-    * headers might be incorrect: encoder/decoder should be above the connections, not the neurons
-    * small "X Neurons" text above +/- buttons
-    * replace Input header with "Features"
-    * input features need to be annotated with f1-fn on the left side of the value
 * Training Configuration
     * Experiment presets
         * There should be several experiment presets that should be loadable via buttons in the training configuration view, setting all parameters including input and embedding dimensions
-* Embedding Vectors View:
 * color (orange/blue) might need to be replaced, as the core thing in this visualization is the features in embedding space
 * Training Statistics
     * Interference Statistic: show the weighted amount of interference produced by the embedding space vectors (remember RELU masks negative interference)

@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { inject, ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { RefreshCw } from 'lucide-vue-next'
-import type { AutoencoderServiceType } from '../services/AutoencoderService'
-import { INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX } from '../services/AutoencoderService'
-import type { SelectionServiceType } from '../services/SelectionService'
+import {inject, ref, computed, watch, onMounted, onUnmounted, nextTick} from 'vue'
+import {RefreshCw} from 'lucide-vue-next'
+import type {AutoencoderServiceType} from '../services/AutoencoderService'
+import {INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX} from '../services/AutoencoderService'
+import type {SelectionServiceType} from '../services/SelectionService'
 import InputValue from './InputValue.vue'
 import ActivationIcons from './ActivationIcons.vue'
 
-const svc    = inject<AutoencoderServiceType>('autoencoderService')!
+const svc = inject<AutoencoderServiceType>('autoencoderService')!
 const selSvc = inject<SelectionServiceType>('selectionService')!
 
 // ─── Template refs ────────────────────────────────────────────────────────────
 const containerRef = ref<HTMLElement | null>(null)
 const svgRef = ref<SVGElement | null>(null)
 
-const inputNeuronRefs  = ref<(HTMLElement | null)[]>([])
-const embNeuronRefs    = ref<(HTMLElement | null)[]>([])
+const inputNeuronRefs = ref<(HTMLElement | null)[]>([])
+const embNeuronRefs = ref<(HTMLElement | null)[]>([])
 const outputNeuronRefs = ref<(HTMLElement | null)[]>([])
 
 // ─── Dimensions ───────────────────────────────────────────────────────────────
@@ -24,11 +24,11 @@ const m = computed(() => svc.config.embeddingDim)
 
 // Row 1: headers, Row 2: sub-header controls/info, Rows 3…n+2: data rows
 const gridTemplateRows = computed(
-  () => `auto auto repeat(${n.value}, var(--row-height))`
+    () => `auto auto repeat(${n.value}, var(--row-height))`
 )
 
 const dataRowStart = 3
-const dataRowEnd   = computed(() => n.value + 3)
+const dataRowEnd = computed(() => n.value + 3)
 
 // ─── Color helpers ────────────────────────────────────────────────────────────
 function neuronColor(v: number): string {
@@ -54,12 +54,12 @@ function neuronScale(i: number): number {
 const userInputs = ref<number[]>([])
 
 watch(n, (newN) => {
-  userInputs.value = Array.from({ length: newN }, (_, i) => svc.currentInput.value[i] ?? 0)
-}, { immediate: true })
+  userInputs.value = Array.from({length: newN}, (_, i) => svc.currentInput.value[i] ?? 0)
+}, {immediate: true})
 
 watch(() => svc.currentInput.value, (inp) => {
   userInputs.value = [...inp]
-}, { deep: true })
+}, {deep: true})
 
 function onInputChange(i: number, val: number) {
   userInputs.value[i] = val
@@ -67,35 +67,46 @@ function onInputChange(i: number, val: number) {
 }
 
 // ─── Add / remove ─────────────────────────────────────────────────────────────
-function addInputNeuron()        { svc.setInputDim(n.value + 1) }
-function removeInputNeuron()     { svc.setInputDim(n.value - 1) }
-function addEmbeddingNeuron()    { svc.setEmbeddingDim(m.value + 1) }
-function removeEmbeddingNeuron() { svc.setEmbeddingDim(m.value - 1) }
+function addInputNeuron() {
+  svc.setInputDim(n.value + 1)
+}
 
-const canAddInput    = computed(() => n.value < INPUT_DIM_MAX && !svc.isTraining.value)
+function removeInputNeuron() {
+  svc.setInputDim(n.value - 1)
+}
+
+function addEmbeddingNeuron() {
+  svc.setEmbeddingDim(m.value + 1)
+}
+
+function removeEmbeddingNeuron() {
+  svc.setEmbeddingDim(m.value - 1)
+}
+
+const canAddInput = computed(() => n.value < INPUT_DIM_MAX && !svc.isTraining.value)
 const canRemoveInput = computed(() => n.value > INPUT_DIM_MIN && !svc.isTraining.value)
-const canAddEmb      = computed(() => m.value < EMB_DIM_MAX   && !svc.isTraining.value)
-const canRemoveEmb   = computed(() => m.value > EMB_DIM_MIN   && !svc.isTraining.value)
+const canAddEmb = computed(() => m.value < EMB_DIM_MAX && !svc.isTraining.value)
+const canRemoveEmb = computed(() => m.value > EMB_DIM_MIN && !svc.isTraining.value)
 
 // ─── SVG connections ──────────────────────────────────────────────────────────
 
 interface SvgPath {
-  d:       string
-  color:   string
-  width:   number
+  d: string
+  color: string
+  width: number
   opacity: number
-  row:     number
-  col:     number
+  row: number
+  col: number
 }
 
 interface NeuronClip {
   cx: number
   cy: number
-  r:  number
+  r: number
 }
 
 const svgPathsData = ref<SvgPath[]>([])
-const neuronClips  = ref<NeuronClip[]>([])
+const neuronClips = ref<NeuronClip[]>([])
 
 /** Returns the center position + radius of a neuron element in SVG/container coordinates. */
 function getNeuronInfo(el: HTMLElement | null | undefined): NeuronClip | null {
@@ -103,9 +114,9 @@ function getNeuronInfo(el: HTMLElement | null | undefined): NeuronClip | null {
   const er = el.getBoundingClientRect()
   const cr = containerRef.value.getBoundingClientRect()
   return {
-    cx: er.left - cr.left + er.width  / 2,
-    cy: er.top  - cr.top  + er.height / 2,
-    r:  er.height / 2,
+    cx: er.left - cr.left + er.width / 2,
+    cy: er.top - cr.top + er.height / 2,
+    r: er.height / 2,
   }
 }
 
@@ -117,8 +128,8 @@ function bezierPath(x1: number, y1: number, x2: number, y2: number): string {
 function weightStyle(w: number): { color: string; width: number; opacity: number } {
   const abs = Math.abs(w)
   return {
-    color:   w >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
-    width:   0.5 + Math.min(abs, 1.5) * 3,
+    color: w >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
+    width: 0.5 + Math.min(abs, 1.5) * 3,
     opacity: 0.15 + Math.min(abs, 1) * 0.65,
   }
 }
@@ -132,15 +143,15 @@ function spreadOffset(idx: number, total: number, diameter: number): number {
 function drawConnections() {
   if (!svgRef.value || !containerRef.value) return
 
-  const W     = svc.W.value
-  const paths: SvgPath[]    = []
+  const W = svc.W.value
+  const paths: SvgPath[] = []
   const clips: NeuronClip[] = []
 
   // Collect neuron clip circles
   for (let j = 0; j < n.value; j++) {
-    const inInfo  = getNeuronInfo(inputNeuronRefs.value[j])
+    const inInfo = getNeuronInfo(inputNeuronRefs.value[j])
     const outInfo = getNeuronInfo(outputNeuronRefs.value[j])
-    if (inInfo)  clips.push(inInfo)
+    if (inInfo) clips.push(inInfo)
     if (outInfo) clips.push(outInfo)
   }
   for (let k = 0; k < m.value; k++) {
@@ -156,11 +167,11 @@ function drawConnections() {
       const inInfo = getNeuronInfo(inputNeuronRefs.value[j])
       if (!inInfo) continue
       const w = W[k]?.[j] ?? 0
-      const { color, width, opacity } = weightStyle(w)
+      const {color, width, opacity} = weightStyle(w)
       // Fan: k-th connection fans at input; j-th connection fans at embedding
-      const sy = inInfo.cy  + spreadOffset(k, m.value, inInfo.r  * 2)
+      const sy = inInfo.cy + spreadOffset(k, m.value, inInfo.r * 2)
       const ty = embInfo.cy + spreadOffset(j, n.value, embInfo.r * 2)
-      paths.push({ d: bezierPath(inInfo.cx, sy, embInfo.cx, ty), color, width, opacity, row: k, col: j })
+      paths.push({d: bezierPath(inInfo.cx, sy, embInfo.cx, ty), color, width, opacity, row: k, col: j})
     }
   }
 
@@ -172,15 +183,15 @@ function drawConnections() {
       const outInfo = getNeuronInfo(outputNeuronRefs.value[j])
       if (!outInfo) continue
       const w = W[k]?.[j] ?? 0
-      const { color, width, opacity } = weightStyle(w)
-      const sy = embInfo.cy  + spreadOffset(j, n.value, embInfo.r  * 2)
-      const ty = outInfo.cy  + spreadOffset(k, m.value, outInfo.r  * 2)
-      paths.push({ d: bezierPath(embInfo.cx, sy, outInfo.cx, ty), color, width, opacity, row: k, col: j })
+      const {color, width, opacity} = weightStyle(w)
+      const sy = embInfo.cy + spreadOffset(j, n.value, embInfo.r * 2)
+      const ty = outInfo.cy + spreadOffset(k, m.value, outInfo.r * 2)
+      paths.push({d: bezierPath(embInfo.cx, sy, outInfo.cx, ty), color, width, opacity, row: k, col: j})
     }
   }
 
   svgPathsData.value = paths
-  neuronClips.value  = clips
+  neuronClips.value = clips
 }
 
 let resizeObserver: ResizeObserver | null = null
@@ -196,19 +207,27 @@ onMounted(async () => {
 
 onUnmounted(() => resizeObserver?.disconnect())
 
-watch(() => svc.W.value,                () => drawConnections(), { deep: true })
-watch([n, m],                           () => drawConnections(), { flush: 'post' })
-watch(() => svc.featureImportance.value, () => drawConnections(), { flush: 'post' })
+watch(() => svc.W.value, () => drawConnections(), {deep: true})
+watch([n, m], () => drawConnections(), {flush: 'post'})
+watch(() => svc.featureImportance.value, () => drawConnections(), {flush: 'post'})
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function fmt(v: number):     string  { return v.toFixed(2) }
-function isNonZero(v: number): boolean { return Math.abs(v) > 0.005 }
-function absErr(v: number):  string  { return Math.abs(v).toFixed(2) }
+function fmt(v: number): string {
+  return v.toFixed(2)
+}
+
+function isNonZero(v: number): boolean {
+  return Math.abs(v) > 0.005
+}
+
+function absErr(v: number): string {
+  return Math.abs(v).toFixed(2)
+}
 
 const currentLoss = computed(() => {
-  const x    = svc.currentInput.value
+  const x = svc.currentInput.value
   const xHat = svc.currentOutput.value
-  const imp  = svc.featureImportance.value
+  const imp = svc.featureImportance.value
   return x.reduce((sum, xi, i) => sum + (imp[i] ?? 1) * (xi - (xHat[i] ?? 0)) ** 2, 0)
 })
 
@@ -234,61 +253,93 @@ function resampleAll() {
 }
 
 // ─── Selection / hover handlers ───────────────────────────────────────────────
-function onWeightEnter(row: number, col: number) { selSvc.setHover({ kind: 'weight', row, col }, 'autoencoder') }
-function onWeightLeave()                          { selSvc.clearHover() }
-function onWeightClick(row: number, col: number)  { selSvc.setSelected({ kind: 'weight', row, col }, 'autoencoder') }
+function onWeightEnter(row: number, col: number) {
+  selSvc.setHover({kind: 'weight', row, col}, 'autoencoder')
+}
 
-function onFeatureEnter(i: number) { selSvc.setHover({ kind: 'feature', idx: i }, 'autoencoder') }
-function onFeatureLeave()          { selSvc.clearHover() }
-function onFeatureClick(i: number) { selSvc.setSelected({ kind: 'feature', idx: i }, 'autoencoder') }
+function onWeightLeave() {
+  selSvc.clearHover()
+}
 
-function onEmbNeuronEnter(k: number) { selSvc.setHover({ kind: 'emb', idx: k }, 'autoencoder') }
-function onEmbNeuronLeave()          { selSvc.clearHover() }
-function onEmbNeuronClick(k: number) { selSvc.setSelected({ kind: 'emb', idx: k }, 'autoencoder') }
+function onWeightClick(row: number, col: number) {
+  selSvc.setSelected({kind: 'weight', row, col}, 'autoencoder')
+}
 
-function onOutputEnter(i: number) { selSvc.setHover({ kind: 'output', idx: i }, 'autoencoder') }
-function onOutputLeave()          { selSvc.clearHover() }
-function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i }, 'autoencoder') }
+function onFeatureEnter(i: number) {
+  selSvc.setHover({kind: 'feature', idx: i}, 'autoencoder')
+}
+
+function onFeatureLeave() {
+  selSvc.clearHover()
+}
+
+function onFeatureClick(i: number) {
+  selSvc.setSelected({kind: 'feature', idx: i}, 'autoencoder')
+}
+
+function onEmbNeuronEnter(k: number) {
+  selSvc.setHover({kind: 'emb', idx: k}, 'autoencoder')
+}
+
+function onEmbNeuronLeave() {
+  selSvc.clearHover()
+}
+
+function onEmbNeuronClick(k: number) {
+  selSvc.setSelected({kind: 'emb', idx: k}, 'autoencoder')
+}
+
+function onOutputEnter(i: number) {
+  selSvc.setHover({kind: 'output', idx: i}, 'autoencoder')
+}
+
+function onOutputLeave() {
+  selSvc.clearHover()
+}
+
+function onOutputClick(i: number) {
+  selSvc.setSelected({kind: 'output', idx: i}, 'autoencoder')
+}
 </script>
 
 <template>
   <div
-    class="ae-grid"
-    ref="containerRef"
-    :style="{ gridTemplateRows }"
+      class="ae-grid"
+      ref="containerRef"
+      :style="{ gridTemplateRows }"
   >
     <!-- SVG overlay — paths masked at neuron circles, pointer-events on stroke only -->
     <svg
-      ref="svgRef"
-      class="connections-svg"
-      :class="{ 'training-active': svc.isTraining.value }"
-      aria-hidden="true"
+        ref="svgRef"
+        class="connections-svg"
+        :class="{ 'training-active': svc.isTraining.value }"
+        aria-hidden="true"
     >
       <defs>
         <!-- Mask: white everywhere except black circles over neurons (hides lines inside circles) -->
         <mask id="neuron-mask" maskUnits="userSpaceOnUse">
-          <rect x="-9999" y="-9999" width="19998" height="19998" fill="white" />
+          <rect x="-9999" y="-9999" width="19998" height="19998" fill="white"/>
           <circle
-            v-for="(c, ci) in neuronClips"
-            :key="ci"
-            :cx="c.cx" :cy="c.cy" :r="c.r"
-            fill="black"
+              v-for="(c, ci) in neuronClips"
+              :key="ci"
+              :cx="c.cx" :cy="c.cy" :r="c.r"
+              fill="black"
           />
         </mask>
       </defs>
       <g mask="url(#neuron-mask)">
         <path
-          v-for="(p, pi) in svgPathsData"
-          :key="pi"
-          :d="p.d"
-          fill="none"
-          :stroke="p.color"
-          :stroke-width="p.width"
-          :opacity="p.opacity"
-          style="pointer-events: stroke; cursor: pointer;stroke-linecap: round;"
-          @mouseenter="onWeightEnter(p.row, p.col)"
-          @mouseleave="onWeightLeave"
-          @click.stop="onWeightClick(p.row, p.col)"
+            v-for="(p, pi) in svgPathsData"
+            :key="pi"
+            :d="p.d"
+            fill="none"
+            :stroke="p.color"
+            :stroke-width="p.width"
+            :opacity="p.opacity"
+            style="pointer-events: stroke; cursor: pointer;stroke-linecap: round;"
+            @mouseenter="onWeightEnter(p.row, p.col)"
+            @mouseleave="onWeightLeave"
+            @click.stop="onWeightClick(p.row, p.col)"
         />
       </g>
     </svg>
@@ -296,26 +347,31 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
     <!-- ── Row 1: Column headings ──────────────────────────── -->
     <div class="col-heading" style="grid-column: 1; grid-row: 1">Features</div>
     <div class="col-heading" style="grid-column: 3; grid-row: 1">Input</div>
+    <div class="col-heading" style="grid-column: 4/6; grid-row: 1">Encoder</div>
     <div class="col-heading" style="grid-column: 6; grid-row: 1">Embedding</div>
-    <div class="col-heading" style="grid-column: 10; grid-row: 1">Output</div>
-    <div class="col-heading" style="grid-column: 12; grid-row: 1">Reconstruction</div>
+    <div class="col-heading" style="grid-column: 7 / 9; grid-row: 1">Decoder</div>
+    <div class="col-heading" style="grid-column: 10 ; grid-row: 1">Output</div>
+<!--    <div class="col-heading" style="grid-column: 12; grid-row: 1">Reconstruction</div>-->
 
     <!-- ── Row 2: Sub-header info / controls ────────────────── -->
     <!-- Input col: resample-all button -->
     <button
-      class="dim-btn resample-all-btn"
-      style="grid-column: 1; grid-row: 2"
-      @click="resampleAll"
-      :disabled="svc.isTraining.value"
-      title="Sample new input values"
-    ><RefreshCw :size="12" /></button>
+        class="dim-btn resample-all-btn"
+        style="grid-column: 1; grid-row: 2"
+        @click="resampleAll"
+        :disabled="svc.isTraining.value"
+        title="Sample new input values"
+    >
+      <RefreshCw :size="12"/>
+    </button>
 
     <!-- Encoder col: +/- dim controls + neuron count -->
     <div class="sub-header-ctrl" style="grid-column: 3; grid-row: 2">
       <span class="neuron-count">{{ n }} neurons</span>
       <div class="dim-btns">
-        <button class="dim-btn" @click="removeInputNeuron" :disabled="!canRemoveInput" title="Remove input feature">−</button>
-        <button class="dim-btn" @click="addInputNeuron"    :disabled="!canAddInput"    title="Add input feature">+</button>
+        <button class="dim-btn" @click="removeInputNeuron" :disabled="!canRemoveInput" title="Remove input feature">−
+        </button>
+        <button class="dim-btn" @click="addInputNeuron" :disabled="!canAddInput" title="Add input feature">+</button>
       </div>
     </div>
 
@@ -323,8 +379,10 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
     <div class="sub-header-ctrl" style="grid-column: 6; grid-row: 2">
       <span class="neuron-count">{{ m }} neurons</span>
       <div class="dim-btns">
-        <button class="dim-btn" @click="removeEmbeddingNeuron" :disabled="!canRemoveEmb" title="Remove embedding dim">−</button>
-        <button class="dim-btn" @click="addEmbeddingNeuron"    :disabled="!canAddEmb"    title="Add embedding dim">+</button>
+        <button class="dim-btn" @click="removeEmbeddingNeuron" :disabled="!canRemoveEmb" title="Remove embedding dim">
+          −
+        </button>
+        <button class="dim-btn" @click="addEmbeddingNeuron" :disabled="!canAddEmb" title="Add embedding dim">+</button>
       </div>
     </div>
 
@@ -342,60 +400,60 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
     <template v-for="(_, i) in n" :key="i">
       <!-- Input value: col 1 -->
       <InputValue
-        :modelValue="userInputs[i] ?? 0"
-        :label="`x${i + 1}`"
-        :disabled="svc.isTraining.value"
-        :featureIdx="i"
-        :featureCount="n"
-        @update:modelValue="onInputChange(i, $event)"
-        @resample="resampleInput(i)"
-        :style="{ gridColumn: '1', gridRow: String(i + dataRowStart) }"
+          :modelValue="userInputs[i] ?? 0"
+          :label="`x${i + 1}`"
+          :disabled="svc.isTraining.value"
+          :featureIdx="i"
+          :featureCount="n"
+          @update:modelValue="onInputChange(i, $event)"
+          @resample="resampleInput(i)"
+          :style="{ gridColumn: '1', gridRow: String(i + dataRowStart) }"
       />
 
       <!-- Input neuron: col 3 -->
       <div
-        :ref="(el) => { inputNeuronRefs[i] = el as HTMLElement }"
-        class="neuron"
-        :style="{
+          :ref="(el) => { inputNeuronRefs[i] = el as HTMLElement }"
+          class="neuron"
+          :style="{
           gridColumn: '3',
           gridRow: String(i + dataRowStart),
           background: neuronColor(svc.currentInput.value[i] ?? 0),
           transform: `scale(${neuronScale(i)})`,
         }"
-        :title="`x${i + 1} = ${fmt(svc.currentInput.value[i] ?? 0)}, importance = ${fmt(svc.featureImportance.value[i] ?? 1)}`"
-        @mouseenter="onFeatureEnter(i)"
-        @mouseleave="onFeatureLeave"
-        @click="onFeatureClick(i)"
+          :title="`x${i + 1} = ${fmt(svc.currentInput.value[i] ?? 0)}, importance = ${fmt(svc.featureImportance.value[i] ?? 1)}`"
+          @mouseenter="onFeatureEnter(i)"
+          @mouseleave="onFeatureLeave"
+          @click="onFeatureClick(i)"
       />
 
       <!-- Activation icons (bias + ReLU): col 7 -->
       <ActivationIcons
-        :biasVal="svc.b.value[i] ?? 0"
-        :preActivation="svc.currentPreActivation.value[i] ?? 0"
-        :featureIdx="i"
-        :style="{ gridColumn: '8', gridRow: String(i + dataRowStart) }"
+          :biasVal="svc.b.value[i] ?? 0"
+          :preActivation="svc.currentPreActivation.value[i] ?? 0"
+          :featureIdx="i"
+          :style="{ gridColumn: '8', gridRow: String(i + dataRowStart) }"
       />
 
       <!-- Output neuron: col 9 — also scales with importance -->
       <div
-        :ref="(el) => { outputNeuronRefs[i] = el as HTMLElement }"
-        class="neuron"
-        :style="{
+          :ref="(el) => { outputNeuronRefs[i] = el as HTMLElement }"
+          class="neuron"
+          :style="{
           gridColumn: '10',
           gridRow: String(i + dataRowStart),
           background: neuronColor(svc.currentOutput.value[i] ?? 0),
           transform: `scale(${neuronScale(i)})`,
         }"
-        :title="`x̂${i + 1} = ${fmt(svc.currentOutput.value[i] ?? 0)}, pre-ReLU = ${fmt(svc.currentPreActivation.value[i] ?? 0)}`"
-        @mouseenter="onOutputEnter(i)"
-        @mouseleave="onOutputLeave"
-        @click="onOutputClick(i)"
+          :title="`x̂${i + 1} = ${fmt(svc.currentOutput.value[i] ?? 0)}, pre-ReLU = ${fmt(svc.currentPreActivation.value[i] ?? 0)}`"
+          @mouseenter="onOutputEnter(i)"
+          @mouseleave="onOutputLeave"
+          @click="onOutputClick(i)"
       />
 
       <!-- Output value: col 11 -->
       <div
-        class="output-value"
-        :style="{ gridColumn: '12', gridRow: String(i + dataRowStart) }"
+          class="output-value"
+          :style="{ gridColumn: '12', gridRow: String(i + dataRowStart) }"
       >
         <span class="out-val">{{ fmt(svc.currentOutput.value[i] ?? 0) }}</span>
         <span class="out-err" :class="{ zero: !isNonZero(svc.currentError.value[i] ?? 0) }">
@@ -406,23 +464,23 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
 
     <!-- ── Embedding column: col 5, spans all data rows ──── -->
     <div
-      class="emb-column"
-      :style="{
+        class="emb-column"
+        :style="{
         gridColumn: '6',
         gridRow: `${dataRowStart} / ${dataRowEnd}`,
       }"
     >
       <div class="emb-neurons">
         <div
-          v-for="(_, k) in m"
-          :key="k"
-          :ref="(el) => { embNeuronRefs[k] = el as HTMLElement }"
-          class="neuron emb-neuron"
-          :style="{ background: neuronColor(svc.currentEmbedding.value[k] ?? 0) }"
-          :title="`h${k + 1} = ${fmt(svc.currentEmbedding.value[k] ?? 0)}`"
-          @mouseenter="onEmbNeuronEnter(k)"
-          @mouseleave="onEmbNeuronLeave"
-          @click="onEmbNeuronClick(k)"
+            v-for="(_, k) in m"
+            :key="k"
+            :ref="(el) => { embNeuronRefs[k] = el as HTMLElement }"
+            class="neuron emb-neuron"
+            :style="{ background: neuronColor(svc.currentEmbedding.value[k] ?? 0) }"
+            :title="`h${k + 1} = ${fmt(svc.currentEmbedding.value[k] ?? 0)}`"
+            @mouseenter="onEmbNeuronEnter(k)"
+            @mouseleave="onEmbNeuronLeave"
+            @click="onEmbNeuronClick(k)"
         >
           <span class="emb-value">{{ fmt(svc.currentEmbedding.value[k] ?? 0) }}</span>
         </div>
@@ -463,8 +521,10 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
 /* ── SVG overlay ──────────────────────────────────────────── */
 .connections-svg {
   position: absolute;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /* Dashed lines — only shown and animated during training */
@@ -473,8 +533,12 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
 }
 
 @keyframes dash-flow {
-  from { stroke-dashoffset: 7; }
-  to   { stroke-dashoffset: 0; }
+  from {
+    stroke-dashoffset: 7;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .connections-svg.training-active path {
@@ -499,7 +563,10 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
   color: var(--color-error);
   line-height: 1;
 }
-.col-loss-val.zero { color: #d1d5db; }
+
+.col-loss-val.zero {
+  color: #d1d5db;
+}
 
 .col-loss-label {
   font-size: 0.6rem;
@@ -518,7 +585,8 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, transform 0.2s;
+  transition: background 0.2s;
+  /*removed transform 0.2s as this causes update problems for the weight svg backdrop*/
   flex-shrink: 0;
   position: relative;
   z-index: 2;
@@ -534,7 +602,7 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
   color: #374151;
   font-weight: 700;
   pointer-events: none;
-  text-shadow: 0 0 3px rgba(255,255,255,0.8);
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
 }
 
 /* ── Embedding column ─────────────────────────────────────── */
@@ -579,7 +647,10 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
-.out-err.zero { color: #d1d5db; }
+
+.out-err.zero {
+  color: #d1d5db;
+}
 
 /* ── Column sub-header row (row 2) ────────────────────────── */
 
@@ -597,8 +668,16 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
   z-index: 2;
   align-self: end;
 }
-.resample-all-btn:hover:not(:disabled) { background: #f1f5f9; color: #334155; }
-.resample-all-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.resample-all-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.resample-all-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
 
 .sub-header-ctrl {
   display: flex;
@@ -654,6 +733,13 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
   color: #64748b;
   transition: opacity 0.15s, background 0.15s;
 }
-.dim-btn:hover:not(:disabled) { background: #e2e8f0; }
-.dim-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.dim-btn:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.dim-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
 </style>
