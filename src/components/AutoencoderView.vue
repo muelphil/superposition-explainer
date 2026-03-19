@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {inject, ref, computed, watch, onMounted, onUnmounted, nextTick} from 'vue'
 import {RefreshCw} from 'lucide-vue-next'
+import {renderLatexHtml} from '../utils/latex'
 import type {AutoencoderServiceType} from '../services/AutoencoderService'
 import {INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX} from '../services/AutoencoderService'
 import type {SelectionServiceType} from '../services/SelectionService'
@@ -48,6 +49,11 @@ function neuronColor(v: number): string {
 function neuronScale(i: number): number {
   const imp = svc.featureImportance.value[i] ?? 1
   return Math.max(0.4, Math.sqrt(imp))
+}
+
+function inputNeuronTooltip(i: number): string {
+  const imp = svc.featureImportance.value[i] ?? 1
+  return renderLatexHtml(`I_{${i + 1}}`) + ` = ${fmt(imp)}`
 }
 
 // ─── User input ───────────────────────────────────────────────────────────────
@@ -412,19 +418,22 @@ function onOutputClick(i: number) {
 
       <!-- Input neuron: col 3 -->
       <div
-          :ref="(el) => { inputNeuronRefs[i] = el as HTMLElement }"
-          class="neuron"
-          :style="{
-          gridColumn: '3',
-          gridRow: String(i + dataRowStart),
-          background: neuronColor(svc.currentInput.value[i] ?? 0),
-          transform: `scale(${neuronScale(i)})`,
-        }"
-          :title="`x${i + 1} = ${fmt(svc.currentInput.value[i] ?? 0)}, importance = ${fmt(svc.featureImportance.value[i] ?? 1)}`"
+          class="neuron-wrap"
+          :style="{ gridColumn: '3', gridRow: String(i + dataRowStart) }"
           @mouseenter="onFeatureEnter(i)"
           @mouseleave="onFeatureLeave"
           @click="onFeatureClick(i)"
-      />
+      >
+        <div
+            :ref="(el) => { inputNeuronRefs[i] = el as HTMLElement }"
+            class="neuron"
+            :style="{
+            background: neuronColor(svc.currentInput.value[i] ?? 0),
+            transform: `scale(${neuronScale(i)})`,
+          }"
+        />
+        <div class="neuron-tooltip" v-html="inputNeuronTooltip(i)" />
+      </div>
 
       <!-- Activation icons (bias + ReLU): col 7 -->
       <ActivationIcons
@@ -577,6 +586,44 @@ function onOutputClick(i: number) {
 }
 
 /* ── Neurons ──────────────────────────────────────────────── */
+.neuron-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  cursor: pointer;
+}
+
+.neuron-wrap:hover .neuron-tooltip {
+  opacity: 1;
+  pointer-events: none;
+}
+
+.neuron-tooltip {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  padding: 3px 7px;
+  font-size: 0.72rem;
+  color: #374151;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  opacity: 0;
+  transition: opacity 0.12s;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.neuron-tooltip :deep(.katex) {
+  font-size: 0.72rem;
+  color: #374151;
+}
+
 .neuron {
   width: var(--neuron-size);
   height: var(--neuron-size);
