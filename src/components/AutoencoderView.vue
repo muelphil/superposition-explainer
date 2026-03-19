@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject, ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { RefreshCw } from 'lucide-vue-next'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
 import { INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX } from '../services/AutoencoderService'
 import type { SelectionServiceType } from '../services/SelectionService'
@@ -307,7 +308,7 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
       @click="resampleAll"
       :disabled="svc.isTraining.value"
       title="Sample new input values"
-    >↻</button>
+    ><RefreshCw :size="12" /></button>
 
     <!-- Encoder col: +/- dim controls + neuron count -->
     <div class="sub-header-ctrl" style="grid-column: 3; grid-row: 2">

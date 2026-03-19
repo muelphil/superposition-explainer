@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, provide } from 'vue'
+import { RotateCcw, Play, Square } from 'lucide-vue-next'
 import { createAutoencoderService } from '../services/AutoencoderService'
 import { createSelectionService } from '../services/SelectionService'
 import AutoencoderView from './AutoencoderView.vue'
@@ -101,13 +102,14 @@ const lossDisplay = computed(() => svc.loss.value.toFixed(4))
                   :disabled="svc.isTraining.value"
                   @click="svc.resetWeights()"
                   title="Re-initialise weights (Xavier normal, bias = 0)"
-                >↺ Reset</button>
+                ><RotateCcw :size="13" /> Reset</button>
                 <button
                   class="train-btn"
                   :class="{ 'train-btn--stop': svc.isTraining.value }"
                   @click="svc.isTraining.value ? svc.stopTraining() : svc.startTraining()"
                 >
-                  {{ svc.isTraining.value ? '■ Stop Training' : '▶ Start Training' }}
+                  <Square v-if="svc.isTraining.value" :size="13" /> <Play v-else :size="13" />
+                  {{ svc.isTraining.value ? 'Stop Training' : 'Start Training' }}
                 </button>
               </div>
             </div>

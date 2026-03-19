@@ -397,7 +397,25 @@ export function useEmbeddingScene(
   // ── Legend events (legend injects selSvc directly) ────────────
   // No legend handlers needed here — the legend component owns its hover/click.
 
-  // ── Vue lifecycle ─────────────────────────────────────────────
+  // ── Camera reset ─────────────────────────────────────────────
+  function resetCamera() {
+    if (!camera || !controls) return
+    const fovHalfRad = (CAMERA_FOV / 2) * (Math.PI / 180)
+    const fitRadius  = Math.hypot(AXIS_LEN, AXIS_LABEL_PERP) + CAMERA_MARGIN
+    const camDist    = fitRadius / Math.tan(fovHalfRad)
+
+    if (svc.config.embeddingDim === 3) {
+      const dir = new THREE.Vector3(...CAMERA_3D_DIR).normalize()
+      camera.position.copy(dir.multiplyScalar(camDist))
+    } else {
+      camera.position.set(0, 0, camDist)
+    }
+    camera.lookAt(0, 0, 0)
+    controls.target.set(0, 0, 0)
+    controls.update()
+  }
+
+
   onMounted(async () => {
     await nextTick()
     init()
@@ -421,5 +439,6 @@ export function useEmbeddingScene(
     onMouseLeave,
     onCanvasMouseDown,
     onCanvasClick,
+    resetCamera,
   }
 }

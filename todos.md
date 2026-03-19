@@ -20,10 +20,6 @@
     * Experiment presets
         * There should be several experiment presets that should be loadable via buttons in the training configuration view, setting all parameters including input and embedding dimensions
 * Embedding Vectors View:
-    * it should be zoomed in so that the view shows only slightly more than the area spanned by the orthonormal vectors of the dimension (1,2,3 depending on embedding dimension)
-    * needs a view reset button
-    * h1 h2 and h3 need to be rendered as crisp text and in black, coordinate vectors still in light grey
-    *
 * color (orange/blue) might need to be replaced, as the core thing in this visualization is the features in embedding space
 * Training Statistics
     * Interference Statistic: show the weighted amount of interference produced by the embedding space vectors (remember RELU masks negative interference)

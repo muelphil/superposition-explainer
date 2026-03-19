@@ -181,3 +181,12 @@ right of the input neurons that is of the same width as act-icons + gap-act (may
 Lets move on to the EmbeddingView. Lets start with small adjustments.
 * Please readjust the default 3D coordinate system camera view so that the angles between all three axis in the render is identical and the length of the axis appears identical (camera needs to be at the same distance from all 3 axis arrows)
 * Please adjust it so that the view is only turnable in 3D, not in 2D or 1D
+
+---
+
+
+
+
+
+
+
