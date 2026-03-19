@@ -1,15 +1,17 @@
 import { watch, onMounted, onUnmounted, nextTick, type Ref } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import type { AutoencoderServiceType } from '../../services/AutoencoderService'
 import type { SelectionServiceType } from '../../services/SelectionService'
 import { featureColorRGB } from '../../utils/featureColor'
+import { createLatexElement } from '../../utils/latex'
 import type { VecVis } from './types'
 import {
   CAMERA_FOV, CAMERA_MARGIN, CAMERA_3D_DIR, CAMERA_MIN_DIST, CAMERA_MAX_DIST, CAMERA_DAMPING,
   AXIS_LEN, AXIS_LABEL_PERP, AXIS_COLOR, AXIS_OPACITY, AXIS_TICK_OPACITY, AXIS_TICK_SIZE,
   AXIS_ARROW_INSET, AXIS_ARROW_LEN, AXIS_ARROW_HEAD_LEN, AXIS_ARROW_HEAD_W,
-  AXIS_HIT_RADIUS, ORIGIN_RADIUS, LABEL_SCALE, LABEL_CANVAS_SIZE,
+  AXIS_HIT_RADIUS, ORIGIN_RADIUS,
   AXIS_LABELS, AXIS_DIRECTIONS,
   ARROW_HEAD_MAX_LEN, ARROW_HEAD_MAX_W, ARROW_HEAD_LEN_FRAC, ARROW_HEAD_W_FRAC,
   ARROW_SHAFT_RADIUS, ARROW_SHAFT_SEGMENTS, VEC_HIT_RADIUS, VEC_HIT_EXTRA,
@@ -26,10 +28,11 @@ export function useEmbeddingScene(
   selSvc: SelectionServiceType,
 ) {
   // ── Three.js scene state ──────────────────────────────────────
-  let renderer: THREE.WebGLRenderer      | null = null
-  let scene:    THREE.Scene              | null = null
-  let camera:   THREE.PerspectiveCamera  | null = null
-  let controls: OrbitControls            | null = null
+  let renderer:      THREE.WebGLRenderer      | null = null
+  let labelRenderer: CSS2DRenderer            | null = null
+  let scene:         THREE.Scene              | null = null
+  let camera:        THREE.PerspectiveCamera  | null = null
+  let controls:      OrbitControls            | null = null
   let rafId = 0
 
   const raycaster = new THREE.Raycaster()
@@ -54,24 +57,14 @@ export function useEmbeddingScene(
     )
   }
 
-  function makeAxisLabel(text: string): THREE.Sprite {
-    const SIZE = LABEL_CANVAS_SIZE
-    const c = document.createElement('canvas')
-    c.width = SIZE; c.height = SIZE
-    const ctx = c.getContext('2d')!
-    ctx.clearRect(0, 0, SIZE, SIZE)
-    ctx.fillStyle = '#000000'
-    ctx.font = 'bold 160px Arial, Helvetica, sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(text, SIZE / 2, SIZE / 2)
-    const tex = new THREE.CanvasTexture(c)
-    tex.needsUpdate = true
-    const sprite = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false })
-    )
-    sprite.scale.setScalar(LABEL_SCALE)
-    return sprite
+  function makeAxisLabel(formula: string): CSS2DObject {
+    const el = createLatexElement(formula, {
+      color: '#6b7280',
+      fontSize: '0.78rem',
+      pointerEvents: 'none',
+      userSelect: 'none',
+    })
+    return new CSS2DObject(el)
   }
 
   // ── Scene lifecycle ───────────────────────────────────────────
@@ -88,6 +81,10 @@ export function useEmbeddingScene(
     axisHitMeshes = []
     axisGroup = null
     renderer?.dispose()
+    if (labelRenderer) {
+      labelRenderer.domElement.remove()
+      labelRenderer = null
+    }
     scene = null; camera = null; renderer = null; controls = null
     lastHoverKey = ''
   }
@@ -105,8 +102,9 @@ export function useEmbeddingScene(
 
   function init() {
     teardown()
-    const canvas = canvasRef.value
-    if (!canvas) return
+    const canvas    = canvasRef.value
+    const container = containerRef.value
+    if (!canvas || !container) return
     const w = Math.max(canvas.clientWidth,  200)
     const h = Math.max(canvas.clientHeight, 200)
 
@@ -114,6 +112,14 @@ export function useEmbeddingScene(
     renderer.setClearColor(0x000000, 0)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setSize(w, h, false)
+
+    labelRenderer = new CSS2DRenderer()
+    labelRenderer.setSize(w, h)
+    labelRenderer.domElement.style.position = 'absolute'
+    labelRenderer.domElement.style.top      = '0'
+    labelRenderer.domElement.style.left     = '0'
+    labelRenderer.domElement.style.pointerEvents = 'none'
+    container.appendChild(labelRenderer.domElement)
 
     scene  = new THREE.Scene()
     camera = new THREE.PerspectiveCamera(CAMERA_FOV, w / h, 0.01, 100)
@@ -343,6 +349,7 @@ export function useEmbeddingScene(
     }
 
     renderer.render(scene, camera)
+    labelRenderer?.render(scene, camera)
   }
 
   // ── Resize ────────────────────────────────────────────────────
@@ -354,6 +361,7 @@ export function useEmbeddingScene(
     camera.aspect = w / h
     camera.updateProjectionMatrix()
     renderer.setSize(w, h, false)
+    labelRenderer?.setSize(w, h)
   }
 
   // ── Mouse / canvas events ─────────────────────────────────────

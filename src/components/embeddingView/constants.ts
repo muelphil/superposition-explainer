@@ -19,11 +19,9 @@ export const AXIS_ARROW_HEAD_LEN = 0.16
 export const AXIS_ARROW_HEAD_W   = 0.07
 export const AXIS_HIT_RADIUS     = 0.08
 export const ORIGIN_RADIUS       = 0.028
-export const LABEL_SCALE         = 0.28
-export const LABEL_CANVAS_SIZE   = 256
 
-// h₁ h₂ h₃ using Unicode subscript digits
-export const AXIS_LABELS = ['h\u2081', 'h\u2082', 'h\u2083'] as const
+// h₁ h₂ h₃ as LaTeX formulae for KaTeX rendering
+export const AXIS_LABELS = ['h_1', 'h_2', 'h_3'] as const
 // X / Y / Z axis directions as plain tuples (no Three.js import here)
 export const AXIS_DIRECTIONS = [
   [1, 0, 0],

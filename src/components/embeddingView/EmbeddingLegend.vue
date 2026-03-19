@@ -2,6 +2,7 @@
 import { inject, computed } from 'vue'
 import type { SelectionServiceType } from '../../services/SelectionService'
 import { featureColorCss } from '../../utils/featureColor'
+import { renderLatexHtml } from '../../utils/latex'
 
 const props = defineProps<{ inputDim: number }>()
 
@@ -31,7 +32,7 @@ function onClick(i: number) { selSvc.setSelected({ kind: 'feature', idx: i }, 'e
       @click="onClick(i)"
     >
       <span class="legend-swatch" :style="{ background: featureColorCss(i, inputDim) }" />
-      <span class="legend-text">f{{ i + 1 }}</span>
+      <span class="legend-text" v-html="renderLatexHtml(`f_{${i + 1}}`)" />
     </div>
   </div>
 </template>
@@ -65,5 +66,11 @@ function onClick(i: number) { selSvc.setSelected({ kind: 'feature', idx: i }, 'e
   font-size: 0.72rem;
   color: var(--color-text-label);
   font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+/* KaTeX resets color internally; re-apply via the rendered root */
+.legend-text :deep(.katex) {
+  font-size: 0.72rem;
+  color: var(--color-text-label);
 }
 </style>

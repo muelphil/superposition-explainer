@@ -1,23 +1,25 @@
 # Superposition visualization
 
-This project is about visualizing the superposition effect in embeddings in machine learning, based on an experiment. The experiment is detailed in EXPERIMENT.md.
-A drafted simple app specification can be found in app-specification.md.
-A analysis of another project called Transformer Explainer in the same educational visualization of machine learning space, detailing important implementation hints is located in transformer-explainer-analysis.md.
+## References
+The [Toy Models of Superposition](https://transformer-circuits.pub/2022/toy%5Fmodel/index.html) post by Anthropic researchers, also released as a paper Elhage et al., 2022 provides a visualized walkthrough of the concept. Especially the visualizations may be very helpful in introducing this concept. A post by Axel Sørensen, [Toy Models of Superposition: Simplified by Hand](https://www.lesswrong.com/posts/8CJuugNkH5FSS9H2w/toy-models-of-superposition-simplified-by-hand) (2024), further breaks the concept down and showcases this on a simple example, making it very tangible.
 
-We now need to create the project. Contrary to the Transformer Explainer I want to use Vue.js for the implementation. I have initialized an empty Vite + Vue3 repository to achieve this.
-Please make sure to put all css colors into variables at root level. Adhere to the same style defined in transformer-explainer-analysis.md.
+## Commands
 
-I want to implement this app step by step. In the first implementation step, I want you to implement the basic app containing the Autoencoder visualization only.
-The autoencoders value and training should all be defined in an extra Typescript service that gets injected into the component responsible for visualizing the Autoencoder. The AutoencoderView is responsible for visualization and user interaction only, not for setting training parameters, training itself, etc.
+```bash
+npm run dev        # Vite dev server (hot reload)
+npm run build      # Production build (also used for type-checking — fix TS errors here)
+npm run preview    # Preview production build locally
+```
 
-Please consult app-specification.md for a general idea on how to visually implement the autoencoder and what interactions it should allow.
-
-Create the other components for the view, but populate them with just a grey background and a title that indicates when this component will hold later on.
-
-Create MainView, AutoencoderView and the other views.
+## Experiment
+For a breakdown of the experiment consult EXPERIMENT.md
 
 
 
 
 
-
+## TODOs
+* https://spherical-codes.org/ -- use this to generate a plot with:
+  * x = alpha
+  * y = amounts of vectors that can be fit into the dimension when they may must have a minimum angle of alpha between them
+  * show multiple dimensions in the plot

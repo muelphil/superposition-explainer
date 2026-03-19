@@ -461,12 +461,12 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
 }
 
 @keyframes dash-flow {
-  from { stroke-dashoffset: 9; }
+  from { stroke-dashoffset: 7; }
   to   { stroke-dashoffset: 0; }
 }
 
 .connections-svg.training-active path {
-  stroke-dasharray: 5 4;
+  stroke-dasharray: 1 6; /*When updating this, also update dash-flow above (dashoffset=sum)*/
   animation: dash-flow 0.35s linear infinite;
 }
 
@@ -632,7 +632,7 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
   border: 1px solid #d1d5db;
   padding: 0;
   font-size: 0.85rem;
-  //font-weight: 600;
+  /* font-weight: 600; */
   line-height: 1;
   display: flex;
   align-items: center;

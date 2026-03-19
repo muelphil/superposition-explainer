@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { featureColorHex } from '../utils/featureColor'
+import {computed} from 'vue'
+import {featureColorHex} from '../utils/featureColor'
+import {renderLatexHtml} from '../utils/latex'
 
 const props = defineProps<{
-  modelValue:   number
-  label?:       string
-  disabled?:    boolean
-  featureIdx:   number
+  modelValue: number
+  label?: string
+  disabled?: boolean
+  featureIdx: number
   featureCount: number
 }>()
 
@@ -20,7 +21,8 @@ function onToggleClick() {
   if (props.modelValue > 0.005) {
     emit('update:modelValue', 0)
   } else {
-    emit('resample')
+    emit('update:modelValue', 1)
+    // emit('resample')
   }
 }
 
@@ -28,14 +30,14 @@ function normalPdf(x: number, mu = 0, sigma = 1): number {
   return (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((x - mu) / sigma) ** 2)
 }
 
-const CURVE_WIDTH  = 88
+const CURVE_WIDTH = 88
 const CURVE_HEIGHT = 36
 const X_MIN = 0
 const X_MAX = 3
 
 // ── Feature color ──────────────────────────────────────────────
 const featureHex = computed(() => featureColorHex(props.featureIdx, props.featureCount))
-const gradId     = computed(() => `dist-grad-${props.featureIdx}`)
+const gradId = computed(() => `dist-grad-${props.featureIdx}`)
 
 /** Thumb color: white → feature color as value increases 0→3 */
 const thumbColor = computed(() => {
@@ -55,8 +57,8 @@ const strokePath = computed(() => {
   const steps = 80
   const pts: string[] = []
   for (let i = 0; i <= steps; i++) {
-    const x    = X_MIN + (i / steps) * (X_MAX - X_MIN)
-    const pdf  = normalPdf(x)
+    const x = X_MIN + (i / steps) * (X_MAX - X_MIN)
+    const pdf = normalPdf(x)
     const svgX = ((x - X_MIN) / (X_MAX - X_MIN)) * CURVE_WIDTH
     const svgY = CURVE_HEIGHT - pdf * CURVE_HEIGHT * 2.5
     pts.push(`${i === 0 ? 'M' : 'L'} ${svgX.toFixed(1)} ${svgY.toFixed(1)}`)
@@ -66,10 +68,10 @@ const strokePath = computed(() => {
 
 const fillPath = computed(() => {
   const steps = 80
-  const pts   = [`M 0 ${CURVE_HEIGHT}`]
+  const pts = [`M 0 ${CURVE_HEIGHT}`]
   for (let i = 0; i <= steps; i++) {
-    const x    = X_MIN + (i / steps) * (X_MAX - X_MIN)
-    const pdf  = normalPdf(x)
+    const x = X_MIN + (i / steps) * (X_MAX - X_MIN)
+    const pdf = normalPdf(x)
     const svgX = ((x - X_MIN) / (X_MAX - X_MIN)) * CURVE_WIDTH
     const svgY = CURVE_HEIGHT - pdf * CURVE_HEIGHT * 2.5
     pts.push(`L ${svgX.toFixed(1)} ${svgY.toFixed(1)}`)
@@ -86,36 +88,44 @@ function onSliderChange(event: Event) {
 <template>
   <div class="input-value">
     <svg
-      :viewBox="`0 0 ${CURVE_WIDTH} ${CURVE_HEIGHT}`"
-      preserveAspectRatio="none"
-      class="dist-svg"
-      aria-hidden="true"
+        :viewBox="`0 0 ${CURVE_WIDTH} ${CURVE_HEIGHT}`"
+        preserveAspectRatio="none"
+        class="dist-svg"
+        aria-hidden="true"
     >
       <defs>
         <linearGradient :id="gradId" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%"   stop-color="#ffffff"      stop-opacity="0.3" />
-          <stop offset="100%" :stop-color="featureHex"  stop-opacity="0.7" />
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3"/>
+          <stop offset="100%" :stop-color="featureHex" stop-opacity="0.7"/>
         </linearGradient>
       </defs>
-      <path :d="fillPath"   :fill="`url(#${gradId})`" />
-      <path :d="strokePath" class="dist-stroke" />
+      <path :d="fillPath" :fill="`url(#${gradId})`"/>
+      <path :d="strokePath" class="dist-stroke"/>
     </svg>
-    <span
-      class="value-label"
-      @click="onToggleClick"
-      :title="modelValue > 0.005 ? 'Click to zero' : 'Click to sample'"
-    >{{ modelValue.toFixed(2) }}</span>
+    <span class="input-label">
+      <span
+          class="feature-label"
+          v-html="renderLatexHtml(`f_{${props.featureIdx + 1}}`)"
+          aria-hidden="true"
+      />
+      <span
+          class="value-label"
+          @click="onToggleClick"
+          :title="modelValue > 0.005 ? 'Click to zero' : 'Click to sample'"
+      >{{ modelValue.toFixed(2) }}
+      </span>
+    </span>
     <input
-      type="range"
-      :min="X_MIN"
-      :max="X_MAX"
-      step="0.05"
-      :value="modelValue"
-      :disabled="props.disabled"
-      class="dist-slider"
-      :style="{ '--thumb-color': thumbColor, background: sliderGradient }"
-      @input="onSliderChange"
-      :aria-label="label ?? 'Input value'"
+        type="range"
+        :min="X_MIN"
+        :max="X_MAX"
+        step="0.05"
+        :value="modelValue"
+        :disabled="props.disabled"
+        class="dist-slider"
+        :style="{ '--thumb-color': thumbColor, background: sliderGradient }"
+        @input="onSliderChange"
+        :aria-label="label ?? 'Input value'"
     />
   </div>
 </template>
@@ -135,27 +145,49 @@ function onSliderChange(event: Event) {
   height: 36px;
   display: block;
 }
+
 .dist-stroke {
   fill: none;
   stroke: #cbd5e1;
   stroke-width: 1;
 }
 
+.feature-label {
+  font-size: 0.8rem;
+  color: var(--color-text-label);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.feature-label :deep(.katex) {
+  font-size: 0.8rem;
+  color: var(--color-text-label);
+}
+
 .value-label {
-  position: absolute;
-  bottom: 1em;
-  right: 0;
   font-size: 1rem;
   font-weight: 500;
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
-  z-index: 3;
   white-space: nowrap;
-  line-height: 1.2;
   user-select: none;
 }
-.value-label:hover { color: var(--color-interactive, #6366f1); }
+
+.input-label {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+
+  position: absolute;
+  bottom: 1em;
+  z-index: 3;
+  line-height: 1.2;
+}
+
+.value-label:hover {
+  color: var(--color-interactive, #6366f1);
+}
 
 .dist-slider {
   position: absolute;
@@ -184,7 +216,7 @@ function onSliderChange(event: Event) {
   height: 11px;
   border-radius: 50%;
   background: var(--thumb-color, #94a3b8);
-  border: 1.5px solid rgba(0,0,0,0.15);
+  border: 1.5px solid rgba(0, 0, 0, 0.15);
   cursor: pointer;
 }
 
@@ -193,7 +225,7 @@ function onSliderChange(event: Event) {
   height: 11px;
   border-radius: 50%;
   background: var(--thumb-color, #94a3b8);
-  border: 1.5px solid rgba(0,0,0,0.15);
+  border: 1.5px solid rgba(0, 0, 0, 0.15);
   cursor: pointer;
 }
 </style>

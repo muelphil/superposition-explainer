@@ -144,4 +144,15 @@ This is okay, but you ignored some constraints and we need to make some adjustme
 * reset weights button in training configuration
 
 * RELU+ bias
-* 
+
+
+---
+
+Let's integrate latex rendering. Preferably use KaTeX to render latex. The latex should be rendered in 3 places:
+* in the EmbeddingLegend showing the different features f_1, ..., f_n
+* In the EmbeddingView specifically in the Three.js render of the coordinate system replacing the h_1, h_2, h_3 AXIS_LABELS -- this requires rendering as svg within Three.js and will require extra care
+* In the Autoencoder in the InputValue components left of the .value-label span, render the feature as f_1, f_2, ... for every input
+
+
+
+

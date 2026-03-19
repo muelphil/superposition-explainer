@@ -36,6 +36,7 @@ const inputDim = computed(() => svc.config.inputDim)
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  position: relative;
 }
 
 .emb-canvas {

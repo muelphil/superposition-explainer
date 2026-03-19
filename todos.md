@@ -35,17 +35,24 @@
     *
 * color (orange/blue) might need to be replaced, as the core thing in this visualization is the features in embedding space
 * Training Statistics
-    * Interference Statistic: show the weighted amount of interference produced by the embedding space vectors (remember RELU maskes negative interference)
+    * Interference Statistic: show the weighted amount of interference produced by the embedding space vectors (remember RELU masks negative interference)
         * compute interference per vectors for every other vector, then set interference for negative values to 0, compute average per vector, then compute total average across all vectors
 * Weights view
     * feature vector length should be provided as tooltip
 
-maybe replace batch loss with "validation" data loss?
+* maybe replace batch loss with "validation" data loss? (all combinations and their respective probabilities)
+    * maybe not all, but so that 99% of cases are present
+
+* Put f_1 in front of features (no inputs)
+* bias/RELU visualisierung
+* KaTeX
 
 Future:
 * input vector should be shown as a vector in embedding space as a sum of embedding feature vectors
 * Autoencoder View
 * increase max features to 12?
+
+Linearkombination von Vektoren für Embeddings anzeigen
 
 * add Embedding Vector View as Tab on Embedding Space visualization
   * show current embedding vector for input as linear combination of embedding vectors
