@@ -21,7 +21,6 @@
         * There should be several experiment presets that should be loadable via buttons in the training configuration view, setting all parameters including input and embedding dimensions
 * Embedding Vectors View:
     * it should be zoomed in so that the view shows only slightly more than the area spanned by the orthonormal vectors of the dimension (1,2,3 depending on embedding dimension)
-    * the coordinate system axes arrow heads should be put at 1.15 instead of 1.5 as currently done
     * needs a view reset button
     * h1 h2 and h3 need to be rendered as crisp text and in black, coordinate vectors still in light grey
     *

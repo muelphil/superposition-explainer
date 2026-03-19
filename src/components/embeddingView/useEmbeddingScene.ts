@@ -143,7 +143,7 @@ export function useEmbeddingScene(
     controls.minDistance   = CAMERA_MIN_DIST
     controls.maxDistance   = CAMERA_MAX_DIST
     controls.enablePan     = false
-    if (embDim === 1) controls.enableRotate = false
+    if (embDim < 3) controls.enableRotate = false
 
     buildAxes()
     buildVecs()

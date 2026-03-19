@@ -1,7 +1,7 @@
 // ── Camera ───────────────────────────────────────────────────
 export const CAMERA_FOV      = 45
 export const CAMERA_MARGIN   = 0.3
-export const CAMERA_3D_DIR   = [1, 0.8, 1.667] as const   // unnormalized view direction
+export const CAMERA_3D_DIR   = [1, 1, 1] as const          // isometric: equal angle/length for all 3 axes
 export const CAMERA_MIN_DIST = 1.5
 export const CAMERA_MAX_DIST = 14
 export const CAMERA_DAMPING  = 0.07
