@@ -90,6 +90,7 @@ export function createAutoencoderService() {
 
   const currentInput = ref<number[]>([])
   const currentEmbedding = ref<number[]>([])
+  const currentPreActivation = ref<number[]>([])   // Wᵀh + b, before ReLU
   const currentOutput = ref<number[]>([])
   const currentError = ref<number[]>([])
   const loss = ref(0)
@@ -226,10 +227,12 @@ export function createAutoencoderService() {
 
     // xHat = ReLU(W^T * h + b)
     const Wth = matTransVecMul(W.value, h)
-    const xHat = Wth.map((val, i) => relu(val + b.value[i]))
+    const pre = Wth.map((val, i) => val + b.value[i])
+    const xHat = pre.map(val => relu(val))
 
     currentInput.value = [...x]
     currentEmbedding.value = [...h]
+    currentPreActivation.value = [...pre]
     currentOutput.value = [...xHat]
     currentError.value = x.map((xi, i) => xi - xHat[i])
 
@@ -444,6 +447,7 @@ export function createAutoencoderService() {
     featureImportance,
     currentInput,
     currentEmbedding,
+    currentPreActivation,
     currentOutput,
     currentError,
     loss,

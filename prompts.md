@@ -154,5 +154,19 @@ Let's integrate latex rendering. Preferably use KaTeX to render latex. The latex
 * In the Autoencoder in the InputValue components left of the .value-label span, render the feature as f_1, f_2, ... for every input
 
 
+---
 
+I would like you to adjust the Headers so that they are technically correct.
+Regarding the bias/RELU representation I would like you to implement the following approach:
+* show the bias/ RELU as 2 small vertically stacked elements left of the individual output neurons
+* they should have the same height for all neurons, independent of the scale applied to the output neuron due to the learning rate
+* the 2 small icons should have a light slightly rounded border and a small gap between them
+* the bias icon should contain a KaTeX rendered b and have a background color equal to the color seen in the WeightsView for the biases
+* the Relu icon should contain a small svg representation of a relu graph/function. The svg should in the best of cases be a separate svg file that I can adjust to my liking later on.
+* If the RELU function is did not change the output (input non-negative), the relu icon should have an opacity of 0.5, otherwise 1.0
 
+---
+
+This is good but needs 2 adjustments:
+* Make the icons width: 19px; height: 19px; instead of 26px
+* I'd prefer'

@@ -1,11 +1,5 @@
 # TODOs
 * Hover and Selection System
-    * hover and selection for certain input features/ embedding features
-    * hovering or selecting (clicking) certain input features or embedding features in the different views (autoencoder/embedding vectors/weights) should mark them selected in a new service, that gets injected into all the views
-    * all views should be able to select/hover things (i.e. Embedding Vector view should be able to select a feature vector by clicking the vector and hovering one by hovering the vector)
-    * 
-    * hovering and selecting should store both origin (which view triggered the hover/select) and what was hovered/selected (input feature, embedding vector, single cell, ... and which)
-    * all views listen to the selection and hover and based on what is selected/hovered and the origin of the selection/hover, they highlight the information themselves
     * it should trigger visualization in different components
         * No feature selected, but feature hovered:
             * Embedding Space Vector View: highlight vector, make other vectors greyscale, show relu regarding selected vector (hyperspace going through coordinate origin + bias value along the vector)
@@ -16,7 +10,6 @@
 * Autoencoder View
     * Embeddings Space Neurons and Output Neurons require interactive visualization of their values being calculated
         * hovering them should show a tip tool element underneath that details the calculation and highlights relevant embedding space vectors
-    * Connection need to fully go into the neurons, they currently stop before them, target needs to be their center line, not the left/right border.
     * The view needs to be smaller in general, more reminiscent of tools like the transformer playground or the CNN explainer or Transformer Explainer, to fit on the screen
         * make input normal distribution more narrow, make it go from 0 to 2 only
     * headers might be incorrect: encoder/decoder should be above the connections, not the neurons
@@ -43,9 +36,8 @@
 * maybe replace batch loss with "validation" data loss? (all combinations and their respective probabilities)
     * maybe not all, but so that 99% of cases are present
 
-* Put f_1 in front of features (no inputs)
+
 * bias/RELU visualisierung
-* KaTeX
 
 Future:
 * input vector should be shown as a vector in embedding space as a sum of embedding feature vectors
@@ -62,4 +54,3 @@ Linearkombination von Vektoren für Embeddings anzeigen
 # What I still need to figure out
 * role of RELU
 * role of bias
-

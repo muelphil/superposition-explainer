@@ -4,6 +4,7 @@ import type { AutoencoderServiceType } from '../services/AutoencoderService'
 import { INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX } from '../services/AutoencoderService'
 import type { SelectionServiceType } from '../services/SelectionService'
 import InputValue from './InputValue.vue'
+import ActivationIcons from './ActivationIcons.vue'
 
 const svc    = inject<AutoencoderServiceType>('autoencoderService')!
 const selSvc = inject<SelectionServiceType>('selectionService')!
@@ -292,11 +293,11 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
     </svg>
 
     <!-- ── Row 1: Column headings ──────────────────────────── -->
-    <div class="col-heading" style="grid-column: 1; grid-row: 1">Input</div>
-    <div class="col-heading" style="grid-column: 3; grid-row: 1">Encoder</div>
+    <div class="col-heading" style="grid-column: 1; grid-row: 1">Features</div>
+    <div class="col-heading" style="grid-column: 3; grid-row: 1">Input</div>
     <div class="col-heading" style="grid-column: 5; grid-row: 1">Embedding</div>
-    <div class="col-heading" style="grid-column: 7; grid-row: 1">Decoder</div>
     <div class="col-heading" style="grid-column: 9; grid-row: 1">Output</div>
+    <div class="col-heading" style="grid-column: 11; grid-row: 1">Reconstruction</div>
 
     <!-- ── Row 2: Sub-header info / controls ────────────────── -->
     <!-- Input col: resample-all button -->
@@ -326,11 +327,10 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
       </div>
     </div>
 
-    <!-- Decoder col: activation info -->
-    <span class="col-subtext" style="grid-column: 7; grid-row: 2">Bias / ReLU</span>
+    <!-- Decoder col: activation info — removed; replaced by per-row ActivationIcons -->
 
     <!-- Output col: weighted loss label + value -->
-    <div class="sub-header-loss" style="grid-column: 9; grid-row: 2">
+    <div class="sub-header-loss" style="grid-column: 11; grid-row: 2">
       <span class="col-loss-label">weighted loss</span>
       <span class="col-loss-val" :class="{ zero: !isNonZero(currentLoss) }">
         {{ currentLoss.toFixed(3) }}
@@ -367,26 +367,33 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
         @click="onFeatureClick(i)"
       />
 
-      <!-- Output neuron: col 7 — also scales with importance -->
+      <!-- Activation icons (bias + ReLU): col 7 -->
+      <ActivationIcons
+        :biasVal="svc.b.value[i] ?? 0"
+        :preActivation="svc.currentPreActivation.value[i] ?? 0"
+        :style="{ gridColumn: '7', gridRow: String(i + dataRowStart) }"
+      />
+
+      <!-- Output neuron: col 9 — also scales with importance -->
       <div
         :ref="(el) => { outputNeuronRefs[i] = el as HTMLElement }"
         class="neuron"
         :style="{
-          gridColumn: '7',
+          gridColumn: '9',
           gridRow: String(i + dataRowStart),
           background: neuronColor(svc.currentOutput.value[i] ?? 0),
           transform: `scale(${neuronScale(i)})`,
         }"
-        :title="`x̂${i + 1} = ${fmt(svc.currentOutput.value[i] ?? 0)}`"
+        :title="`x̂${i + 1} = ${fmt(svc.currentOutput.value[i] ?? 0)}, pre-ReLU = ${fmt(svc.currentPreActivation.value[i] ?? 0)}`"
         @mouseenter="onOutputEnter(i)"
         @mouseleave="onOutputLeave"
         @click="onOutputClick(i)"
       />
 
-      <!-- Output value: col 9 -->
+      <!-- Output value: col 11 -->
       <div
         class="output-value"
-        :style="{ gridColumn: '9', gridRow: String(i + dataRowStart) }"
+        :style="{ gridColumn: '11', gridRow: String(i + dataRowStart) }"
       >
         <span class="out-val">{{ fmt(svc.currentOutput.value[i] ?? 0) }}</span>
         <span class="out-err" :class="{ zero: !isNonZero(svc.currentError.value[i] ?? 0) }">
@@ -430,12 +437,14 @@ function onOutputClick(i: number) { selSvc.setSelected({ kind: 'output', idx: i 
   display: grid;
 
   grid-template-columns:
-    [inputs]          60px
+    [features]        60px
     [gap-s-left]      1.2rem
     [input-neurons]   var(--neuron-size)
     [gap-conn-l]      1fr
     [embedding]       calc(var(--neuron-size) * 1.4)
     [gap-conn-r]      1fr
+    [act-icons]       30px
+    [gap-act]         0.5rem
     [output-neurons]  var(--neuron-size)
     [gap-s-right]     1.2rem
     [outputs]         82px;

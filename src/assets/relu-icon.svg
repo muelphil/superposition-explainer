@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 16" fill="none">
+  <!-- Axis lines -->
+  <line x1="1"  y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="0.6" stroke-opacity="0.3"/>
+  <line x1="8"  y1="1"  x2="8"  y2="15" stroke="currentColor" stroke-width="0.6" stroke-opacity="0.3"/>
+  <!-- ReLU: flat for x<0, linear for x≥0 -->
+  <polyline
+    points="1,12 8,12 19,1.5"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
