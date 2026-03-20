@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { renderLatexHtml } from '../utils/latex'
 import reluIconSvg from '../assets/relu-icon.svg?raw'
+import type { SelectionServiceType } from '../services/SelectionService'
 
 const props = defineProps<{
   biasVal:       number
   preActivation: number
   featureIdx:    number
 }>()
+
+const selSvc = inject<SelectionServiceType>('selectionService')!
 
 /** Same colour scale as WeightView — positive→orange, negative→blue, zero→white */
 function valColor(val: number): string {
@@ -31,6 +34,12 @@ const biasLabel      = computed(() => renderLatexHtml(`b_{${props.featureIdx + 1
 
 /** ReLU clips when pre-activation ≤ 0 */
 const reluClipping = computed(() => props.preActivation <= 0)
+
+function onBiasEnter()  { selSvc.setHover({ kind: 'bias', idx: props.featureIdx }, 'autoencoder') }
+function onReluEnter()  { selSvc.setHover({ kind: 'relu', idx: props.featureIdx }, 'autoencoder') }
+function onIconLeave()  { selSvc.clearHover() }
+function onBiasClick()  { selSvc.setSelected({ kind: 'bias', idx: props.featureIdx }, 'autoencoder') }
+function onReluClick()  { selSvc.setSelected({ kind: 'relu', idx: props.featureIdx }, 'autoencoder') }
 </script>
 
 <template>
@@ -39,7 +48,9 @@ const reluClipping = computed(() => props.preActivation <= 0)
     <div
       class="act-icon bias-icon"
       :style="{ background: biasBackground }"
-      :title="`b${featureIdx + 1} = ${biasVal.toFixed(3)}`"
+      @mouseenter="onBiasEnter"
+      @mouseleave="onIconLeave"
+      @click="onBiasClick"
     >
       <span class="bias-label" v-html="biasLabel" />
     </div>
@@ -48,9 +59,9 @@ const reluClipping = computed(() => props.preActivation <= 0)
     <div
       class="act-icon relu-icon"
       :class="{ 'relu-clipping': reluClipping }"
-      :title="reluClipping
-        ? `ReLU clipped (pre = ${preActivation.toFixed(3)})`
-        : `ReLU active  (pre = ${preActivation.toFixed(3)})`"
+      @mouseenter="onReluEnter"
+      @mouseleave="onIconLeave"
+      @click="onReluClick"
     >
       <span class="relu-svg" v-html="reluIconSvg" />
     </div>
@@ -64,6 +75,7 @@ const reluClipping = computed(() => props.preActivation <= 0)
   align-items: center;
   gap: 4px;
   z-index: 2;
+  cursor: pointer;
 }
 
 .act-icon {

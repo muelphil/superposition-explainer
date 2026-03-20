@@ -283,6 +283,18 @@ function onFeatureClick(i: number) {
   selSvc.setSelected({kind: 'feature', idx: i}, 'autoencoder')
 }
 
+function onInputEnter(i: number) {
+  selSvc.setHover({kind: 'input', idx: i}, 'autoencoder')
+}
+
+function onInputLeave() {
+  selSvc.clearHover()
+}
+
+function onInputClick(i: number) {
+  selSvc.setSelected({kind: 'input', idx: i}, 'autoencoder')
+}
+
 function onEmbNeuronEnter(k: number) {
   selSvc.setHover({kind: 'emb', idx: k}, 'autoencoder')
 }
@@ -413,6 +425,9 @@ function onOutputClick(i: number) {
           :featureCount="n"
           @update:modelValue="onInputChange(i, $event)"
           @resample="resampleInput(i)"
+          @featureClick="onInputClick(i)"
+          @mouseenter="onInputEnter(i)"
+          @mouseleave="onInputLeave"
           :style="{ gridColumn: '1', gridRow: String(i + dataRowStart) }"
       />
 
@@ -435,7 +450,7 @@ function onOutputClick(i: number) {
         <div class="neuron-tooltip" v-html="inputNeuronTooltip(i)" />
       </div>
 
-      <!-- Activation icons (bias + ReLU): col 7 -->
+      <!-- Activation icons (bias + ReLU): col 8 -->
       <ActivationIcons
           :biasVal="svc.b.value[i] ?? 0"
           :preActivation="svc.currentPreActivation.value[i] ?? 0"

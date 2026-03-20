@@ -14,6 +14,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: number]
   'resample': []
+  'featureClick': []
 }>()
 
 /** Toggle: if non-zero → set to 0; if zero → ask parent to resample */
@@ -107,6 +108,7 @@ function onSliderChange(event: Event) {
           class="feature-label"
           v-html="renderLatexHtml(`f_{${props.featureIdx + 1}}`)"
           aria-hidden="true"
+          @click.stop="emit('featureClick')"
       />
       <span
           class="value-label"
@@ -156,7 +158,11 @@ function onSliderChange(event: Event) {
   font-size: 0.8rem;
   color: var(--color-text-label);
   white-space: nowrap;
-  pointer-events: none;
+  cursor: pointer;
+  user-select: none;
+}
+.feature-label:hover :deep(.katex) {
+  color: var(--color-interactive, #6366f1);
 }
 .feature-label :deep(.katex) {
   font-size: 0.8rem;

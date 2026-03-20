@@ -184,7 +184,21 @@ Lets move on to the EmbeddingView. Lets start with small adjustments.
 
 ---
 
+We next need to implement the focusing and highlighting logic for the view components, that provide visual cues when certain things are hovered/ selected.
+I would like to start with the AutoencoderView.
+When certain things are hovered or selected, it should mainly affect the neurons and weights.
+When a feature/embedding/output is hovered, this needs to make all other neurons that are not associated with that feature semi-transparent. Neurons and weights should be rendered in lower opacity for these.
+For a feature, the neurons that should not be made semi-transparent it's the associated input and reconstructed output neuron and all embedding neurons as well as all weights that are between these neurons.
+Likewise for the hovered outputs.
+For the embedding neurons, highlight the embedding neurons and all input/output neurons that are connected to this embedding neuron.
+A selected feature/emb/output should be visualized by having a different border or outline around the neuron. It should clearly indicate the neuron is selected, without totally rearranging the view.
 
+
+
+| { kind: 'feature';     idx: number }
+| { kind: 'emb';  idx: number }
+| { kind: 'output'; idx: number }
+| { kind: 'weight'; row: number; col: number }
 
 
 

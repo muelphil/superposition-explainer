@@ -3,10 +3,13 @@ import { ref } from 'vue'
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type SelectionTarget =
-  | { kind: 'feature';     idx: number }
-  | { kind: 'emb';  idx: number }
-  | { kind: 'output'; idx: number }
-  | { kind: 'weight'; row: number; col: number }
+  | { kind: 'feature';  idx: number }
+  | { kind: 'input';    idx: number }
+  | { kind: 'bias';     idx: number }
+  | { kind: 'relu';     idx: number }
+  | { kind: 'emb';      idx: number }
+  | { kind: 'output';   idx: number }
+  | { kind: 'weight';   row: number; col: number }
   | null
 
 export type OriginView = 'autoencoder' | 'embedding' | 'weights'
