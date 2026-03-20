@@ -5,6 +5,10 @@ const YELLOW_RGB = [234, 179,  8]   // #eab308
 const CSS_GREEN  = `rgb(${GREEN_RGB.join(', ')})`
 const CSS_YELLOW = `rgb(${YELLOW_RGB.join(', ')})`
 
+/** Purple used for the current embedding point in the 3D scene. */
+export const EMBEDDING_POINT_COLOR     = '#a855f7'   // violet-500
+export const EMBEDDING_POINT_COLOR_HEX = 0xa855f7
+
 /**
  * CSS color for feature i out of n total features.
  * Uses `color(srgb-linear ...)` so the browser applies sRGB gamma encoding,

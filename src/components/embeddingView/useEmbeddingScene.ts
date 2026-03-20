@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import type { AutoencoderServiceType } from '../../services/AutoencoderService'
 import type { SelectionServiceType } from '../../services/SelectionService'
-import { featureColorRGB } from '../../utils/featureColor'
+import { featureColorRGB, EMBEDDING_POINT_COLOR_HEX } from '../../utils/featureColor'
 import { createLatexElement } from '../../utils/latex'
 import type { VecVis } from './types'
 import {
@@ -41,6 +41,7 @@ export function useEmbeddingScene(
   let vecs:          VecVis[]     = []
   let axisHitMeshes: THREE.Mesh[] = []
   let axisGroup: THREE.Group | null = null
+  let embPointMesh: THREE.Mesh | null = null
   let needsVecUpdate = false
   let lastHoverKey   = ''
 
@@ -80,6 +81,12 @@ export function useEmbeddingScene(
     })
     axisHitMeshes = []
     axisGroup = null
+    if (embPointMesh) {
+      scene?.remove(embPointMesh)
+      embPointMesh.geometry.dispose()
+      ;(embPointMesh.material as THREE.Material).dispose()
+      embPointMesh = null
+    }
     renderer?.dispose()
     if (labelRenderer) {
       labelRenderer.domElement.remove()
@@ -265,6 +272,30 @@ export function useEmbeddingScene(
       applyVecGeom(vv)   // set initial scale/position/orientation
     }
     applyHover()
+
+    // ── Embedding point (current input in embedding space) ────
+    if (embPointMesh) {
+      scene.remove(embPointMesh)
+      embPointMesh.geometry.dispose()
+      ;(embPointMesh.material as THREE.Material).dispose()
+    }
+    embPointMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.045, 14, 14),
+      new THREE.MeshBasicMaterial({ color: EMBEDDING_POINT_COLOR_HEX }),
+    )
+    scene.add(embPointMesh)
+    updateEmbPoint()
+  }
+
+  function updateEmbPoint() {
+    if (!embPointMesh) return
+    const h   = svc.currentEmbedding.value
+    const dim = svc.config.embeddingDim
+    embPointMesh.position.set(
+      dim >= 1 ? (h[0] ?? 0) : 0,
+      dim >= 2 ? (h[1] ?? 0) : 0,
+      dim >= 3 ? (h[2] ?? 0) : 0,
+    )
   }
 
   /** Update scale, position, and orientation of one vector's meshes without disposing geometry. */
@@ -327,6 +358,7 @@ export function useEmbeddingScene(
       updateVecs()
       needsVecUpdate = false
     }
+    updateEmbPoint()
 
     raycaster.setFromCamera(mouseNDC, camera)
     const vecHits  = raycaster.intersectObjects(vecs.map(vv => vv.hitMesh))
