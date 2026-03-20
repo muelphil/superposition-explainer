@@ -258,7 +258,123 @@ function resampleAll() {
   svc.runForward([...vals])
 }
 
-// ─── Selection / hover handlers ───────────────────────────────────────────────
+// ─── Hover / selection highlight logic ───────────────────────────────────────
+//
+// Architecture: each SelectionTarget maps to an Illumination — a description of
+// which neurons/paths are "lit" (everything else is dimmed).
+//
+// When both selection and hover are active:
+//   - Selection defines the base illumination.
+//   - Hover "narrows" it via set intersection ONLY when the hover is on a
+//     compatible (different) axis (e.g. feature selected + emb hovered → show
+//     only that feature AND that embedding neuron + their shared weights).
+//   - Incompatible hover (same axis, different index) is ignored so that
+//     selection always has precedence.
+//
+// The single `activeIllumination` computed is the source of truth. All dim /
+// opacity helpers derive from it — no ad-hoc functions needed.
+
+type IllumSet = Set<number> | 'all'
+
+interface Illumination {
+  inputs:  IllumSet
+  outputs: IllumSet
+  embs:    IllumSet
+  paths:   (row: number, col: number) => boolean
+}
+
+const FEATURE_LIKE = new Set(['feature', 'input', 'output', 'bias', 'relu'])
+
+function illuminationFor(t: ReturnType<typeof selSvc.selected.valueOf> | null): Illumination {
+  if (!t) return { inputs: 'all', outputs: 'all', embs: 'all', paths: () => true }
+  if (FEATURE_LIKE.has(t.kind)) {
+    const i = (t as { idx: number }).idx
+    return { inputs: new Set([i]), outputs: new Set([i]), embs: 'all', paths: (_r, c) => c === i }
+  }
+  if (t.kind === 'emb') {
+    return { inputs: 'all', outputs: 'all', embs: new Set([t.idx]), paths: (r) => r === t.idx }
+  }
+  if (t.kind === 'weight') {
+    return {
+      inputs:  new Set([t.col]),
+      outputs: new Set([t.col]),
+      embs:    new Set([t.row]),
+      paths:   (r, c) => r === t.row && c === t.col,
+    }
+  }
+  return { inputs: 'all', outputs: 'all', embs: 'all', paths: () => true }
+}
+
+function intersectSet(a: IllumSet, b: IllumSet): IllumSet {
+  if (a === 'all') return b
+  if (b === 'all') return a
+  const r = new Set([...a].filter(x => (b as Set<number>).has(x)))
+  return r.size > 0 ? r : a  // if empty, fall back to selection's set
+}
+
+function intersectIllum(sel: Illumination, hov: Illumination): Illumination {
+  return {
+    inputs:  intersectSet(sel.inputs,  hov.inputs),
+    outputs: intersectSet(sel.outputs, hov.outputs),
+    embs:    intersectSet(sel.embs,    hov.embs),
+    paths:   (r, c) => sel.paths(r, c) && hov.paths(r, c),
+  }
+}
+
+/** Hover is compatible when it is on a different "axis" than the selection.
+ *  Same-axis, different-index hovers are ignored (selection has precedence). */
+function hovIsCompatible(
+  sel: NonNullable<ReturnType<typeof selSvc.selected.valueOf>>,
+  hov: NonNullable<ReturnType<typeof selSvc.hovered.valueOf>>,
+): boolean {
+  const selF = FEATURE_LIKE.has(sel.kind)
+  const hovF = FEATURE_LIKE.has(hov.kind)
+  if (selF && hovF)
+    return (sel as { idx: number }).idx === (hov as { idx: number }).idx
+  if (sel.kind === 'emb' && hov.kind === 'emb')
+    return sel.idx === hov.idx
+  // A hovered weight is only compatible if it connects to the selected element
+  if (hov.kind === 'weight') {
+    if (selF) return hov.col === (sel as { idx: number }).idx
+    if (sel.kind === 'emb') return hov.row === sel.idx
+  }
+  return true
+}
+
+const activeIllumination = computed<Illumination>(() => {
+  const sel = selSvc.selected.value
+  const hov = selSvc.hovered.value
+  if (!sel && !hov) return illuminationFor(null)
+  if (!sel) return illuminationFor(hov)
+  if (!hov) return illuminationFor(sel)
+  return hovIsCompatible(sel, hov)
+    ? intersectIllum(illuminationFor(sel), illuminationFor(hov))
+    : illuminationFor(sel)
+})
+
+const isAnyActive = computed(() =>
+  selSvc.selected.value !== null || selSvc.hovered.value !== null
+)
+
+function inSet(s: IllumSet, i: number): boolean {
+  return s === 'all' || (s as Set<number>).has(i)
+}
+
+function isInputDimmed(i: number):  boolean { return isAnyActive.value && !inSet(activeIllumination.value.inputs,  i) }
+function isOutputDimmed(i: number): boolean { return isAnyActive.value && !inSet(activeIllumination.value.outputs, i) }
+function isEmbDimmed(k: number):    boolean { return isAnyActive.value && !inSet(activeIllumination.value.embs,    k) }
+
+function pathOpacity(row: number, col: number, base: number): number {
+  if (!isAnyActive.value) return base
+  return activeIllumination.value.paths(row, col) ? base : base * 0.1
+}
+
+/** Selection outline — reads selected only, independent of hover. */
+function isInputSelected(i: number):  boolean { const t = selSvc.selected.value; return !!t && FEATURE_LIKE.has(t.kind) && (t as {idx:number}).idx === i }
+function isOutputSelected(i: number): boolean { const t = selSvc.selected.value; return !!t && (t.kind === 'output' || FEATURE_LIKE.has(t.kind)) && (t as {idx:number}).idx === i }
+function isEmbSelected(k: number):    boolean { const t = selSvc.selected.value; return t?.kind === 'emb' && t.idx === k }
+
+
 function onWeightEnter(row: number, col: number) {
   selSvc.setHover({kind: 'weight', row, col}, 'autoencoder')
 }
@@ -353,7 +469,7 @@ function onOutputClick(i: number) {
             fill="none"
             :stroke="p.color"
             :stroke-width="p.width"
-            :opacity="p.opacity"
+            :opacity="pathOpacity(p.row, p.col, p.opacity)"
             style="pointer-events: stroke; cursor: pointer;stroke-linecap: round;"
             @mouseenter="onWeightEnter(p.row, p.col)"
             @mouseleave="onWeightLeave"
@@ -434,6 +550,7 @@ function onOutputClick(i: number) {
       <!-- Input neuron: col 3 -->
       <div
           class="neuron-wrap"
+          :class="{ dimmed: isInputDimmed(i) }"
           :style="{ gridColumn: '3', gridRow: String(i + dataRowStart) }"
           @mouseenter="onFeatureEnter(i)"
           @mouseleave="onFeatureLeave"
@@ -442,6 +559,7 @@ function onOutputClick(i: number) {
         <div
             :ref="(el) => { inputNeuronRefs[i] = el as HTMLElement }"
             class="neuron"
+            :class="{ 'neuron-selected': isInputSelected(i) }"
             :style="{
             background: neuronColor(svc.currentInput.value[i] ?? 0),
             transform: `scale(${neuronScale(i)})`,
@@ -458,17 +576,17 @@ function onOutputClick(i: number) {
           :style="{ gridColumn: '8', gridRow: String(i + dataRowStart) }"
       />
 
-      <!-- Output neuron: col 9 — also scales with importance -->
+      <!-- Output neuron: col 10 — also scales with importance -->
       <div
           :ref="(el) => { outputNeuronRefs[i] = el as HTMLElement }"
           class="neuron"
+          :class="{ dimmed: isOutputDimmed(i), 'neuron-selected': isOutputSelected(i) }"
           :style="{
           gridColumn: '10',
           gridRow: String(i + dataRowStart),
           background: neuronColor(svc.currentOutput.value[i] ?? 0),
           transform: `scale(${neuronScale(i)})`,
         }"
-          :title="`x̂${i + 1} = ${fmt(svc.currentOutput.value[i] ?? 0)}, pre-ReLU = ${fmt(svc.currentPreActivation.value[i] ?? 0)}`"
           @mouseenter="onOutputEnter(i)"
           @mouseleave="onOutputLeave"
           @click="onOutputClick(i)"
@@ -500,6 +618,7 @@ function onOutputClick(i: number) {
             :key="k"
             :ref="(el) => { embNeuronRefs[k] = el as HTMLElement }"
             class="neuron emb-neuron"
+          :class="{ dimmed: isEmbDimmed(k), 'neuron-selected': isEmbSelected(k) }"
             :style="{ background: neuronColor(svc.currentEmbedding.value[k] ?? 0) }"
             :title="`h${k + 1} = ${fmt(svc.currentEmbedding.value[k] ?? 0)}`"
             @mouseenter="onEmbNeuronEnter(k)"
@@ -600,7 +719,26 @@ function onOutputClick(i: number) {
   line-height: 1.2;
 }
 
-/* ── Neurons ──────────────────────────────────────────────── */
+/* ── Highlight / dim ──────────────────────────────────────── */
+.neuron-wrap.dimmed {
+  opacity: 0.18;
+}
+
+.neuron.dimmed {
+  opacity: 0.18;
+}
+
+.neuron-wrap,
+.neuron {
+  transition: opacity 0.15s;
+}
+
+.neuron.neuron-selected {
+  box-shadow: 0 0 0 2.5px #6366f1, 0 0 8px rgba(99, 102, 241, 0.4);
+  border-color: #6366f1;
+}
+
+
 .neuron-wrap {
   position: relative;
   display: flex;

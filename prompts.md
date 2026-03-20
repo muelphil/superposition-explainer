@@ -184,7 +184,7 @@ Lets move on to the EmbeddingView. Lets start with small adjustments.
 
 ---
 
-We next need to implement the focusing and highlighting logic for the view components, that provide visual cues when certain things are hovered/ selected.
+We next need to implement the reactive focusing and highlighting logic for the view components, that provide visual cues when certain things are hovered/ selected.
 I would like to start with the AutoencoderView.
 When certain things are hovered or selected, it should mainly affect the neurons and weights.
 When a feature/embedding/output is hovered, this needs to make all other neurons that are not associated with that feature semi-transparent. Neurons and weights should be rendered in lower opacity for these.
@@ -193,13 +193,16 @@ Likewise for the hovered outputs.
 For the embedding neurons, highlight the embedding neurons and all input/output neurons that are connected to this embedding neuron.
 A selected feature/emb/output should be visualized by having a different border or outline around the neuron. It should clearly indicate the neuron is selected, without totally rearranging the view.
 
+---
 
+This is not bad, but there are some minor issues:
+* selection has precedence over hover. When something is already selected, don't simply apply hover logic.
+* Where obvious, add special logic for when something is selected and something else is hovered additionally; e.g. if a input/feature is selected and a embedding neuron is hovered, additionally make all other embeddings transparent so that only the input neuron, the selected embedding neuron and the associated output neuron are highlighted including their connecting weights.
+  * This will be a reoccurring general pattern, that there needs to be complex combinations of selection & hover and different visualizations will need to be shown for combinations of these. I suppose it would be good to define a standard approach for this, perhaps via Vues reactive API with computed combining things. However, one needs to be careful to not make it too complicated. Make it clean, legible, functioning and efficient. 
 
-| { kind: 'feature';     idx: number }
-| { kind: 'emb';  idx: number }
-| { kind: 'output'; idx: number }
-| { kind: 'weight'; row: number; col: number }
+---
 
+can you instead of applying a border make it some outer glow?
 
 
 
