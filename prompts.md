@@ -202,7 +202,22 @@ This is not bad, but there are some minor issues:
 
 ---
 
-can you instead of applying a border make it some outer glow?
+Can you now look into the WeightView Component? Please hook it up to the selection/hover logic. First think about what should be highlighted when -- feature hover should also highlight the associated bias, but bias hover should only highlight the bias.
+When you seasoned about what needs to highlight when what is selected, please hook it up to the selection/hover logic.
+
+---
+
+
+We next need to tackle the visualization of different hovered and selected properties in the EmbeddingView. This is the most concerning part, as the Three.js visualization of the coordinate system is already complex. For visualization of the different hovered/selected properties, this would add a lot of logic to the code, that we already had to split into the several files in /src/components/embeddingView/.
+Additional objects may include: 
+* Interference: red dotted line
+* relu: surface/ area
+* bias blue/orange offset of the relu
+* grey dotted line parallel to embedding space vectors during input hover/modification
+* orange/blue line along the axes, plus dotted grey line tracing it to the vectors
+
+It would be very important to be able to abstract the low level logic away and also attach the visualization of different objects to reactive properties provided by the AutoencoderService, to make it reactive. Hovering/selection may introduce these objects, during hovering they need to reactively update to changes in weights/ inputs. Before implementing any of these, can you please review the embedding space view component and scripts and assess how well modularized and abstracted everything is? We need to prepare for implementing a lot of hover/selection based visualization. Review, improve where obvious, build a plan where not obvious, so we can discuss and implement it afterwards.
+
 
 
 

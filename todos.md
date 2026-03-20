@@ -26,6 +26,9 @@
   * issue is that batch loss will have strong variation across batches
   * maybe not all, but so that 99% of cases are present
 
+* improve visuals
+  * can you instead of applying a border make it some outer glow?
+* introduce compact mode?
 
 * bias/RELU visualisierung
 
