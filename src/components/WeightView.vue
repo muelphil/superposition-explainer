@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { inject, computed, ref } from 'vue'
+import { inject, computed } from 'vue'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
-import type { SelectionServiceType } from '../services/SelectionService'
+import type { SelectionServiceType, SelectionTarget } from '../services/SelectionService'
 
 const svc    = inject<AutoencoderServiceType>('autoencoderService')!
 const selSvc = inject<SelectionServiceType>('selectionService')!
@@ -9,54 +9,117 @@ const selSvc = inject<SelectionServiceType>('selectionService')!
 const m = computed(() => svc.config.embeddingDim)  // rows  (h₁…hₘ)
 const n = computed(() => svc.config.inputDim)       // cols  (f₁…fₙ)
 
-// ── Hover state ───────────────────────────────────────────────
-const hoverRow  = ref<number | null>(null)
-const hoverCol  = ref<number | null>(null)
-const hoverCell = ref<{ r: number; c: number } | null>(null)
-const hoverBias = ref<number | null>(null)
+// ─── Illumination ─────────────────────────────────────────────────────────────
+// null = everything lit (no active hover/selection)
+
+interface WvIllum {
+  wRows: Set<number> | 'all'
+  wCols: Set<number> | 'all'
+  wCell: { r: number; c: number } | null
+  bCols: Set<number> | 'all'
+}
+
+function illumForTarget(t: SelectionTarget): WvIllum | null {
+  if (!t) return null
+  switch (t.kind) {
+    // Feature, input, output all map to the same column + bias
+    case 'feature':
+    case 'input':
+    case 'output':
+      return { wRows: 'all', wCols: new Set([t.idx]), wCell: null, bCols: new Set([t.idx]) }
+    // Embedding → entire row of W; bias has no embedding connection
+    case 'emb':
+      return { wRows: new Set([t.idx]), wCols: 'all', wCell: null, bCols: new Set() }
+    // Bias and relu → only the bias cell (W fully dimmed per spec)
+    case 'bias':
+    case 'relu':
+      return { wRows: new Set(), wCols: new Set(), wCell: null, bCols: new Set([t.idx]) }
+    // Weight cell → only that specific cell
+    case 'weight':
+      return { wRows: new Set(), wCols: new Set(), wCell: { r: t.row, c: t.col }, bCols: new Set() }
+    default:
+      return null
+  }
+}
+
+// Selection takes precedence over hover
+const activeIllum = computed<WvIllum | null>(() => {
+  const sel = selSvc.selected.value
+  if (sel) return illumForTarget(sel)
+  const hov = selSvc.hovered.value
+  if (hov) return illumForTarget(hov)
+  return null
+})
 
 function isActive(): boolean {
-  return hoverRow.value !== null || hoverCol.value !== null ||
-         hoverCell.value !== null || hoverBias.value !== null
+  return activeIllum.value !== null
+}
+
+function inSet(s: Set<number> | 'all', idx: number): boolean {
+  return s === 'all' || (s as Set<number>).has(idx)
 }
 
 function cellHighlighted(r: number, c: number): boolean {
-  if (hoverCell.value) return hoverCell.value.r === r && hoverCell.value.c === c
-  if (hoverRow.value !== null) return hoverRow.value === r
-  if (hoverCol.value !== null) return hoverCol.value === c
-  return false
+  const illum = activeIllum.value
+  if (!illum) return false
+  if (illum.wCell) return illum.wCell.r === r && illum.wCell.c === c
+  return inSet(illum.wRows, r) && inSet(illum.wCols, c)
 }
 
 function biasHighlighted(c: number): boolean {
-  if (hoverBias.value !== null) return hoverBias.value === c
-  if (hoverCol.value !== null) return hoverCol.value === c
-  return false
+  const illum = activeIllum.value
+  if (!illum) return false
+  return inSet(illum.bCols, c)
 }
 
 function colHeaderHighlighted(c: number): boolean {
-  if (hoverCol.value !== null) return hoverCol.value === c
-  if (hoverCell.value) return hoverCell.value.c === c
-  if (hoverBias.value !== null) return hoverBias.value === c
-  return false
+  const illum = activeIllum.value
+  if (!illum) return false
+  if (illum.wCell) return illum.wCell.c === c
+  if (illum.wCols === 'all') return true
+  return (illum.wCols as Set<number>).has(c)
 }
 
 function rowHeaderHighlighted(r: number): boolean {
-  if (hoverRow.value !== null) return hoverRow.value === r
-  if (hoverCell.value) return hoverCell.value.r === r
-  return false
+  const illum = activeIllum.value
+  if (!illum) return false
+  if (illum.wCell) return illum.wCell.r === r
+  if (illum.wRows === 'all') return true
+  return (illum.wRows as Set<number>).has(r)
+}
+
+// ─── Selection indicators (outline/border on selected items) ──────────────────
+
+function isColSelected(c: number): boolean {
+  const sel = selSvc.selected.value
+  if (!sel) return false
+  return (sel.kind === 'feature' || sel.kind === 'input' || sel.kind === 'output') && sel.idx === c
+}
+
+function isRowSelected(r: number): boolean {
+  const sel = selSvc.selected.value
+  if (!sel) return false
+  return sel.kind === 'emb' && sel.idx === r
+}
+
+function isCellSelected(r: number, c: number): boolean {
+  const sel = selSvc.selected.value
+  if (!sel) return false
+  return sel.kind === 'weight' && sel.row === r && sel.col === c
+}
+
+function isBiasSelected(c: number): boolean {
+  const sel = selSvc.selected.value
+  if (!sel) return false
+  return sel.kind === 'bias' && sel.idx === c
 }
 
 function clearHover() {
-  hoverRow.value  = null
-  hoverCol.value  = null
-  hoverCell.value = null
-  hoverBias.value = null
   selSvc.clearHover()
 }
 
 // ── Selection service wrappers ─────────────────────────────────
 function onColEnter(c: number) {
-  hoverCol.value = c; hoverCell.value = null; hoverBias.value = null
   selSvc.setHover({ kind: 'feature', idx: c }, 'weights')
 }
 function onColClick(c: number) {
@@ -64,7 +127,6 @@ function onColClick(c: number) {
 }
 
 function onRowEnter(r: number) {
-  hoverRow.value = r; hoverCell.value = null
   selSvc.setHover({ kind: 'emb', idx: r }, 'weights')
 }
 function onRowClick(r: number) {
@@ -72,19 +134,18 @@ function onRowClick(r: number) {
 }
 
 function onCellEnter(r: number, c: number) {
-  hoverCell.value = { r, c }; hoverRow.value = null; hoverCol.value = null; hoverBias.value = null
   selSvc.setHover({ kind: 'weight', row: r, col: c }, 'weights')
 }
 function onCellClick(r: number, c: number) {
   selSvc.setSelected({ kind: 'weight', row: r, col: c }, 'weights')
 }
 
+// Bias hover/select uses 'bias' kind — highlights only the bias cell
 function onBiasEnter(c: number) {
-  hoverBias.value = c; hoverRow.value = null; hoverCell.value = null
-  selSvc.setHover({ kind: 'feature', idx: c }, 'weights')
+  selSvc.setHover({ kind: 'bias', idx: c }, 'weights')
 }
 function onBiasClick(c: number) {
-  selSvc.setSelected({ kind: 'feature', idx: c }, 'weights')
+  selSvc.setSelected({ kind: 'bias', idx: c }, 'weights')
 }
 
 // ── Color matching AutoencoderView neuron colors ──────────────
@@ -151,7 +212,11 @@ function sub(i: number): string {
           <div
             v-for="c in n" :key="c"
             class="col-header"
-            :class="{ highlighted: colHeaderHighlighted(c - 1), dimmed: isActive() && !colHeaderHighlighted(c - 1) }"
+            :class="{
+              highlighted: colHeaderHighlighted(c - 1),
+              dimmed: isActive() && !colHeaderHighlighted(c - 1),
+              selected: isColSelected(c - 1),
+            }"
             :title="`f${sub(c - 1)}  |f| = ${featureVecLength(c - 1).toFixed(3)}`"
             @mouseenter="onColEnter(c - 1)"
             @mouseleave="clearHover"
@@ -168,7 +233,11 @@ function sub(i: number): string {
             <div
               v-for="r in m" :key="r"
               class="row-header"
-              :class="{ highlighted: rowHeaderHighlighted(r - 1), dimmed: isActive() && !rowHeaderHighlighted(r - 1) }"
+              :class="{
+                highlighted: rowHeaderHighlighted(r - 1),
+                dimmed: isActive() && !rowHeaderHighlighted(r - 1),
+                selected: isRowSelected(r - 1),
+              }"
               @mouseenter="onRowEnter(r - 1)"
               @mouseleave="clearHover"
               @click="onRowClick(r - 1)"
@@ -185,6 +254,7 @@ function sub(i: number): string {
                 :class="{
                   highlighted: cellHighlighted(r - 1, c - 1),
                   dimmed: isActive() && !cellHighlighted(r - 1, c - 1),
+                  selected: isCellSelected(r - 1, c - 1),
                 }"
                 :style="{ background: valColor(wVal(r - 1, c - 1)) }"
                 @mouseenter="onCellEnter(r - 1, c - 1)"
@@ -217,6 +287,7 @@ function sub(i: number): string {
               :class="{
                 highlighted: biasHighlighted(c - 1),
                 dimmed: isActive() && !biasHighlighted(c - 1),
+                selected: isBiasSelected(c - 1),
               }"
               :style="{ background: valColor(bVal(c - 1)) }"
               @mouseenter="onBiasEnter(c - 1)"
@@ -391,6 +462,11 @@ function sub(i: number): string {
   box-shadow: 0 0 0 2px rgba(0,0,0,0.06);
 }
 
+.matrix-cell.selected {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.3);
+}
+
 .matrix-cell.dimmed {
   opacity: 0.35;
 }
@@ -414,5 +490,9 @@ function sub(i: number): string {
   opacity: 0.35;
 }
 
-
+.col-header.selected,
+.row-header.selected {
+  color: #6366f1;
+  font-weight: 700;
+}
 </style>
