@@ -195,8 +195,7 @@ export function createAutoencoderService() {
   function initialize() {
     _computeImportance()
     _initWeights()
-    // Initialize display with non-negative values, consistent with training data
-    currentInput.value = Array.from({ length: config.inputDim }, () => Math.abs(randn() * 0.8))
+    currentInput.value = _generateSample()
     _forwardPass(currentInput.value)
     step.value = 0
     loss.value = 0
