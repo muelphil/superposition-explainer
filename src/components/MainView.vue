@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, provide } from 'vue'
-import { RotateCcw, Play, Square } from 'lucide-vue-next'
+import { RotateCcw, Play, Square, Settings } from 'lucide-vue-next'
 import { createAutoencoderService } from '../services/AutoencoderService'
 import { createSelectionService } from '../services/SelectionService'
 import AutoencoderView from './AutoencoderView.vue'
@@ -8,6 +8,7 @@ import EmbeddingView from './embeddingView/EmbeddingView.vue'
 import WeightView from './WeightView.vue'
 import TrainingConfigView from './TrainingConfigView.vue'
 import TrainingStatsView from './TrainingStatsView.vue'
+import SettingsModal from './SettingsModal.vue'
 
 const autoencoderService = createAutoencoderService()
 provide('autoencoderService', autoencoderService)
@@ -30,12 +31,17 @@ const stepsCompleted = computed(() =>
   Math.max(0, svc.step.value - svc.trainingStartStep.value)
 )
 const lossDisplay = computed(() => svc.loss.value.toFixed(4))
+
+const showSettings = ref(false)
 </script>
 
 <template>
   <div class="main-view">
     <header class="app-header">
       <h1 class="app-title">Superposition Visualization</h1>
+      <button class="header-icon-btn" @click="showSettings = true" title="Settings">
+        <Settings :size="16" />
+      </button>
     </header>
 
     <main class="app-content">
@@ -120,6 +126,7 @@ const lossDisplay = computed(() => svc.loss.value.toFixed(4))
     </main>
 
     <!-- ── Selection debug bar ─────────────────────────────── -->
+    <SettingsModal :show="showSettings" @close="showSettings = false" />
     <div class="debug-bar">
       <span class="debug-section">
         <span class="debug-label">Hover</span>
@@ -172,13 +179,34 @@ const lossDisplay = computed(() => svc.loss.value.toFixed(4))
   padding: 0.5rem 1rem;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .app-title {
   font-size: 1.4rem;
   font-weight: 700;
   color: var(--color-text-primary);
-  margin: 0 0 0.25rem;
+  margin: 0;
+}
+
+.header-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.3rem;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.header-icon-btn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+  background: var(--color-bg-secondary);
 }
 
 .app-content {

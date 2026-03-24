@@ -5,6 +5,7 @@ import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import type { AutoencoderServiceType } from '../../services/AutoencoderService'
 import type { SelectionServiceType, SelectionTarget } from '../../services/SelectionService'
 import { featureColorRGB, EMBEDDING_POINT_COLOR_HEX } from '../../utils/featureColor'
+import { showEmbeddingPoint } from '../../services/SettingsService'
 import type { VecVis, SceneCtx } from './types'
 import { featureVec, makeAxisLabel, disposeMesh } from './sceneHelpers'
 import { useOverlayManager } from './useOverlayManager'
@@ -286,6 +287,7 @@ export function useEmbeddingScene(
       new THREE.SphereGeometry(0.045, 14, 14),
       new THREE.MeshBasicMaterial({ color: EMBEDDING_POINT_COLOR_HEX }),
     )
+    embPointMesh.visible = showEmbeddingPoint.value
     scene.add(embPointMesh)
     updateEmbPoint()
   }
@@ -526,6 +528,7 @@ export function useEmbeddingScene(
   watch([selSvc.hovered, selSvc.selected], ([hov, sel]) => {
     applyVisualState(sel, hov)
   }, { flush: 'sync' })
+  watch(showEmbeddingPoint, v => { if (embPointMesh) embPointMesh.visible = v })
 
   return {
     onMouseMove,
