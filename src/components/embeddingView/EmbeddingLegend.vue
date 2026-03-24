@@ -41,18 +41,22 @@ function onClick(i: number) { selSvc.setSelected({ kind: 'feature', idx: i }, 'e
 .emb-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem 0.65rem;
   justify-content: center;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.2rem;
   cursor: pointer;
   transition: opacity 0.15s;
   user-select: none;
 }
+
+.legend-item:not(:last-child){
+  padding-right: 0.5rem;
+}
+
 .legend-item.dimmed { opacity: 0.35; }
 
 .legend-swatch {
