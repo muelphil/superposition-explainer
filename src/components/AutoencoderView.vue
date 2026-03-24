@@ -790,6 +790,7 @@ function onOutputClick(i: number) {
   flex-shrink: 0;
   position: relative;
   z-index: 2;
+  cursor: pointer;
 }
 
 .emb-neuron {
