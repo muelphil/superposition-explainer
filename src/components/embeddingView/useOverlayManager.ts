@@ -64,8 +64,7 @@ import type { SelectionTarget, SelectionServiceType } from '../../services/Selec
 import type { SceneCtx, SceneOverlay } from './types'
 
 // ── Overlay registry ───────────────────────────────────────────────────────────
-// Import overlay classes here as they are implemented:
-// import { FeatureProjectionOverlay } from './overlays/FeatureProjectionOverlay'
+import { InputDirectionOverlay } from './overlays/InputDirectionOverlay'
 
 /**
  * Pure function: maps the current selection + hover target to a list of overlays.
@@ -76,11 +75,15 @@ function resolveOverlays(
   _sel: SelectionTarget,
   _hov: SelectionTarget,
 ): SceneOverlay[] {
-  // Overlay implementations are added here one by one.
-  // Example (once FeatureProjectionOverlay is implemented):
-  //   const target = _sel ?? _hov
-  //   if (target?.kind === 'feature') return [new FeatureProjectionOverlay(target.idx)]
-  return []
+  const target = _sel ?? _hov
+  if (!target) return []
+
+  switch (target.kind) {
+    case 'input':
+      return [new InputDirectionOverlay(target.idx)]
+    default:
+      return []
+  }
 }
 
 // ── Composable ────────────────────────────────────────────────────────────────

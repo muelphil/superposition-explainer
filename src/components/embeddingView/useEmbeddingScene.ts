@@ -23,9 +23,11 @@ import {
 const Y_UP    = new THREE.Vector3(0, 1, 0)
 const DIM_COLOR = new THREE.Color(DIM_COLOR_HEX)
 
-// Axis highlight: full brightness when an emb axis is hovered/selected
-const AXIS_HIGHLIGHT_COLOR   = 0xffffff
+// Axis highlight: dark grey when an emb axis is hovered/selected
+const AXIS_HIGHLIGHT_COLOR   = 0x374151   // grey-700 TODO too dark
 const AXIS_HIGHLIGHT_OPACITY = 1.0
+const AXIS_LABEL_COLOR_DEFAULT   = '#6b7280'   // grey-500 (matches makeAxisLabel)
+const AXIS_LABEL_COLOR_HIGHLIGHT = '#1f2937'   // grey-800
 
 export function useEmbeddingScene(
   canvasRef:    Ref<HTMLCanvasElement | null>,
@@ -47,8 +49,10 @@ export function useEmbeddingScene(
   let vecs:          VecVis[]     = []
   let axisHitMeshes: THREE.Mesh[] = []
   let axisGroup: THREE.Group | null = null
-  // Per-axis materials for targeted highlighting: [lineMatPos, lineMatNeg, ...] per axis
-  let axisMaterials: THREE.LineBasicMaterial[][] = []
+  // Per-axis materials for targeted highlighting: [lineMat, arrowMats, tickMats, ...] per axis
+  let axisMaterials: THREE.Material[][] = []
+  // Per-axis CSS2DObject labels for text color highlighting
+  let axisLabels: import('three/examples/jsm/renderers/CSS2DRenderer.js').CSS2DObject[] = []
   let embPointMesh: THREE.Mesh | null = null
   let needsVecUpdate = false
   let lastHoverKey   = ''
@@ -83,6 +87,7 @@ export function useEmbeddingScene(
     })
     axisHitMeshes = []
     axisMaterials = []
+    axisLabels    = []
     axisGroup = null
     if (embPointMesh) {
       scene?.remove(embPointMesh)
@@ -170,6 +175,7 @@ export function useEmbeddingScene(
     })
     axisHitMeshes = []
     axisMaterials = []
+    axisLabels    = []
     if (axisGroup) scene.remove(axisGroup)
 
     const grp = new THREE.Group()
@@ -183,9 +189,12 @@ export function useEmbeddingScene(
       const dir    = new THREE.Vector3(dx, dy, dz)
       const negDir = dir.clone().negate()
 
-      // Keep per-axis line materials so they can be highlighted individually
+      // Collect all materials for this axis so highlighting can target them
+      const mats: THREE.Material[] = []
+
+      // Main axis line
       const lineMat = new THREE.LineBasicMaterial({ color: AXIS_COLOR, opacity: AXIS_OPACITY, transparent: true })
-      const mats: THREE.LineBasicMaterial[] = [lineMat]
+      mats.push(lineMat)
 
       const lineGeom = new THREE.BufferGeometry().setFromPoints([
         dir.clone().multiplyScalar(-AXIS_LEN),
@@ -193,14 +202,24 @@ export function useEmbeddingScene(
       ])
       grp.add(new THREE.Line(lineGeom, lineMat))
 
-      grp.add(new THREE.ArrowHelper(
+      // Arrow helpers (positive + negative direction)
+      const arrowPos = new THREE.ArrowHelper(
         dir, dir.clone().multiplyScalar(AXIS_LEN - AXIS_ARROW_INSET),
         AXIS_ARROW_LEN, AXIS_COLOR, AXIS_ARROW_HEAD_LEN, AXIS_ARROW_HEAD_W,
-      ))
-      grp.add(new THREE.ArrowHelper(
+      )
+      const arrowNeg = new THREE.ArrowHelper(
         negDir, negDir.clone().multiplyScalar(AXIS_LEN - AXIS_ARROW_INSET),
         AXIS_ARROW_LEN, AXIS_COLOR, AXIS_ARROW_HEAD_LEN, AXIS_ARROW_HEAD_W,
-      ))
+      )
+      grp.add(arrowPos)
+      grp.add(arrowNeg)
+      // ArrowHelper has .line (Line) and .cone (Mesh) children
+      mats.push(
+        arrowPos.line.material as THREE.Material,
+        arrowPos.cone.material as THREE.Material,
+        arrowNeg.line.material as THREE.Material,
+        arrowNeg.cone.material as THREE.Material,
+      )
 
       // Tick marks at ±1
       const perp = a === 0 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0)
@@ -209,9 +228,11 @@ export function useEmbeddingScene(
           dir.clone().multiplyScalar(s).add(perp.clone().multiplyScalar(-AXIS_TICK_SIZE)),
           dir.clone().multiplyScalar(s).add(perp.clone().multiplyScalar( AXIS_TICK_SIZE)),
         ])
-        grp.add(new THREE.Line(tg, new THREE.LineBasicMaterial({
+        const tickMat = new THREE.LineBasicMaterial({
           color: AXIS_COLOR, opacity: AXIS_TICK_OPACITY, transparent: true,
-        })))
+        })
+        mats.push(tickMat)
+        grp.add(new THREE.Line(tg, tickMat))
       }
 
       // Label sprite beside arrowhead tip
@@ -221,6 +242,7 @@ export function useEmbeddingScene(
         dir.clone().multiplyScalar(AXIS_LEN).add(perp2.clone().multiplyScalar(AXIS_LABEL_PERP))
       )
       grp.add(lbl)
+      axisLabels.push(lbl)
 
       // Invisible hit cylinder for hover/click (aligned to axis direction)
       const hitGeom = new THREE.CylinderGeometry(AXIS_HIT_RADIUS, AXIS_HIT_RADIUS, AXIS_LEN * 2, 8)
@@ -402,8 +424,13 @@ export function useEmbeddingScene(
     for (let a = 0; a < axisMaterials.length; a++) {
       const highlight = litAxisIdx === a
       for (const mat of axisMaterials[a]) {
-        mat.color.setHex(highlight ? AXIS_HIGHLIGHT_COLOR : AXIS_COLOR)
-        mat.opacity = highlight ? AXIS_HIGHLIGHT_OPACITY : AXIS_OPACITY
+        const m = mat as THREE.MeshBasicMaterial  // works for both MeshBasicMaterial and LineBasicMaterial
+        m.color.setHex(highlight ? AXIS_HIGHLIGHT_COLOR : AXIS_COLOR)
+        m.opacity = highlight ? AXIS_HIGHLIGHT_OPACITY : AXIS_OPACITY
+      }
+      // Update label text color
+      if (axisLabels[a]) {
+        axisLabels[a].element.style.color = highlight ? AXIS_LABEL_COLOR_HIGHLIGHT : AXIS_LABEL_COLOR_DEFAULT
       }
     }
   }
