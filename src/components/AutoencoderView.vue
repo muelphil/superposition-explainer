@@ -539,6 +539,7 @@ function onOutputClick(i: number) {
           :disabled="svc.isTraining.value"
           :featureIdx="i"
           :featureCount="n"
+          :class="{ dimmed: isInputDimmed(i) }"
           @update:modelValue="onInputChange(i, $event)"
           @resample="resampleInput(i)"
           @featureClick="onInputClick(i)"
@@ -595,6 +596,7 @@ function onOutputClick(i: number) {
       <!-- Output value: col 11 -->
       <div
           class="output-value"
+          :class="{ dimmed: isOutputDimmed(i) }"
           :style="{ gridColumn: '12', gridRow: String(i + dataRowStart) }"
       >
         <span class="out-val">{{ fmt(svc.currentOutput.value[i] ?? 0) }}</span>
@@ -728,8 +730,15 @@ function onOutputClick(i: number) {
   opacity: 0.18;
 }
 
+:deep(.input-value.dimmed),
+.output-value.dimmed {
+  opacity: 0.18;
+}
+
 .neuron-wrap,
-.neuron {
+.neuron,
+:deep(.input-value),
+.output-value {
   transition: opacity 0.15s;
 }
 
