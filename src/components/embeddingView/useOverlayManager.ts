@@ -65,6 +65,7 @@ import type { SceneCtx, SceneOverlay } from './types'
 
 // ── Overlay registry ───────────────────────────────────────────────────────────
 import { InputDirectionOverlay } from './overlays/InputDirectionOverlay'
+import { AxisGradientOverlay } from './overlays/AxisGradientOverlay'
 
 /**
  * Pure function: maps the current selection + hover target to a list of overlays.
@@ -81,6 +82,8 @@ function resolveOverlays(
   switch (target.kind) {
     case 'input':
       return [new InputDirectionOverlay(target.idx)]
+    case 'emb':
+      return [new AxisGradientOverlay(target.idx)]
     default:
       return []
   }
