@@ -5,42 +5,16 @@ import { setCylinderEnds } from '../sceneHelpers'
 import { createLatexElement } from '../../../utils/latex'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const REGION_OPACITY  = 0.12
+const REGION_OPACITY  = 0.25
 const REGION_COLOR    = 0x737373      // grey
 const SURFACE_COLOR   = 0x9ca3af      // grey-400
 const SURFACE_OPACITY = 0.5
 const SURFACE_RADIUS  = 0.003
-const SURFACE_EXTENT  = 20            // large enough to always span the viewport
+const SURFACE_EXTENT  = 20            // large enough to always span the viewport (2D)
 const LABEL_OFFSET    = 0.45          // how far into the inactive region for the label
-const REGION_DEPTH    = 10            // how far the inactive-region surface extends
-
-// ── Crosshatch texture (helps distinguish boundary in 3D) ────────────────────
-
-let _hatchTexture: THREE.CanvasTexture | null = null
-
-function getHatchTexture(): THREE.CanvasTexture {
-  if (_hatchTexture) return _hatchTexture
-  const size = 32
-  const canvas = document.createElement('canvas')
-  canvas.width = size
-  canvas.height = size
-  const ctx = canvas.getContext('2d')!
-  ctx.clearRect(0, 0, size, size)
-  // Diagonal stripes
-  ctx.strokeStyle = 'rgba(115, 115, 115, 0.45)'
-  ctx.lineWidth = 1.5
-  for (let i = -size; i < size * 2; i += 6) {
-    ctx.beginPath()
-    ctx.moveTo(i, 0)
-    ctx.lineTo(i + size, size)
-    ctx.stroke()
-  }
-  _hatchTexture = new THREE.CanvasTexture(canvas)
-  _hatchTexture.wrapS = THREE.RepeatWrapping
-  _hatchTexture.wrapT = THREE.RepeatWrapping
-  _hatchTexture.repeat.set(20, 20)
-  return _hatchTexture
-}
+const REGION_DEPTH    = 10            // how far the inactive-region surface extends (2D)
+const DISC_RADIUS     = 1.2           // radius of the circular ReLU disc in 3D
+const DISC_SEGMENTS   = 48            // number of segments for the disc circle
 
 // ── Overlay class ─────────────────────────────────────────────────────────────
 
@@ -68,6 +42,7 @@ export class ReluRegionOverlay implements SceneOverlay {
 
   // Label
   private label!: CSS2DObject
+  private labelInner!: HTMLElement  // inner element for rotation (CSS2DRenderer controls outer)
 
   private readonly _biasPos = new THREE.Vector3()
   private readonly _perp    = new THREE.Vector3()
@@ -86,7 +61,6 @@ export class ReluRegionOverlay implements SceneOverlay {
       depthTest:   false,
       depthWrite:  false,
       side:        THREE.DoubleSide,
-      map:         getHatchTexture(),
     })
     this.regionGeom = new THREE.BufferGeometry()
     this.regionMesh = new THREE.Mesh(this.regionGeom, this.regionMat)
@@ -107,7 +81,9 @@ export class ReluRegionOverlay implements SceneOverlay {
     ctx.scene.add(this.surface)
 
     // ── Label ──────────────────────────────────────────────────
-    const el = createLatexElement('\\text{Masked by ReLU}', {
+    // Wrap in a container so CSS2DRenderer controls the outer transform
+    // while we rotate the inner element independently.
+    const inner = createLatexElement('\\text{Masked by ReLU}', {
       color: '#9ca3af',
       fontSize: '0.68rem',
       pointerEvents: 'none',
@@ -117,7 +93,11 @@ export class ReluRegionOverlay implements SceneOverlay {
       padding: '1px 5px',
       background: 'rgba(255,255,255,0.85)',
     })
-    this.label = new CSS2DObject(el)
+    const wrapper = document.createElement('div')
+    wrapper.style.pointerEvents = 'none'
+    wrapper.appendChild(inner)
+    this.labelInner = inner
+    this.label = new CSS2DObject(wrapper)
     ctx.scene.add(this.label)
 
     this.update()
@@ -182,10 +162,15 @@ export class ReluRegionOverlay implements SceneOverlay {
       const from = this._biasPos.clone().addScaledVector(this._perp, -0.06)
       const to   = this._biasPos.clone().addScaledVector(this._perp,  0.06)
       setCylinderEnds(this.surface, from, to)
-    } else {
+      this.surface.visible = true
+    } else if (dim === 2) {
       const from = this._biasPos.clone().addScaledVector(this._perp, -SURFACE_EXTENT)
       const to   = this._biasPos.clone().addScaledVector(this._perp,  SURFACE_EXTENT)
       setCylinderEnds(this.surface, from, to)
+      this.surface.visible = true
+    } else {
+      // In 3D the disc edge IS the boundary — hide the line
+      this.surface.visible = false
     }
 
     // ── Label position (in the inactive region) ────────────────
@@ -199,78 +184,58 @@ export class ReluRegionOverlay implements SceneOverlay {
   }
 
   /**
-   * Build the inactive-region surface as a BufferGeometry quad.
-   * - 2D: rectangle from boundary line extending toward origin
-   * - 3D: large square perpendicular to vec at the boundary, extending toward origin
-   * - 1D: thin rectangle
+   * Build the inactive-region surface as a BufferGeometry.
+   * - 1D/2D: rectangle from boundary line extending toward origin
+   * - 3D: circular disc (radius DISC_RADIUS) centered on the bias point
    */
   private buildRegionSurface(vecNorm: THREE.Vector3, dim: number) {
     const bp = this._biasPos
-    const depth = REGION_DEPTH
-    const hw = dim === 1 ? 0.06 : SURFACE_EXTENT  // half-width along perp
-
-    // Edge at the boundary (0 depth), back edge deep into inactive region
-    const edgeNear = bp      // at the boundary
-    const backOffset = vecNorm.clone().multiplyScalar(-depth) // into inactive region
-
-    let positions: Float32Array
-    let uvs: Float32Array
-
-    // UV quad for one face (2 triangles): v0(1,1) v1(0,1) v2(0,0) / v0(1,1) v2(0,0) v3(1,0)
-    const FACE_UVS = [1,1, 0,1, 0,0, 1,1, 0,0, 1,0]
 
     if (dim <= 2) {
-      const v0 = edgeNear.clone().addScaledVector(this._perp,  hw)
-      const v1 = edgeNear.clone().addScaledVector(this._perp, -hw)
+      const depth = REGION_DEPTH
+      const hw = dim === 1 ? 0.06 : SURFACE_EXTENT
+      const backOffset = vecNorm.clone().multiplyScalar(-depth)
+
+      const v0 = bp.clone().addScaledVector(this._perp,  hw)
+      const v1 = bp.clone().addScaledVector(this._perp, -hw)
       const v2 = v1.clone().add(backOffset)
       const v3 = v0.clone().add(backOffset)
 
-      positions = new Float32Array([
+      const positions = new Float32Array([
         v0.x, v0.y, v0.z,  v1.x, v1.y, v1.z,  v2.x, v2.y, v2.z,
         v0.x, v0.y, v0.z,  v2.x, v2.y, v2.z,  v3.x, v3.y, v3.z,
       ])
-      uvs = new Float32Array(FACE_UVS)
+      this.regionGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+      this.regionGeom.setIndex(null)
     } else {
+      // 3D: circular disc perpendicular to feature vector, centered on bias
       const p1 = this._perp
       const p2 = this._perp2
-      const v0 = edgeNear.clone().addScaledVector(p1,  hw).addScaledVector(p2,  hw)
-      const v1 = edgeNear.clone().addScaledVector(p1, -hw).addScaledVector(p2,  hw)
-      const v2 = edgeNear.clone().addScaledVector(p1, -hw).addScaledVector(p2, -hw)
-      const v3 = edgeNear.clone().addScaledVector(p1,  hw).addScaledVector(p2, -hw)
-      const v4 = v0.clone().add(backOffset)
-      const v5 = v1.clone().add(backOffset)
-      const v6 = v2.clone().add(backOffset)
-      const v7 = v3.clone().add(backOffset)
+      const R  = DISC_RADIUS
+      const n  = DISC_SEGMENTS
 
-      positions = new Float32Array([
-        // Front face
-        v0.x,v0.y,v0.z, v1.x,v1.y,v1.z, v2.x,v2.y,v2.z,
-        v0.x,v0.y,v0.z, v2.x,v2.y,v2.z, v3.x,v3.y,v3.z,
-        // Back face
-        v4.x,v4.y,v4.z, v6.x,v6.y,v6.z, v5.x,v5.y,v5.z,
-        v4.x,v4.y,v4.z, v7.x,v7.y,v7.z, v6.x,v6.y,v6.z,
-        // Top side
-        v0.x,v0.y,v0.z, v1.x,v1.y,v1.z, v5.x,v5.y,v5.z,
-        v0.x,v0.y,v0.z, v5.x,v5.y,v5.z, v4.x,v4.y,v4.z,
-        // Bottom side
-        v3.x,v3.y,v3.z, v2.x,v2.y,v2.z, v6.x,v6.y,v6.z,
-        v3.x,v3.y,v3.z, v6.x,v6.y,v6.z, v7.x,v7.y,v7.z,
-        // Left side
-        v1.x,v1.y,v1.z, v2.x,v2.y,v2.z, v6.x,v6.y,v6.z,
-        v1.x,v1.y,v1.z, v6.x,v6.y,v6.z, v5.x,v5.y,v5.z,
-        // Right side
-        v0.x,v0.y,v0.z, v3.x,v3.y,v3.z, v7.x,v7.y,v7.z,
-        v0.x,v0.y,v0.z, v7.x,v7.y,v7.z, v4.x,v4.y,v4.z,
-      ])
-      // Each face gets the same UV quad
-      uvs = new Float32Array([
-        ...FACE_UVS, ...FACE_UVS, ...FACE_UVS,
-        ...FACE_UVS, ...FACE_UVS, ...FACE_UVS,
-      ])
+      // Fan: center vertex + n circumference vertices
+      const positions = new Float32Array((1 + n) * 3)
+      positions[0] = bp.x; positions[1] = bp.y; positions[2] = bp.z
+
+      for (let i = 0; i < n; i++) {
+        const θ = (i / n) * Math.PI * 2
+        const c = Math.cos(θ), s = Math.sin(θ)
+        const idx = (1 + i) * 3
+        positions[idx]     = bp.x + c * R * p1.x + s * R * p2.x
+        positions[idx + 1] = bp.y + c * R * p1.y + s * R * p2.y
+        positions[idx + 2] = bp.z + c * R * p1.z + s * R * p2.z
+      }
+
+      const indices: number[] = []
+      for (let i = 0; i < n; i++) {
+        indices.push(0, 1 + i, 1 + ((i + 1) % n))
+      }
+
+      this.regionGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+      this.regionGeom.setIndex(indices)
     }
 
-    this.regionGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    this.regionGeom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2))
     this.regionGeom.computeVertexNormals()
   }
 
@@ -294,6 +259,7 @@ export class ReluRegionOverlay implements SceneOverlay {
     if (angleDeg > 90)  angleDeg -= 180
     if (angleDeg < -90) angleDeg += 180
 
-    this.label.element.style.transform = `rotate(${-angleDeg}deg)`
+    // Apply to the inner element (CSS2DRenderer controls the outer wrapper's transform)
+    this.labelInner.style.transform = `rotate(${-angleDeg}deg)`
   }
 }

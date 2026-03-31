@@ -496,25 +496,11 @@ export function useEmbeddingScene(
         }
     }
 
-    // ── Camera animation state ──────────────────────────────────
-    let cameraAnimTarget: THREE.Vector3 | null = null
-    const CAMERA_LERP = 0.08
-
     // ── Render loop ───────────────────────────────────────────────
     function renderLoop() {
         rafId = requestAnimationFrame(renderLoop)
         if (!renderer || !scene || !camera) return
-
-        // Camera animation (skip controls.update during animation)
-        if (cameraAnimTarget) {
-            camera.position.lerp(cameraAnimTarget, CAMERA_LERP)
-            camera.lookAt(controls?.target ?? new THREE.Vector3())
-            if (camera.position.distanceTo(cameraAnimTarget) < 0.02) {
-                cameraAnimTarget = null
-            }
-        } else {
-            controls?.update()
-        }
+        controls?.update()
 
         if (needsVecUpdate) {
             updateVecs()
@@ -648,18 +634,6 @@ export function useEmbeddingScene(
     // Re-apply visual state when hover/selection changes from any other component
     watch([selSvc.hovered, selSvc.selected], ([hov, sel]) => {
         applyVisualState(sel, hov)
-        // Auto-rotate camera to face the selected output's feature vector (3D only)
-        if (svc.config.embeddingDim === 3 && camera) {
-            const outputTarget = (hov?.kind === 'output' ? hov : null) ?? (sel?.kind === 'output' ? sel : null)
-            if (outputTarget) {
-                const vec = featureVec(svc.W.value, svc.config.embeddingDim, outputTarget.idx)
-                if (vec.lengthSq() > 1e-8) {
-                    const dir = vec.clone().normalize()
-                    const dist = camera.position.length()
-                    cameraAnimTarget = dir.multiplyScalar(dist)
-                }
-            }
-        }
     }, {flush: 'sync'})
     watch(showEmbeddingPoint, v => {
         if (embPointMesh) embPointMesh.visible = v
