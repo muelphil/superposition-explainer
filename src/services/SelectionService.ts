@@ -14,6 +14,50 @@ export type SelectionTarget =
 
 export type OriginView = 'autoencoder' | 'embedding' | 'weights'
 
+export type TargetKind = NonNullable<SelectionTarget>['kind']
+
+// ─── Hover interaction matrix ─────────────────────────────────────────────────
+// Rows = selected kind, columns = hovered kind.
+// Cell = true → hovering that kind produces a visual effect while the row kind
+// is selected.  When false, consumers should treat hover as null.
+
+const ALL_KINDS: TargetKind[] = ['feature', 'input', 'emb', 'output', 'bias', 'relu', 'weight']
+
+const HOVER_EFFECT_MATRIX: Record<TargetKind, Set<TargetKind>> = {
+  //                              feature  input  emb   output
+  feature: new Set<TargetKind>([          'input','emb','output']),
+  input:   new Set<TargetKind>([                        'output']),
+  emb:     new Set<TargetKind>(['feature','input',      'output']),
+  output:  new Set<TargetKind>(['feature','input','emb','output']),
+  bias:    new Set<TargetKind>([          'input',      'output']),
+  relu:    new Set<TargetKind>([          'input',      'output']),
+  weight:  new Set<TargetKind>([          'input',      'output']),
+}
+
+/**
+ * Returns `true` when hovering `hov` should produce visual feedback while
+ * `sel` is selected.  When either is null the answer is always true (no
+ * conflict to suppress).
+ */
+export function hoverHasEffect(
+  sel: SelectionTarget,
+  hov: SelectionTarget,
+): boolean {
+  if (!sel || !hov) return true
+  return HOVER_EFFECT_MATRIX[sel.kind]?.has(hov.kind) ?? false
+}
+
+/**
+ * Compute the effective hover: the hover itself when it has an effect,
+ * or `null` when suppressed by the current selection.
+ */
+export function effectiveHover(
+  sel: SelectionTarget,
+  hov: SelectionTarget,
+): SelectionTarget {
+  return hoverHasEffect(sel, hov) ? hov : null
+}
+
 // ─── Service factory ──────────────────────────────────────────────────────────
 
 export function createSelectionService() {

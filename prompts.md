@@ -336,6 +336,10 @@ Better, but still not perfect.
 * please rotate the "Masked by RELU" text so that it is parallel to the surface line of this relu surface; if it is more upside down, rotate it around an additional 180 degree so that it is readable by the user.
 * please put a lighter grey border around "Masked by RELU" text, so that it is always visible. Again, reuse colors.
 
+---
+
+* Please again review the bias and the interference visualization is correct. My iss
+
 
 ---
 

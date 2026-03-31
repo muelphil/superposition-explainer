@@ -61,6 +61,7 @@
 
 import { watch } from 'vue'
 import type { SelectionTarget, SelectionServiceType } from '../../services/SelectionService'
+import { effectiveHover } from '../../services/SelectionService'
 import type { SceneCtx, SceneOverlay } from './types'
 
 // ── Overlay registry ───────────────────────────────────────────────────────────
@@ -75,90 +76,67 @@ import { InterferenceLinesOverlay } from './overlays/InterferenceLinesOverlay'
 /** Kinds that identify a single input feature index. */
 const FEATURE_KINDS = new Set(['input', 'feature', 'output', 'bias', 'relu'])
 
+/** Helper: build the standard output-decoding overlay set. */
+function outputOverlays(idx: number): SceneOverlay[] {
+  return [
+    new BiasPointOverlay(idx),
+    new ReluRegionOverlay(idx),
+    new InterferenceLinesOverlay(idx),
+  ]
+}
+
 /**
  * Pure function: maps the current selection + hover target to a list of overlays.
  *
+ * Invalid hover combinations are filtered via the hover-effect matrix
+ * (`effectiveHover`), so only valid (sel, hov) pairs reach the resolution logic.
  * Overlays are **compositional** — each class does one visual thing, and this
- * resolver combines them freely. E.g. the projection visual is two independent
- * overlays (ProjectionLineOverlay + DropLineOverlay) composed into one list.
+ * resolver combines them freely.
  */
 function resolveOverlays(
   _sel: SelectionTarget,
-  _hov: SelectionTarget,
+  _rawHov: SelectionTarget,
 ): SceneOverlay[] {
-  // ── Input hover always takes priority ────────────────────────
-  if (_hov?.kind === 'input') {
-    return [new InputDirectionOverlay(_hov.idx)]
+  const _hov = effectiveHover(_sel, _rawHov)
+
+  // ── Priority hover kinds ──────────────────────────────────────
+  if (_hov?.kind === 'input')  return [new InputDirectionOverlay(_hov.idx)]
+  if (_hov?.kind === 'output') return outputOverlays(_hov.idx)
+
+  // ── Output selected (+ optional valid hover) ─────────────────
+  if (_sel?.kind === 'output') {
+    const overlays = outputOverlays(_sel.idx)
+    if (_hov?.kind === 'emb') overlays.push(new AxisGradientOverlay(_hov.idx))
+    return overlays
   }
 
-  // ── Output hover takes priority (show decoding for hovered output) ──
-  if (_hov?.kind === 'output') {
-    return [
-      new BiasPointOverlay(_hov.idx),
-      new ReluRegionOverlay(_hov.idx),
-      new InterferenceLinesOverlay(_hov.idx),
-    ]
-  }
-
-  // ── Output selected + emb hovered → output overlays + axis gradient ──
-  if (_sel?.kind === 'output' && _hov?.kind === 'emb') {
-    return [
-      new BiasPointOverlay(_sel.idx),
-      new ReluRegionOverlay(_sel.idx),
-      new InterferenceLinesOverlay(_sel.idx),
-      new AxisGradientOverlay(_hov.idx),
-    ]
-  }
-
-  // ── Output selected + feature hovered → keep output overlays ──
-  if (_sel?.kind === 'output' && _hov && FEATURE_KINDS.has(_hov.kind)) {
-    return [
-      new BiasPointOverlay(_sel.idx),
-      new ReluRegionOverlay(_sel.idx),
-      new InterferenceLinesOverlay(_sel.idx),
-    ]
-  }
-
-  // ── Cross-case: one is a feature-kind, the other is an emb axis ──
+  // ── Cross-case: feature-kind + emb axis ───────────────────────
   if (_sel && _hov) {
     const selIsFeature = FEATURE_KINDS.has(_sel.kind)
+    const selIsEmb     = _sel.kind === 'emb'
     const hovIsFeature = FEATURE_KINDS.has(_hov.kind)
-    const selIsEmb = _sel.kind === 'emb'
-    const hovIsEmb = _hov.kind === 'emb'
+    const hovIsEmb     = _hov.kind === 'emb'
 
-    if (selIsFeature && hovIsEmb) {
-      const featureIdx = 'idx' in _sel ? _sel.idx : ('col' in _sel ? _sel.col : 0)
+    if ((selIsFeature && hovIsEmb) || (selIsEmb && hovIsFeature)) {
+      const featureTarget = selIsFeature ? _sel : _hov
+      const embTarget     = selIsEmb     ? _sel : _hov
+      const fIdx = 'idx' in featureTarget ? featureTarget.idx : 0
       return [
-        new ProjectionLineOverlay(featureIdx, _hov.idx),
-        new DropLineOverlay(featureIdx, _hov.idx),
-      ]
-    }
-    if (selIsEmb && hovIsFeature) {
-      const featureIdx = 'idx' in _hov ? _hov.idx : ('col' in _hov ? _hov.col : 0)
-      return [
-        new ProjectionLineOverlay(featureIdx, _sel.idx),
-        new DropLineOverlay(featureIdx, _sel.idx),
+        new ProjectionLineOverlay(fIdx, embTarget.idx),
+        new DropLineOverlay(fIdx, embTarget.idx),
       ]
     }
   }
 
-  // ── Single-target: selection takes precedence over hover ─────────
+  // ── Single target (selection takes precedence over hover) ─────
   const target = _sel ?? _hov
   if (!target) return []
 
   switch (target.kind) {
-    case 'input':
-      return [new InputDirectionOverlay(target.idx)]
-    case 'emb':
-      return [new AxisGradientOverlay(target.idx)]
-    case 'output':
-      return [
-        new BiasPointOverlay(target.idx),
-        new ReluRegionOverlay(target.idx),
-        new InterferenceLinesOverlay(target.idx),
-      ]
-    default:
-      return []
+    case 'input':   return [new InputDirectionOverlay(target.idx)]
+    case 'emb':     return [new AxisGradientOverlay(target.idx)]
+    case 'output':  return outputOverlays(target.idx)
+    default:        return []
   }
 }
 

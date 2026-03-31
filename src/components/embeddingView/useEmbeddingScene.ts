@@ -4,6 +4,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
 import {CSS2DRenderer} from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import type {AutoencoderServiceType} from '../../services/AutoencoderService'
 import type {SelectionServiceType, SelectionTarget} from '../../services/SelectionService'
+import {effectiveHover} from '../../services/SelectionService'
 import {featureColorRGB, EMBEDDING_POINT_COLOR_HEX} from '../../utils/featureColor'
 import {showEmbeddingPoint} from '../../services/SettingsService'
 import type {VecVis, SceneCtx} from './types'
@@ -381,8 +382,9 @@ export function useEmbeddingScene(
      *   - weight (r,c) → highlight axis r
      *   - others       → all axes at normal opacity
      */
-    function applyVisualState(sel: SelectionTarget, hov: SelectionTarget) {
+    function applyVisualState(sel: SelectionTarget, rawHov: SelectionTarget) {
         const FEATURE_KINDS = new Set(['feature', 'input', 'output', 'bias', 'relu'])
+        const hov = effectiveHover(sel, rawHov)
 
         // Output hover takes priority for determining the effective output target
         const outputTarget =
@@ -390,8 +392,7 @@ export function useEmbeddingScene(
           (sel?.kind === 'output' ? sel : null)
         const isOutputActive = outputTarget !== null
 
-        // Detect cross-case: one is a feature-kind, the other is an emb axis
-        // (but NOT when output is active — output has its own dimming logic)
+        // Cross-case: feature-kind + emb axis (not when output is active — handled separately)
         const isCrossCase = !isOutputActive && sel && hov && (
             (FEATURE_KINDS.has(sel.kind) && hov.kind === 'emb') ||
             (sel.kind === 'emb' && FEATURE_KINDS.has(hov.kind))
