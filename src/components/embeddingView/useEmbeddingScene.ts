@@ -7,12 +7,12 @@ import type { SelectionServiceType, SelectionTarget } from '../../services/Selec
 import { featureColorRGB, EMBEDDING_POINT_COLOR_HEX } from '../../utils/featureColor'
 import { showEmbeddingPoint } from '../../services/SettingsService'
 import type { VecVis, SceneCtx } from './types'
-import { featureVec, makeAxisLabel, disposeMesh } from './sceneHelpers'
+import { featureVec, makeAxisLabel, disposeMesh, setCylinderEnds } from './sceneHelpers'
 import { useOverlayManager } from './useOverlayManager'
 import {
   CAMERA_FOV, CAMERA_MARGIN, CAMERA_3D_DIR, CAMERA_MIN_DIST, CAMERA_MAX_DIST, CAMERA_DAMPING,
   AXIS_LEN, AXIS_LABEL_PERP, AXIS_COLOR, AXIS_OPACITY, AXIS_TICK_OPACITY, AXIS_TICK_SIZE,
-  AXIS_ARROW_INSET, AXIS_ARROW_LEN, AXIS_ARROW_HEAD_LEN, AXIS_ARROW_HEAD_W,
+  AXIS_SHAFT_RADIUS, AXIS_SHAFT_SEGMENTS, AXIS_ARROW_HEAD_LEN, AXIS_ARROW_HEAD_W,
   AXIS_HIT_RADIUS, ORIGIN_RADIUS,
   AXIS_LABELS, AXIS_DIRECTIONS,
   ARROW_HEAD_MAX_LEN, ARROW_HEAD_MAX_W, ARROW_HEAD_LEN_FRAC, ARROW_HEAD_W_FRAC,
@@ -192,47 +192,49 @@ export function useEmbeddingScene(
       // Collect all materials for this axis so highlighting can target them
       const mats: THREE.Material[] = []
 
-      // Main axis line
-      const lineMat = new THREE.LineBasicMaterial({ color: AXIS_COLOR, opacity: AXIS_OPACITY, transparent: true })
+      // Main axis cylinder
+      const lineMat = new THREE.MeshBasicMaterial({ color: AXIS_COLOR, opacity: AXIS_OPACITY, transparent: true })
       mats.push(lineMat)
 
-      const lineGeom = new THREE.BufferGeometry().setFromPoints([
+      const lineGeom = new THREE.CylinderGeometry(AXIS_SHAFT_RADIUS, AXIS_SHAFT_RADIUS, 1, AXIS_SHAFT_SEGMENTS)
+      const lineMesh = new THREE.Mesh(lineGeom, lineMat)
+      setCylinderEnds(lineMesh,
         dir.clone().multiplyScalar(-AXIS_LEN),
         dir.clone().multiplyScalar( AXIS_LEN),
-      ])
-      grp.add(new THREE.Line(lineGeom, lineMat))
+      )
+      grp.add(lineMesh)
 
-      // Arrow helpers (positive + negative direction)
-      const arrowPos = new THREE.ArrowHelper(
-        dir, dir.clone().multiplyScalar(AXIS_LEN - AXIS_ARROW_INSET),
-        AXIS_ARROW_LEN, AXIS_COLOR, AXIS_ARROW_HEAD_LEN, AXIS_ARROW_HEAD_W,
-      )
-      const arrowNeg = new THREE.ArrowHelper(
-        negDir, negDir.clone().multiplyScalar(AXIS_LEN - AXIS_ARROW_INSET),
-        AXIS_ARROW_LEN, AXIS_COLOR, AXIS_ARROW_HEAD_LEN, AXIS_ARROW_HEAD_W,
-      )
-      grp.add(arrowPos)
-      grp.add(arrowNeg)
-      // ArrowHelper has .line (Line) and .cone (Mesh) children
-      mats.push(
-        arrowPos.line.material as THREE.Material,
-        arrowPos.cone.material as THREE.Material,
-        arrowNeg.line.material as THREE.Material,
-        arrowNeg.cone.material as THREE.Material,
-      )
+      // Arrowhead cones at both ends (no shaft — the cylinder covers that)
+      for (const d of [dir, negDir]) {
+        const coneMat = new THREE.MeshBasicMaterial({
+          color: AXIS_COLOR, opacity: AXIS_OPACITY, transparent: true,
+        })
+        mats.push(coneMat)
+        const cone = new THREE.Mesh(
+          new THREE.ConeGeometry(AXIS_ARROW_HEAD_W, AXIS_ARROW_HEAD_LEN, 12),
+          coneMat,
+        )
+        // Position cone so its base starts at the cylinder end (AXIS_LEN)
+        const tipPos = d.clone().multiplyScalar(AXIS_LEN + AXIS_ARROW_HEAD_LEN / 2)
+        cone.position.copy(tipPos)
+        cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d)
+        grp.add(cone)
+      }
 
-      // Tick marks at ±1
+      // Tick marks at ±1 (thin cylinders)
       const perp = a === 0 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0)
       for (const s of [1, -1] as const) {
-        const tg = new THREE.BufferGeometry().setFromPoints([
-          dir.clone().multiplyScalar(s).add(perp.clone().multiplyScalar(-AXIS_TICK_SIZE)),
-          dir.clone().multiplyScalar(s).add(perp.clone().multiplyScalar( AXIS_TICK_SIZE)),
-        ])
-        const tickMat = new THREE.LineBasicMaterial({
+        const tickMat = new THREE.MeshBasicMaterial({
           color: AXIS_COLOR, opacity: AXIS_TICK_OPACITY, transparent: true,
         })
         mats.push(tickMat)
-        grp.add(new THREE.Line(tg, tickMat))
+        const tickGeom = new THREE.CylinderGeometry(AXIS_SHAFT_RADIUS, AXIS_SHAFT_RADIUS, 1, 6)
+        const tickMesh = new THREE.Mesh(tickGeom, tickMat)
+        setCylinderEnds(tickMesh,
+          dir.clone().multiplyScalar(s).add(perp.clone().multiplyScalar(-AXIS_TICK_SIZE)),
+          dir.clone().multiplyScalar(s).add(perp.clone().multiplyScalar( AXIS_TICK_SIZE)),
+        )
+        grp.add(tickMesh)
       }
 
       // Label sprite beside arrowhead tip
@@ -374,14 +376,26 @@ export function useEmbeddingScene(
    *   - others       → all axes at normal opacity
    */
   function applyVisualState(sel: SelectionTarget, hov: SelectionTarget) {
-    // Selection takes precedence; hover only applies when nothing is selected
-    const primary   = sel ?? hov
+    // ── Detect cross-case: one is a feature-kind, the other is an emb axis ──
+    const FEATURE_KINDS = new Set(['feature', 'input', 'output', 'bias', 'relu'])
+    const isCrossCase = sel && hov && (
+      (FEATURE_KINDS.has(sel.kind) && hov.kind === 'emb') ||
+      (sel.kind === 'emb' && FEATURE_KINDS.has(hov.kind))
+    )
+
+    // In cross-case, both targets contribute; otherwise selection takes precedence
+    const primary = sel ?? hov
 
     // ── Feature vectors ──────────────────────────────────────────
     let litVecIdx: number | null = null   // index of the one non-dimmed vector, or null = all lit
     let dimVecs = false
 
-    if (primary) {
+    if (isCrossCase) {
+      // Cross-case: dim all except the feature-kind target
+      dimVecs = true
+      const featureTarget = FEATURE_KINDS.has(sel!.kind) ? sel! : hov!
+      litVecIdx = 'idx' in featureTarget ? featureTarget.idx : null
+    } else if (primary) {
       switch (primary.kind) {
         case 'feature':
         case 'input':
@@ -415,7 +429,11 @@ export function useEmbeddingScene(
     // ── Axis highlighting ─────────────────────────────────────────
     let litAxisIdx: number | null = null
 
-    if (primary?.kind === 'emb') {
+    if (isCrossCase) {
+      // Cross-case: highlight the emb axis
+      const embTarget = sel!.kind === 'emb' ? sel! : hov!
+      litAxisIdx = embTarget.idx
+    } else if (primary?.kind === 'emb') {
       litAxisIdx = primary.idx
     } else if (primary?.kind === 'weight') {
       litAxisIdx = primary.row

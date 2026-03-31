@@ -24,6 +24,12 @@ ephemeral scene objects.
 | File | Trigger | Visual |
 |------|---------|--------|
 | `InputDirectionOverlay.ts` | input hover or select | Small grey dot at h − W[:, idx]·x[idx] (embedding with this feature zeroed), plus a dashed grey ray from that dot in the positive feature-vector direction |
+| `AxisGradientOverlay.ts` | emb axis hover or select | Full-screen blue→white→orange gradient backdrop aligned to the hovered axis |
+| `ProjectionLineOverlay.ts` | feature-kind ↔ emb cross-case | Solid colored cylinder from origin along the axis to the projection value (orange if positive, blue if negative) |
+| `DropLineOverlay.ts` | feature-kind ↔ emb cross-case | Dashed grey cylinder line from the feature vector's arrow tip to the projection point on the axis |
+
+**Composability:** `ProjectionLineOverlay` and `DropLineOverlay` are always used together
+via `resolveOverlays`, demonstrating how small focused overlays compose into richer visuals.
 
 ## Planned Overlays
 

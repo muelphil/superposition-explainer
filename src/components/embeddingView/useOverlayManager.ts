@@ -66,16 +66,52 @@ import type { SceneCtx, SceneOverlay } from './types'
 // ── Overlay registry ───────────────────────────────────────────────────────────
 import { InputDirectionOverlay } from './overlays/InputDirectionOverlay'
 import { AxisGradientOverlay } from './overlays/AxisGradientOverlay'
+import { ProjectionLineOverlay } from './overlays/ProjectionLineOverlay'
+import { DropLineOverlay } from './overlays/DropLineOverlay'
+
+/** Kinds that identify a single input feature index. */
+const FEATURE_KINDS = new Set(['input', 'feature', 'output', 'bias', 'relu'])
 
 /**
  * Pure function: maps the current selection + hover target to a list of overlays.
- * Selection takes precedence; hover only contributes if nothing is selected.
- * Return [] to show no overlays for a given target combination.
+ *
+ * Overlays are **compositional** — each class does one visual thing, and this
+ * resolver combines them freely. E.g. the projection visual is two independent
+ * overlays (ProjectionLineOverlay + DropLineOverlay) composed into one list.
  */
 function resolveOverlays(
   _sel: SelectionTarget,
   _hov: SelectionTarget,
 ): SceneOverlay[] {
+  // ── Input hover always takes priority ────────────────────────
+  if (_hov?.kind === 'input') {
+    return [new InputDirectionOverlay(_hov.idx)]
+  }
+
+  // ── Cross-case: one is a feature-kind, the other is an emb axis ──
+  if (_sel && _hov) {
+    const selIsFeature = FEATURE_KINDS.has(_sel.kind)
+    const hovIsFeature = FEATURE_KINDS.has(_hov.kind)
+    const selIsEmb = _sel.kind === 'emb'
+    const hovIsEmb = _hov.kind === 'emb'
+
+    if (selIsFeature && hovIsEmb) {
+      const featureIdx = 'idx' in _sel ? _sel.idx : ('col' in _sel ? _sel.col : 0)
+      return [
+        new ProjectionLineOverlay(featureIdx, _hov.idx),
+        new DropLineOverlay(featureIdx, _hov.idx),
+      ]
+    }
+    if (selIsEmb && hovIsFeature) {
+      const featureIdx = 'idx' in _hov ? _hov.idx : ('col' in _hov ? _hov.col : 0)
+      return [
+        new ProjectionLineOverlay(featureIdx, _sel.idx),
+        new DropLineOverlay(featureIdx, _sel.idx),
+      ]
+    }
+  }
+
+  // ── Single-target: selection takes precedence over hover ─────────
   const target = _sel ?? _hov
   if (!target) return []
 

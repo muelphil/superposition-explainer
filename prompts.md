@@ -219,6 +219,70 @@ Additional objects may include:
 It would be very important to be able to abstract the low level logic away and also attach the visualization of different objects to reactive properties provided by the AutoencoderService, to make it reactive. Hovering/selection may introduce these objects, during hovering they need to reactively update to changes in weights/ inputs. Before implementing any of these, can you please review the embedding space view component and scripts and assess how well modularized and abstracted everything is? We need to prepare for implementing a lot of hover/selection based visualization. Review, improve where obvious, build a plan where not obvious, so we can discuss and implement it afterwards.
 
 
+---
+
+Lets shift attention to the EmbeddingView, which is a Three js visualization of the features in embedding space.
+Lets start by implementing the first "overlay". Remember, the goal is to show visual indicators when certain elements of the application are hovered or selected in the EmbeddingViews Three js visualization. We have previously modularized and cleaned up the embedding view directory to implement new visual indicators cleanly. In the best of cases, there should be one function that is responsible for deciding what visual indicators to show and what not to show and then only calls function to use the indicators. Please read the src/components/embeddingView/overlays/README.md for more info.
+
+Lets start by implementing the first overlay. When the user hovers an input, please show a dashed, light grey line that runs parallel to the embedding space vector that the input represents (simply take it from weights), but the line must not go though the coordinate origin, but through the inputs representation in vector space (currently visualized by a purple dot). What is important is that the dashed line does not obfuscate the inputs embedding representation (purple dot), nor the selected or other vectors.
+Additionally, as already implemented, the other feature vectors in embedding space (that are not associated with the selected input) should be greyed out.
+
+It must be clean, modular, precise. The introduced objects should update when the vectors or the view updates. When you are done, update the README.md in overlays, explaining where to find what (the logic that decides what overlay/visual indicators to show based on selection/hover) and a high level explanation of how it works.
+
+---
+
+This is not bad, however requires a small update:
+The dashed line should not move with the input. Lets reformulate.
+The dashed line should start where the input representation would be if the hovered features input was 0 and all other features were unchanged.
+Display a small grey dot in that place. Start the dashed line there in the positive direction of the feature.
+Remember, this should only happen when input is hovered, not when features (neurons) are hovered.
+Make the dashed line a little bit thicker. The grey dashed line needs to extend so that it covers the visible screen, so make it long.
+
+---
+
+Lets continue with the visual cues displayed on hover/selection.
+I would next like to test something out; we will likely remove the visualization later, this is about checking if the idea can be realized:
+When hovering an embedding dimension, please not only highlight the embedding dimension in the embedding space visualization by making it darker, but also display a gradient in the background.
+The gradient should go from blue (negative values) to white (0) to orange (positive values), the same way as the weights are visualized in the Autoencoder view.
+The tricky part is that this needs to be shown as a background/backdrop and it must also work in 3D.
+The likeliest solution might be using a big sphere, texturing it on the insight and using ray marching to determine the color of the individual pixels.
+Think about how to implement this first, implement it in a separate new Overlay class that I can plug in or remove easily. This is mostly about checking if it is possible and how it looks, especially in 3D. 
+Remember, it must be reactive to camera changes.
+
+
+---
+
+Lets continue with the visual cues displayed on hover/selection.
+When a feature is selected and an embedding dimension is hovered (or the other way around), grey out the other features,
+and show a projection of the feature vector onto the embedding axis, visualized through a continuous line on the axis and a dashed line from the vector arrow onto the axis.
+The dashed line should be light grey. The continuous line should be --color-positive:        #fb923c; when postive and --color-negative:        #60a5fa; when negative.
+The dashed line and continuous lines must be shown on top of the axes/ the other vectors, to be visible. 
+
+
+---
+copilot --resume=03109b87-4286-4c93-b597-d7089602eeb4
 
 
 
+# Ideas
+* make the input vector as a whole selectable/hoverable
+* hovering embedding dimensions should highlight h_1/h_2/h_3 values, potentially also blend out vectors and put a gradient (blue -> white -> orange in the background)
+* 
+
+
+# TODOs
+* remove training steps fully (instead define stop conditions or free runs until you stop)
+* hovering features should also apply opacity to other inputvalue inputs
+* correlate features and show how dimensions change when correlation is active
+  * in theory, feature vectors that are correlated should be (more) orthogonal than ones that arent
+* only show compass when view changed
+* gradients in the background -- this will be very hard
+  * rays?
+
+Thats great! In the autoencoder view can you make it so that when the .value-label is clicked, it doesn't instantly toggle the feature on or off, but instead transitions the value from 0 to 1 (and from any other non 0
+value to 0) over 1 second? If the user clicks again while the transition is still running, it should simply end the transition early, setting it to the target value. (i.e. 0->1, the user clicks again after 0.2 second
+when the value is at 0.2 it stops the transition and sets the value to 1)
+
+
+
+loss as interference -- W^TW entries

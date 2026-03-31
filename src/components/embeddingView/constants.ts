@@ -13,10 +13,10 @@ export const AXIS_COLOR          = 0xd1d5db   // slate-300
 export const AXIS_OPACITY        = 0.55
 export const AXIS_TICK_OPACITY   = 0.4
 export const AXIS_TICK_SIZE      = 0.05
-export const AXIS_ARROW_INSET    = 0.18
-export const AXIS_ARROW_LEN      = 0.22
+export const AXIS_SHAFT_RADIUS   = 0.004
+export const AXIS_SHAFT_SEGMENTS = 8
 export const AXIS_ARROW_HEAD_LEN = 0.16
-export const AXIS_ARROW_HEAD_W   = 0.07
+export const AXIS_ARROW_HEAD_W   = 0.04
 export const AXIS_HIT_RADIUS     = 0.08
 export const ORIGIN_RADIUS       = 0.028
 
