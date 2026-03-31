@@ -7,7 +7,7 @@ import { createLatexElement } from '../../../utils/latex'
 // ── Constants ─────────────────────────────────────────────────────────────────
 const REGION_OPACITY_2D = 0.7
 const REGION_OPACITY_3D = 0.85
-const REGION_COLOR    = 0x737373      // grey
+const REGION_COLOR    = 0x9ca3af      // grey-400 (lighter)
 const SURFACE_COLOR   = 0x9ca3af      // grey-400
 const SURFACE_OPACITY = 0.5
 const SURFACE_RADIUS  = 0.003
@@ -31,7 +31,7 @@ function getFadeTexture(): THREE.CanvasTexture {
   const half = size / 2
   const grad = ctx.createRadialGradient(half, half, 0, half, half, half)
   grad.addColorStop(0,    'rgba(255,255,255,1)')
-  grad.addColorStop(0.55, 'rgba(255,255,255,1)')   // stay opaque through most of center
+  grad.addColorStop(0.8,  'rgba(255,255,255,1)')   // stay opaque through most of disc
   grad.addColorStop(1,    'rgba(255,255,255,0)')   // fade to transparent at edge
   ctx.fillStyle = grad
   ctx.fillRect(0, 0, size, size)
@@ -205,7 +205,10 @@ export class ReluRegionOverlay implements SceneOverlay {
       .addScaledVector(labelPerp, 0.08)
 
     // ── Rotate label parallel to the boundary line ─────────────
-    this.rotateLabel()
+    // Only meaningful in 1D/2D where the boundary is a visible line.
+    // In 3D the disc is a plane; rotation causes the text to flip confusingly.
+    if (dim <= 2) this.rotateLabel()
+    else this.labelInner.style.transform = ''
   }
 
   /**
