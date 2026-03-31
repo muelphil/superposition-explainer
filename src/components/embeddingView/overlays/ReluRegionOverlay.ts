@@ -5,7 +5,8 @@ import { setCylinderEnds } from '../sceneHelpers'
 import { createLatexElement } from '../../../utils/latex'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const REGION_OPACITY  = 0.25
+const REGION_OPACITY_2D = 0.7
+const REGION_OPACITY_3D = 0.85
 const REGION_COLOR    = 0x737373      // grey
 const SURFACE_COLOR   = 0x9ca3af      // grey-400
 const SURFACE_OPACITY = 0.5
@@ -15,6 +16,28 @@ const LABEL_OFFSET    = 0.45          // how far into the inactive region for th
 const REGION_DEPTH    = 10            // how far the inactive-region surface extends (2D)
 const DISC_RADIUS     = 1.2           // radius of the circular ReLU disc in 3D
 const DISC_SEGMENTS   = 48            // number of segments for the disc circle
+
+// ── Radial fade texture for 3D disc (opaque center → transparent edge) ───────
+
+let _fadeTexture: THREE.CanvasTexture | null = null
+
+function getFadeTexture(): THREE.CanvasTexture {
+  if (_fadeTexture) return _fadeTexture
+  const size = 256
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+  const half = size / 2
+  const grad = ctx.createRadialGradient(half, half, 0, half, half, half)
+  grad.addColorStop(0,    'rgba(255,255,255,1)')
+  grad.addColorStop(0.55, 'rgba(255,255,255,1)')   // stay opaque through most of center
+  grad.addColorStop(1,    'rgba(255,255,255,0)')   // fade to transparent at edge
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, size, size)
+  _fadeTexture = new THREE.CanvasTexture(canvas)
+  return _fadeTexture
+}
 
 // ── Overlay class ─────────────────────────────────────────────────────────────
 
@@ -52,15 +75,17 @@ export class ReluRegionOverlay implements SceneOverlay {
 
   build(ctx: SceneCtx) {
     this.ctx = ctx
+    const is3D = ctx.svc.config.embeddingDim >= 3
 
-    // ── Inactive-region surface (3D quad) ──────────────────────
+    // ── Inactive-region surface ────────────────────────────────
     this.regionMat = new THREE.MeshBasicMaterial({
       color:       REGION_COLOR,
-      opacity:     REGION_OPACITY,
+      opacity:     is3D ? REGION_OPACITY_3D : REGION_OPACITY_2D,
       transparent: true,
       depthTest:   false,
       depthWrite:  false,
       side:        THREE.DoubleSide,
+      ...(is3D ? { map: getFadeTexture() } : {}),
     })
     this.regionGeom = new THREE.BufferGeometry()
     this.regionMesh = new THREE.Mesh(this.regionGeom, this.regionMat)
@@ -209,6 +234,7 @@ export class ReluRegionOverlay implements SceneOverlay {
       this.regionGeom.setIndex(null)
     } else {
       // 3D: circular disc perpendicular to feature vector, centered on bias
+      // with UVs for radial fade texture (center=0.5,0.5, edge on unit circle)
       const p1 = this._perp
       const p2 = this._perp2
       const R  = DISC_RADIUS
@@ -216,15 +242,22 @@ export class ReluRegionOverlay implements SceneOverlay {
 
       // Fan: center vertex + n circumference vertices
       const positions = new Float32Array((1 + n) * 3)
+      const uvs       = new Float32Array((1 + n) * 2)
+
+      // Center
       positions[0] = bp.x; positions[1] = bp.y; positions[2] = bp.z
+      uvs[0] = 0.5; uvs[1] = 0.5
 
       for (let i = 0; i < n; i++) {
         const θ = (i / n) * Math.PI * 2
         const c = Math.cos(θ), s = Math.sin(θ)
-        const idx = (1 + i) * 3
-        positions[idx]     = bp.x + c * R * p1.x + s * R * p2.x
-        positions[idx + 1] = bp.y + c * R * p1.y + s * R * p2.y
-        positions[idx + 2] = bp.z + c * R * p1.z + s * R * p2.z
+        const pi = (1 + i) * 3
+        positions[pi]     = bp.x + c * R * p1.x + s * R * p2.x
+        positions[pi + 1] = bp.y + c * R * p1.y + s * R * p2.y
+        positions[pi + 2] = bp.z + c * R * p1.z + s * R * p2.z
+        const ui = (1 + i) * 2
+        uvs[ui]     = 0.5 + 0.5 * c
+        uvs[ui + 1] = 0.5 + 0.5 * s
       }
 
       const indices: number[] = []
@@ -233,6 +266,7 @@ export class ReluRegionOverlay implements SceneOverlay {
       }
 
       this.regionGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+      this.regionGeom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2))
       this.regionGeom.setIndex(indices)
     }
 
