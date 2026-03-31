@@ -364,9 +364,32 @@ function isInputDimmed(i: number):  boolean { return isAnyActive.value && !inSet
 function isOutputDimmed(i: number): boolean { return isAnyActive.value && !inSet(activeIllumination.value.outputs, i) }
 function isEmbDimmed(k: number):    boolean { return isAnyActive.value && !inSet(activeIllumination.value.embs,    k) }
 
+/** When an output neuron is the effective target, use half-dim instead of full dim. */
+const isOutputTargetActive = computed(() => {
+  const hov = selSvc.hovered.value
+  const sel = selSvc.selected.value
+  if (hov?.kind === 'output') return true
+  if (sel?.kind === 'output' && !hov) return true
+  return false
+})
+
+function inputDimClass(i: number): string {
+  if (!isInputDimmed(i)) return ''
+  return isOutputTargetActive.value ? 'half-dimmed' : 'dimmed'
+}
+function outputDimClass(i: number): string {
+  if (!isOutputDimmed(i)) return ''
+  return isOutputTargetActive.value ? 'half-dimmed' : 'dimmed'
+}
+function embDimClass(k: number): string {
+  if (!isEmbDimmed(k)) return ''
+  return isOutputTargetActive.value ? 'half-dimmed' : 'dimmed'
+}
+
 function pathOpacity(row: number, col: number, base: number): number {
   if (!isAnyActive.value) return base
-  return activeIllumination.value.paths(row, col) ? base : base * 0.1
+  if (activeIllumination.value.paths(row, col)) return base
+  return isOutputTargetActive.value ? base * 0.4 : base * 0.1
 }
 
 /** Selection outline — reads selected only, independent of hover. */
@@ -535,7 +558,7 @@ function onOutputClick(i: number) {
       <!-- Input value: col 1 -->
       <div
           class="cell-hover-zone"
-          :class="{ dimmed: isInputDimmed(i) }"
+          :class="inputDimClass(i)"
           :style="{ gridColumn: '1', gridRow: String(i + dataRowStart) }"
           @mouseenter="onInputEnter(i)"
           @mouseleave="onInputLeave"
@@ -554,7 +577,7 @@ function onOutputClick(i: number) {
       <!-- Input neuron: col 3 -->
       <div
           class="neuron-wrap"
-          :class="{ dimmed: isInputDimmed(i) }"
+          :class="inputDimClass(i)"
           :style="{ gridColumn: '3', gridRow: String(i + dataRowStart) }"
           @mouseenter="onFeatureEnter(i)"
           @mouseleave="onFeatureLeave"
@@ -583,7 +606,7 @@ function onOutputClick(i: number) {
       <!-- Output neuron: col 10 — also scales with importance -->
       <div
           class="neuron-wrap"
-          :class="{ dimmed: isOutputDimmed(i) }"
+          :class="outputDimClass(i)"
           :style="{ gridColumn: '10', gridRow: String(i + dataRowStart) }"
           @mouseenter="onOutputEnter(i)"
           @mouseleave="onOutputLeave"
@@ -603,7 +626,7 @@ function onOutputClick(i: number) {
       <!-- Output value: col 11 -->
       <div
           class="output-value"
-          :class="{ dimmed: isOutputDimmed(i) }"
+          :class="outputDimClass(i)"
           :style="{ gridColumn: '12', gridRow: String(i + dataRowStart) }"
       >
         <span class="out-val">{{ fmt(svc.currentOutput.value[i] ?? 0) }}</span>
@@ -627,7 +650,7 @@ function onOutputClick(i: number) {
             :key="k"
             :ref="(el) => { embNeuronRefs[k] = el as HTMLElement }"
             class="neuron emb-neuron"
-          :class="{ dimmed: isEmbDimmed(k), 'neuron-selected': isEmbSelected(k) }"
+            :class="[embDimClass(k), { 'neuron-selected': isEmbSelected(k) }]"
             :style="{ background: neuronColor(svc.currentEmbedding.value[k] ?? 0) }"
             :title="`h${k + 1} = ${fmt(svc.currentEmbedding.value[k] ?? 0)}`"
             @mouseenter="onEmbNeuronEnter(k)"
@@ -741,6 +764,20 @@ function onOutputClick(i: number) {
 .cell-hover-zone.dimmed,
 .output-value.dimmed {
   opacity: 0.18;
+}
+
+.neuron-wrap.half-dimmed {
+  opacity: 0.5;
+}
+
+.neuron.half-dimmed {
+  opacity: 0.5;
+}
+
+:deep(.input-value.half-dimmed),
+.cell-hover-zone.half-dimmed,
+.output-value.half-dimmed {
+  opacity: 0.5;
 }
 
 .neuron-wrap,

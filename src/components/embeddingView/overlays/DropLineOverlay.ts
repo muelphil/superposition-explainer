@@ -25,7 +25,7 @@ export class DropLineOverlay implements SceneOverlay {
 
   constructor(
     private readonly featureIdx: number,
-    private readonly axisIdx: number,
+    readonly axisIdx: number,
   ) {
     const [dx, dy, dz] = AXIS_DIRECTIONS[Math.min(axisIdx, 2)]
     this.axisDir = new THREE.Vector3(dx, dy, dz)

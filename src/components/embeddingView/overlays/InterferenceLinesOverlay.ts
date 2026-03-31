@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import type { SceneCtx, SceneOverlay } from '../types'
 import { DashedCylinders } from '../sceneHelpers'
 
-const RADIUS    = 0.004
+const RADIUS    = 0.008
 const DASH_SIZE = 0.04
 const GAP_SIZE  = 0.04
 const COLOR     = 0xef4444   // red-500

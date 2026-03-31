@@ -431,6 +431,29 @@ export function createAutoencoderService() {
     _forwardPass(currentInput.value)
   }
 
+  // ─── Input shelving (for output neuron visualization) ──────────────────────
+
+  let shelvedInput: number[] | null = null
+
+  /** Save the current input and run a forward pass with a unit vector at `idx`. */
+  function shelveInput(idx: number) {
+    if (shelvedInput === null) {
+      shelvedInput = [...currentInput.value]
+    }
+    const unit = Array(config.inputDim).fill(0)
+    unit[idx] = 1.0
+    _forwardPass(unit)
+  }
+
+  /** Restore the user-provided input saved by shelveInput(). */
+  function restoreInput() {
+    if (shelvedInput !== null) {
+      const saved = shelvedInput
+      shelvedInput = null
+      _forwardPass(saved)
+    }
+  }
+
   // ─── Initialization on creation ──────────────────────────────────────────────
 
   initialize()
@@ -467,6 +490,8 @@ export function createAutoencoderService() {
     resetWeights,
     trainingStartStep,
     generateSample: _generateSample,
+    shelveInput,
+    restoreInput,
   }
 }
 

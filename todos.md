@@ -47,3 +47,7 @@ Linearkombination von Vektoren für Embeddings anzeigen
 # What I still need to figure out
 * role of RELU
 * role of bias
+
+
+bug:
+* when moving the 3d view, hover logic is still triggered when mouse is down -- should not be the case.

@@ -3,7 +3,6 @@ import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import type { SceneCtx, SceneOverlay } from '../types'
 import { ORIGIN_RADIUS } from '../constants'
 import { createLatexElement } from '../../../utils/latex'
-import { featureColorRGB } from '../../../utils/featureColor'
 
 const DOT_SEGMENTS = 12
 const LABEL_OFFSET = 0.12   // perpendicular offset for the label
@@ -29,12 +28,9 @@ export class BiasPointOverlay implements SceneOverlay {
   build(ctx: SceneCtx) {
     this.ctx = ctx
 
-    // Dot color matches the feature vector
-    const n = ctx.svc.config.inputDim
-    const [cr, cg, cb] = featureColorRGB(this.featureIdx, n)
-
+    // Dot color: dark grey for visibility against any vector color
     this.dotMat = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(cr, cg, cb),
+      color: 0x4b5563,   // grey-600
       depthTest: false,
     })
     this.dot = new THREE.Mesh(

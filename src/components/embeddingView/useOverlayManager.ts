@@ -91,6 +91,15 @@ function resolveOverlays(
     return [new InputDirectionOverlay(_hov.idx)]
   }
 
+  // ── Output hover takes priority (show decoding for hovered output) ──
+  if (_hov?.kind === 'output') {
+    return [
+      new BiasPointOverlay(_hov.idx),
+      new ReluRegionOverlay(_hov.idx),
+      new InterferenceLinesOverlay(_hov.idx),
+    ]
+  }
+
   // ── Cross-case: one is a feature-kind, the other is an emb axis ──
   if (_sel && _hov) {
     const selIsFeature = FEATURE_KINDS.has(_sel.kind)
@@ -141,11 +150,32 @@ export function useOverlayManager(
   selSvc: SelectionServiceType,
 ) {
   let active: SceneOverlay[] = []
+  let inputShelved = false
+
+  /** Resolve the effective output target (hover priority over select). */
+  function activeOutputIdx(): number | null {
+    const hov = selSvc.hovered.value
+    const sel = selSvc.selected.value
+    if (hov?.kind === 'output') return hov.idx
+    if (sel?.kind === 'output') return sel.idx
+    return null
+  }
 
   function rebuild() {
     const ctx = getCtx()
     active.forEach(o => o.dispose())
     active = []
+
+    // Shelve / restore input based on whether an output neuron is active
+    const outIdx = ctx ? activeOutputIdx() : null
+    if (outIdx !== null && ctx) {
+      ctx.svc.shelveInput(outIdx)
+      inputShelved = true
+    } else if (inputShelved && ctx) {
+      ctx.svc.restoreInput()
+      inputShelved = false
+    }
+
     if (!ctx) return
 
     const overlays = resolveOverlays(selSvc.selected.value, selSvc.hovered.value)
@@ -166,6 +196,11 @@ export function useOverlayManager(
     disposeAll() {
       active.forEach(o => o.dispose())
       active = []
+      if (inputShelved) {
+        const ctx = getCtx()
+        if (ctx) ctx.svc.restoreInput()
+        inputShelved = false
+      }
     },
   }
 }

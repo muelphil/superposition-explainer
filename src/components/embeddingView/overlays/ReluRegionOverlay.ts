@@ -11,7 +11,7 @@ const SURFACE_COLOR   = 0x9ca3af   // grey-400
 const SURFACE_OPACITY = 0.5
 const SURFACE_RADIUS  = 0.003
 const SURFACE_EXTENT  = 20          // large enough to always span the viewport
-const LABEL_OFFSET    = 0.25        // how far into the inactive region for the label
+const LABEL_OFFSET    = 0.45        // how far into the inactive region for the label
 
 // ── GLSL shaders (similar to AxisGradientOverlay) ─────────────────────────────
 
@@ -114,7 +114,7 @@ export class ReluRegionOverlay implements SceneOverlay {
     ctx.scene.add(this.surface)
 
     // ── Label ──────────────────────────────────────────────────
-    const el = createLatexElement('\\text{ReLU} = 0', {
+    const el = createLatexElement('\\text{Masked by ReLU}', {
       color: '#9ca3af',
       fontSize: '0.68rem',
       pointerEvents: 'none',

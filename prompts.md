@@ -311,3 +311,31 @@ To do so:
 ---
 
 
+This is great already but needs several small adjustments:
+* when an output neuron is selected, please only half-grey out the vectors that are causing interference, so that the user can still see the which feature vectors cause interference
+* also only apply half the full opacities to these input values/neurons/output neurons/loss in the autoencoder
+* when hovering/selecting an output, shelve the current input and instead put as input the vector that has the input associated with the selected output neuron set to 1, all others to 0. restore user provided input afterwards. 
+* make the red interference dashed cylinder thicker
+* move the RELU = 0 label further out. maybe replace with "Masked by RELU" for clearer communication
+* the bias dot should not have the same color as the vector, instead make it a dark grey. us existing colors, dont use new ones if possible
+* hover should have priority over select. If an output neuron is hovered, it should show the bias/relu/interference info for that hovered neurons feature vector; currently, when a output neuron is selected and another one is hovered, it will always show the info for the selected one.
+
+---
+
+Better, but still not perfect.
+* hovering the inputs should always make the associated vectors be shown in color; i.e. when an output neuron is selected, hovering over input neurons or the embedding legend features, this should make the hovered feature vectors show up in color, even when greyed out by the output neuron selection
+* again, when hovering or selecting an output neuron, the features that are associated with vectors that are causing interference should not be fully greyed out -- the vectors causing interference should still be in color. The legend should also grey out the vectors that are not causing interference. 
+* the bias dot needs to be rendered over the vector
+* please review mathematically, if the bias needs to be multiplied or divided by the length of the associated feature vector. Explain your decision. My concern is that if the feature vector is not of length 1, multiplying with that vector is not a length retaining projection onto the vector.
+* While the output neuron is selected, it should be possible to hover embedding space axes.
+
+---
+
+
+* please use a surface for the relu area instead of the axis gradient approach -- it does look good.
+* please rotate the "Masked by RELU" text so that it is parallel to the surface line of this relu surface; if it is more upside down, rotate it around an additional 180 degree so that it is readable by the user.
+
+
+---
+
+show feature vector and length when hovering the input feature or the embedding legend.

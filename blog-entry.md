@@ -17,6 +17,7 @@
   * representing 2 features using basis -> requires linear coordinate system to solve
   * using orthogonal basis: no interference between the directions, easy computation per projection, energy dissolved additively (Signalzerlegung)
   * using orthonormal basis: maximally decoupled, coefficients are dot products and easy to interpret, lengths are retained, most importantly: the basis matrix is orthogonal, so Q^{-1} = Q^T
+    * motivate this as basically projecting the input onto the bases, measuring the length of the projection
   * TODO: 3 visualizations of the bases, and a short example of basis transformation
   * TODO: change of basis example/ visualization
     * see https://www.youtube.com/watch?v=P2LTAUO1TdA as supplementary material
@@ -28,7 +29,15 @@ As you can see, the 2 features are represented by 2 normalized, orthogonal vecto
 
 But we have a problem: embedding dimensions are limited. Modern llms use up to TODO latent dimensions, but this is not nearly enough to fully capture all concepts -- there are more words in the english dicitonary than latent dimension.
 
-* lets try it out: 4 features, 2 emb dimensions (full sparcity) run the simulation
+* lets try it out: 4 features of varying importance, 2 emb dimensions (full sparcity) run the simulation.
+  * What do you notice?
+  * What role does importance I of the vectors play? Check which features are embedded, and which ones are ignored
+  * Check the bias used for the features that are unused in embedding space -- compare it to the [mean of  the half-normal distribution](https://en.wikipedia.org/wiki/Half-normal_distribution)
+
+
+
+
+
 
 
 So the big question is: how do llms seemingly encode more features than embedding dimensions into latent space?
@@ -58,7 +67,9 @@ Two important concepts make this possible:
 
 
 
+---
 
+optional: show effect of high correlation
 
 
 
