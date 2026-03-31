@@ -370,8 +370,8 @@ function pathOpacity(row: number, col: number, base: number): number {
 }
 
 /** Selection outline — reads selected only, independent of hover. */
-function isInputSelected(i: number):  boolean { const t = selSvc.selected.value; return !!t && FEATURE_LIKE.has(t.kind) && (t as {idx:number}).idx === i }
-function isOutputSelected(i: number): boolean { const t = selSvc.selected.value; return !!t && (t.kind === 'output' || FEATURE_LIKE.has(t.kind)) && (t as {idx:number}).idx === i }
+function isInputSelected(i: number):  boolean { const t = selSvc.selected.value; return !!t && (t.kind === 'input' || t.kind === 'feature') && (t as {idx:number}).idx === i }
+function isOutputSelected(i: number): boolean { const t = selSvc.selected.value; return !!t && t.kind === 'output' && t.idx === i }
 function isEmbSelected(k: number):    boolean { const t = selSvc.selected.value; return t?.kind === 'emb' && t.idx === k }
 
 
@@ -548,7 +548,6 @@ function onOutputClick(i: number) {
             :featureCount="n"
             @update:modelValue="onInputChange(i, $event)"
             @resample="resampleInput(i)"
-            @featureClick="onInputClick(i)"
         />
       </div>
 
