@@ -27,15 +27,16 @@ ephemeral scene objects.
 | `AxisGradientOverlay.ts` | emb axis hover or select | Full-screen blue→white→orange gradient backdrop aligned to the hovered axis |
 | `ProjectionLineOverlay.ts` | feature-kind ↔ emb cross-case | Solid colored cylinder from origin along the axis to the projection value (orange if positive, blue if negative) |
 | `DropLineOverlay.ts` | feature-kind ↔ emb cross-case | Dashed grey cylinder line from the feature vector's arrow tip to the projection point on the axis |
+| `BiasPointOverlay.ts` | output hover or select | Dot at ReLU threshold point on the feature vector + LaTeX label `b_n` |
+| `ReluRegionOverlay.ts` | output hover or select | Perpendicular line through bias point + shader-based grey half-space on the inactive (ReLU=0) side + label |
+| `InterferenceLinesOverlay.ts` | output hover or select | Red dashed cylinders from interfering vectors' tips to their projection on the ReLU surface |
 
-**Composability:** `ProjectionLineOverlay` and `DropLineOverlay` are always used together
-via `resolveOverlays`, demonstrating how small focused overlays compose into richer visuals.
+**Composability:** Overlays are small focused units composed via `resolveOverlays`.
+- Projection: `ProjectionLineOverlay` + `DropLineOverlay`
+- Output decoding: `BiasPointOverlay` + `ReluRegionOverlay` + `InterferenceLinesOverlay`
 
 ## Planned Overlays
 
 | File | Trigger | Visual |
 |------|---------|--------|
 | `FeatureProjectionOverlay.ts` | feature / input hover | Dotted grey lines projecting the feature vector onto each embedding axis |
-| `BiasOffsetOverlay.ts` | bias hover / select | Colored offset indicator along the output axis |
-| `InterferenceOverlay.ts` | feature selected + another feature hovered | Red dotted line between the two vectors |
-| `ReluSurfaceOverlay.ts` | feature / output select | Semi-transparent relu halfspace surface |

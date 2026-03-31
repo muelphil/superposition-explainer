@@ -286,3 +286,28 @@ when the value is at 0.2 it stops the transition and sets the value to 1)
 
 
 loss as interference -- W^TW entries
+
+---
+
+Let's next visualize the decoding. Importantly, hovering or selecting the output neurons should not visualize the same thing as the input neurons. If an output neuron is selected, this should not put a border around the input neuron. Make feature input selection disabled for now (but keep hover effect). In the next step we will visualize the output neurons in the embedding view, after you made sure that all these selectable/hoverable targets are not interchanged without me telling you explicitly.
+
+----
+
+Let's next visualize the decoding. When hovering/ selecting an output neuron, we need to visualize:
+* the vector
+* the Bias
+* the RELU
+* the interference
+
+To do so:
+* highlight the vector associated with the output neuron
+* put the bias as a dot onto the vector, write b_n in latex beside it (similar to the h_1, h_2, h_3)
+* put a line/surface orthogonal to the vector through the bias
+* put a grey background color in the area that gets ignored by RELU and label this area
+  * use the AxisGradientOverlay as potential reference for coloring the part that is ignored by RELU
+* for vectors whose tip is outside the RELU area (vectors causing interference), put a red dotted line (cylinder) from the tip of those vectors onto the surface/line going through the bias. The red dotted line is representing the amount of interference caused.
+
+
+---
+
+

@@ -68,6 +68,9 @@ import { InputDirectionOverlay } from './overlays/InputDirectionOverlay'
 import { AxisGradientOverlay } from './overlays/AxisGradientOverlay'
 import { ProjectionLineOverlay } from './overlays/ProjectionLineOverlay'
 import { DropLineOverlay } from './overlays/DropLineOverlay'
+import { BiasPointOverlay } from './overlays/BiasPointOverlay'
+import { ReluRegionOverlay } from './overlays/ReluRegionOverlay'
+import { InterferenceLinesOverlay } from './overlays/InterferenceLinesOverlay'
 
 /** Kinds that identify a single input feature index. */
 const FEATURE_KINDS = new Set(['input', 'feature', 'output', 'bias', 'relu'])
@@ -120,6 +123,12 @@ function resolveOverlays(
       return [new InputDirectionOverlay(target.idx)]
     case 'emb':
       return [new AxisGradientOverlay(target.idx)]
+    case 'output':
+      return [
+        new BiasPointOverlay(target.idx),
+        new ReluRegionOverlay(target.idx),
+        new InterferenceLinesOverlay(target.idx),
+      ]
     default:
       return []
   }
