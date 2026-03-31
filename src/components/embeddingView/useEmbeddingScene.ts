@@ -1,6 +1,7 @@
 import {watch, onMounted, onUnmounted, nextTick, type Ref} from 'vue'
 import * as THREE from 'three'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
+import {TrackballControls} from 'three/examples/jsm/controls/TrackballControls.js'
 import {CSS2DRenderer} from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import type {AutoencoderServiceType} from '../../services/AutoencoderService'
 import type {SelectionServiceType, SelectionTarget} from '../../services/SelectionService'
@@ -41,7 +42,7 @@ export function useEmbeddingScene(
     let labelRenderer: CSS2DRenderer | null = null
     let scene: THREE.Scene | null = null
     let camera: THREE.PerspectiveCamera | null = null
-    let controls: OrbitControls | null = null
+    let controls: OrbitControls | TrackballControls | null = null
     let rafId = 0
 
     const raycaster = new THREE.Raycaster()
@@ -157,13 +158,26 @@ export function useEmbeddingScene(
         }
         camera.lookAt(0, 0, 0)
 
-        controls = new OrbitControls(camera, canvas)
-        controls.enableDamping = true
-        controls.dampingFactor = CAMERA_DAMPING
-        controls.minDistance = CAMERA_MIN_DIST
-        controls.maxDistance = CAMERA_MAX_DIST
-        controls.enablePan = true
-        if (embDim < 3) controls.enableRotate = false
+        if (embDim >= 3) {
+            // TrackballControls for free rotation without polar angle clamping
+            const tc = new TrackballControls(camera, canvas)
+            tc.rotateSpeed = 3.0
+            tc.zoomSpeed = 1.2
+            tc.panSpeed = 0.8
+            tc.dynamicDampingFactor = CAMERA_DAMPING
+            tc.minDistance = CAMERA_MIN_DIST
+            tc.maxDistance = CAMERA_MAX_DIST
+            controls = tc
+        } else {
+            const oc = new OrbitControls(camera, canvas)
+            oc.enableDamping = true
+            oc.dampingFactor = CAMERA_DAMPING
+            oc.minDistance = CAMERA_MIN_DIST
+            oc.maxDistance = CAMERA_MAX_DIST
+            oc.enablePan = true
+            oc.enableRotate = false
+            controls = oc
+        }
 
         buildAxes()
         buildVecs()
