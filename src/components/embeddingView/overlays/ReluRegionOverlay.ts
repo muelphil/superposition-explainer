@@ -14,6 +14,34 @@ const SURFACE_EXTENT  = 20            // large enough to always span the viewpor
 const LABEL_OFFSET    = 0.45          // how far into the inactive region for the label
 const REGION_DEPTH    = 10            // how far the inactive-region surface extends
 
+// ── Crosshatch texture (helps distinguish boundary in 3D) ────────────────────
+
+let _hatchTexture: THREE.CanvasTexture | null = null
+
+function getHatchTexture(): THREE.CanvasTexture {
+  if (_hatchTexture) return _hatchTexture
+  const size = 32
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+  ctx.clearRect(0, 0, size, size)
+  // Diagonal stripes
+  ctx.strokeStyle = 'rgba(115, 115, 115, 0.45)'
+  ctx.lineWidth = 1.5
+  for (let i = -size; i < size * 2; i += 6) {
+    ctx.beginPath()
+    ctx.moveTo(i, 0)
+    ctx.lineTo(i + size, size)
+    ctx.stroke()
+  }
+  _hatchTexture = new THREE.CanvasTexture(canvas)
+  _hatchTexture.wrapS = THREE.RepeatWrapping
+  _hatchTexture.wrapT = THREE.RepeatWrapping
+  _hatchTexture.repeat.set(20, 20)
+  return _hatchTexture
+}
+
 // ── Overlay class ─────────────────────────────────────────────────────────────
 
 /**
@@ -58,6 +86,7 @@ export class ReluRegionOverlay implements SceneOverlay {
       depthTest:   false,
       depthWrite:  false,
       side:        THREE.DoubleSide,
+      map:         getHatchTexture(),
     })
     this.regionGeom = new THREE.BufferGeometry()
     this.regionMesh = new THREE.Mesh(this.regionGeom, this.regionMat)
@@ -185,59 +214,63 @@ export class ReluRegionOverlay implements SceneOverlay {
     const backOffset = vecNorm.clone().multiplyScalar(-depth) // into inactive region
 
     let positions: Float32Array
+    let uvs: Float32Array
+
+    // UV quad for one face (2 triangles): v0(1,1) v1(0,1) v2(0,0) / v0(1,1) v2(0,0) v3(1,0)
+    const FACE_UVS = [1,1, 0,1, 0,0, 1,1, 0,0, 1,0]
 
     if (dim <= 2) {
-      // 4 vertices: 2 on the boundary line, 2 deep into inactive region
       const v0 = edgeNear.clone().addScaledVector(this._perp,  hw)
       const v1 = edgeNear.clone().addScaledVector(this._perp, -hw)
       const v2 = v1.clone().add(backOffset)
       const v3 = v0.clone().add(backOffset)
 
-      // Two triangles: v0-v1-v2, v0-v2-v3
       positions = new Float32Array([
         v0.x, v0.y, v0.z,  v1.x, v1.y, v1.z,  v2.x, v2.y, v2.z,
         v0.x, v0.y, v0.z,  v2.x, v2.y, v2.z,  v3.x, v3.y, v3.z,
       ])
+      uvs = new Float32Array(FACE_UVS)
     } else {
-      // 3D: use both perpendicular directions for a square at the boundary
       const p1 = this._perp
       const p2 = this._perp2
       const v0 = edgeNear.clone().addScaledVector(p1,  hw).addScaledVector(p2,  hw)
       const v1 = edgeNear.clone().addScaledVector(p1, -hw).addScaledVector(p2,  hw)
       const v2 = edgeNear.clone().addScaledVector(p1, -hw).addScaledVector(p2, -hw)
       const v3 = edgeNear.clone().addScaledVector(p1,  hw).addScaledVector(p2, -hw)
-
-      // Plus the back face (deep into inactive region)
       const v4 = v0.clone().add(backOffset)
       const v5 = v1.clone().add(backOffset)
       const v6 = v2.clone().add(backOffset)
       const v7 = v3.clone().add(backOffset)
 
-      // 6 faces × 2 triangles × 3 vertices = 36 vertices
-      // Front, back, and 4 sides
       positions = new Float32Array([
-        // Front face (at boundary)
+        // Front face
         v0.x,v0.y,v0.z, v1.x,v1.y,v1.z, v2.x,v2.y,v2.z,
         v0.x,v0.y,v0.z, v2.x,v2.y,v2.z, v3.x,v3.y,v3.z,
         // Back face
         v4.x,v4.y,v4.z, v6.x,v6.y,v6.z, v5.x,v5.y,v5.z,
         v4.x,v4.y,v4.z, v7.x,v7.y,v7.z, v6.x,v6.y,v6.z,
-        // Top side (v0-v1-v5-v4)
+        // Top side
         v0.x,v0.y,v0.z, v1.x,v1.y,v1.z, v5.x,v5.y,v5.z,
         v0.x,v0.y,v0.z, v5.x,v5.y,v5.z, v4.x,v4.y,v4.z,
-        // Bottom side (v3-v2-v6-v7)
+        // Bottom side
         v3.x,v3.y,v3.z, v2.x,v2.y,v2.z, v6.x,v6.y,v6.z,
         v3.x,v3.y,v3.z, v6.x,v6.y,v6.z, v7.x,v7.y,v7.z,
-        // Left side (v1-v2-v6-v5)
+        // Left side
         v1.x,v1.y,v1.z, v2.x,v2.y,v2.z, v6.x,v6.y,v6.z,
         v1.x,v1.y,v1.z, v6.x,v6.y,v6.z, v5.x,v5.y,v5.z,
-        // Right side (v0-v3-v7-v4)
+        // Right side
         v0.x,v0.y,v0.z, v3.x,v3.y,v3.z, v7.x,v7.y,v7.z,
         v0.x,v0.y,v0.z, v7.x,v7.y,v7.z, v4.x,v4.y,v4.z,
+      ])
+      // Each face gets the same UV quad
+      uvs = new Float32Array([
+        ...FACE_UVS, ...FACE_UVS, ...FACE_UVS,
+        ...FACE_UVS, ...FACE_UVS, ...FACE_UVS,
       ])
     }
 
     this.regionGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    this.regionGeom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2))
     this.regionGeom.computeVertexNormals()
   }
 

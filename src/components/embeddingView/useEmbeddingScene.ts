@@ -57,6 +57,7 @@ export function useEmbeddingScene(
     let embPointMesh: THREE.Mesh | null = null
     let needsVecUpdate = false
     let lastHoverKey = ''
+    let mouseIsDown = false
 
     let ro: ResizeObserver | null = null
 
@@ -161,7 +162,7 @@ export function useEmbeddingScene(
         controls.dampingFactor = CAMERA_DAMPING
         controls.minDistance = CAMERA_MIN_DIST
         controls.maxDistance = CAMERA_MAX_DIST
-        controls.enablePan = false
+        controls.enablePan = true
         if (embDim < 3) controls.enableRotate = false
 
         buildAxes()
@@ -476,9 +477,6 @@ export function useEmbeddingScene(
         if (isCrossCase) {
             const embTarget = sel!.kind === 'emb' ? sel! : hov!
             litAxisIdx = embTarget.idx
-        } else if (isOutputActive && hov?.kind === 'emb') {
-            // Output selected + emb hovered → highlight the axis
-            litAxisIdx = hov.idx
         } else if (primary?.kind === 'emb') {
             litAxisIdx = primary.idx
         } else if (primary?.kind === 'weight') {
@@ -498,11 +496,25 @@ export function useEmbeddingScene(
         }
     }
 
+    // ── Camera animation state ──────────────────────────────────
+    let cameraAnimTarget: THREE.Vector3 | null = null
+    const CAMERA_LERP = 0.08
+
     // ── Render loop ───────────────────────────────────────────────
     function renderLoop() {
         rafId = requestAnimationFrame(renderLoop)
         if (!renderer || !scene || !camera) return
-        controls?.update()
+
+        // Camera animation (skip controls.update during animation)
+        if (cameraAnimTarget) {
+            camera.position.lerp(cameraAnimTarget, CAMERA_LERP)
+            camera.lookAt(controls?.target ?? new THREE.Vector3())
+            if (camera.position.distanceTo(cameraAnimTarget) < 0.02) {
+                cameraAnimTarget = null
+            }
+        } else {
+            controls?.update()
+        }
 
         if (needsVecUpdate) {
             updateVecs()
@@ -511,24 +523,27 @@ export function useEmbeddingScene(
         updateEmbPoint()
         overlayManager.tick()
 
-        raycaster.setFromCamera(mouseNDC, camera)
-        const vecHits = raycaster.intersectObjects(vecs.map(vv => vv.hitMesh))
-        const axisHits = raycaster.intersectObjects(axisHitMeshes)
+        // Suppress hover detection while mouse is down (user is rotating/panning)
+        if (!mouseIsDown) {
+            raycaster.setFromCamera(mouseNDC, camera)
+            const vecHits = raycaster.intersectObjects(vecs.map(vv => vv.hitMesh))
+            const axisHits = raycaster.intersectObjects(axisHitMeshes)
 
-        const newFeatureH = vecHits.length > 0 ? (vecHits[0].object.userData.vIdx as number) : null
-        const newAxisH = axisHits.length > 0 ? (axisHits[0].object.userData.aIdx as number) : null
+            const newFeatureH = vecHits.length > 0 ? (vecHits[0].object.userData.vIdx as number) : null
+            const newAxisH = axisHits.length > 0 ? (axisHits[0].object.userData.aIdx as number) : null
 
-        const newHoverKey = newFeatureH !== null ? `f:${newFeatureH}` : newAxisH !== null ? `e:${newAxisH}` : ''
-        if (newHoverKey !== lastHoverKey) {
-            lastHoverKey = newHoverKey
-            if (newFeatureH !== null) {
-                selSvc.setHover({kind: 'feature', idx: newFeatureH}, 'embedding')
-            } else if (newAxisH !== null) {
-                selSvc.setHover({kind: 'emb', idx: newAxisH}, 'embedding')
-            } else {
-                selSvc.clearHover()
+            const newHoverKey = newFeatureH !== null ? `f:${newFeatureH}` : newAxisH !== null ? `e:${newAxisH}` : ''
+            if (newHoverKey !== lastHoverKey) {
+                lastHoverKey = newHoverKey
+                if (newFeatureH !== null) {
+                    selSvc.setHover({kind: 'feature', idx: newFeatureH}, 'embedding')
+                } else if (newAxisH !== null) {
+                    selSvc.setHover({kind: 'emb', idx: newAxisH}, 'embedding')
+                } else {
+                    selSvc.clearHover()
+                }
+                applyVisualState(selSvc.selected.value, selSvc.hovered.value)
             }
-            applyVisualState(selSvc.selected.value, selSvc.hovered.value)
         }
 
         renderer.render(scene, camera)
@@ -558,6 +573,7 @@ export function useEmbeddingScene(
 
     function onMouseLeave() {
         mouseNDC.set(-9999, -9999)
+        mouseIsDown = false
         if (lastHoverKey !== '') {
             lastHoverKey = ''
             selSvc.clearHover()
@@ -569,6 +585,11 @@ export function useEmbeddingScene(
 
     function onCanvasMouseDown(e: MouseEvent) {
         mouseDownPos = {x: e.clientX, y: e.clientY}
+        mouseIsDown = true
+    }
+
+    function onCanvasMouseUp() {
+        mouseIsDown = false
     }
 
     function onCanvasClick(e: MouseEvent) {
@@ -604,11 +625,13 @@ export function useEmbeddingScene(
         init()
         ro = new ResizeObserver(onResize)
         if (containerRef.value) ro.observe(containerRef.value)
+        window.addEventListener('mouseup', onCanvasMouseUp)
     })
 
     onUnmounted(() => {
         teardown()
         ro?.disconnect()
+        window.removeEventListener('mouseup', onCanvasMouseUp)
     })
 
     watch(() => svc.config.embeddingDim, async () => {
@@ -625,6 +648,18 @@ export function useEmbeddingScene(
     // Re-apply visual state when hover/selection changes from any other component
     watch([selSvc.hovered, selSvc.selected], ([hov, sel]) => {
         applyVisualState(sel, hov)
+        // Auto-rotate camera to face the selected output's feature vector (3D only)
+        if (svc.config.embeddingDim === 3 && camera) {
+            const outputTarget = (hov?.kind === 'output' ? hov : null) ?? (sel?.kind === 'output' ? sel : null)
+            if (outputTarget) {
+                const vec = featureVec(svc.W.value, svc.config.embeddingDim, outputTarget.idx)
+                if (vec.lengthSq() > 1e-8) {
+                    const dir = vec.clone().normalize()
+                    const dist = camera.position.length()
+                    cameraAnimTarget = dir.multiplyScalar(dist)
+                }
+            }
+        }
     }, {flush: 'sync'})
     watch(showEmbeddingPoint, v => {
         if (embPointMesh) embPointMesh.visible = v

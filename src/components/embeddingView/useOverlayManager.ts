@@ -105,9 +105,7 @@ function resolveOverlays(
 
   // ── Output selected (+ optional valid hover) ─────────────────
   if (_sel?.kind === 'output') {
-    const overlays = outputOverlays(_sel.idx)
-    if (_hov?.kind === 'emb') overlays.push(new AxisGradientOverlay(_hov.idx))
-    return overlays
+    return outputOverlays(_sel.idx)
   }
 
   // ── Cross-case: feature-kind + emb axis ───────────────────────

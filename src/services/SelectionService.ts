@@ -28,7 +28,7 @@ const HOVER_EFFECT_MATRIX: Record<TargetKind, Set<TargetKind>> = {
   feature: new Set<TargetKind>([          'input','emb','output']),
   input:   new Set<TargetKind>([                        'output']),
   emb:     new Set<TargetKind>(['feature','input',      'output']),
-  output:  new Set<TargetKind>(['feature','input','emb','output']),
+  output:  new Set<TargetKind>(['feature','input',      'output']),
   bias:    new Set<TargetKind>([          'input',      'output']),
   relu:    new Set<TargetKind>([          'input',      'output']),
   weight:  new Set<TargetKind>([          'input',      'output']),
