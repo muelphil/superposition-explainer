@@ -331,9 +331,10 @@ Better, but still not perfect.
 
 ---
 
-
+* please implement a quadratic matrix in the selection/hover service of booleans, where columns/rows are selection targets (output, feature, input, bias, relu, ...). The cells indicate whether when the first target in the dimension is selected, if the second can be hovered/ if hovering should have an effect. I.e. output-feature cell being true means that while an output is selected, a feature may be hovered for an effect; output-output being True means while one output is selected, another may be hovered to overwrite. This should make the logic in useOverlayManager easier and also useEmbeddingScene easier. 
 * please use a surface for the relu area instead of the axis gradient approach -- it does look good.
 * please rotate the "Masked by RELU" text so that it is parallel to the surface line of this relu surface; if it is more upside down, rotate it around an additional 180 degree so that it is readable by the user.
+* please put a lighter grey border around "Masked by RELU" text, so that it is always visible. Again, reuse colors.
 
 
 ---

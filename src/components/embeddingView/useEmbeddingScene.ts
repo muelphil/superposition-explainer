@@ -382,31 +382,63 @@ export function useEmbeddingScene(
      *   - others       → all axes at normal opacity
      */
     function applyVisualState(sel: SelectionTarget, hov: SelectionTarget) {
-        // ── Detect cross-case: one is a feature-kind, the other is an emb axis ──
         const FEATURE_KINDS = new Set(['feature', 'input', 'output', 'bias', 'relu'])
-        const isCrossCase = sel && hov && (
+
+        // Output hover takes priority for determining the effective output target
+        const outputTarget =
+          (hov?.kind === 'output' ? hov : null) ??
+          (sel?.kind === 'output' ? sel : null)
+        const isOutputActive = outputTarget !== null
+
+        // Detect cross-case: one is a feature-kind, the other is an emb axis
+        // (but NOT when output is active — output has its own dimming logic)
+        const isCrossCase = !isOutputActive && sel && hov && (
             (FEATURE_KINDS.has(sel.kind) && hov.kind === 'emb') ||
             (sel.kind === 'emb' && FEATURE_KINDS.has(hov.kind))
         )
 
-        // Output hover takes priority over select for visual state
-        const effectiveTarget = hov?.kind === 'output' ? hov : (sel ?? hov)
-        // In cross-case, both targets contribute; otherwise use effective target
-        const primary = isCrossCase ? (sel ?? hov) : effectiveTarget
-
-        // Output-kind uses half-dim so users can still see interference vectors
-        const isOutputActive = effectiveTarget?.kind === 'output'
-        const HALF_DIM_OPACITY = 0.65
+        const primary = isCrossCase ? (sel ?? hov) : (hov?.kind === 'output' ? hov : (sel ?? hov))
 
         // ── Feature vectors ──────────────────────────────────────────
-        let litVecIdx: number | null = null   // index of the one non-dimmed vector, or null = all lit
+        let litVecSet: Set<number> | null = null  // null = all lit
         let dimVecs = false
+        const HALF_DIM_OPACITY = 0.65
 
-        if (isCrossCase) {
-            // Cross-case: dim all except the feature-kind target
+        if (isOutputActive) {
+            // Output active: show selected output vec + interfering vecs in color
+            dimVecs = true
+            litVecSet = new Set<number>()
+            const outIdx = outputTarget!.idx
+            litVecSet.add(outIdx)
+
+            // Compute interfering vector indices
+            const W = svc.W.value
+            const embDim = svc.config.embeddingDim
+            const vecI = featureVec(W, embDim, outIdx)
+            const lenSq = vecI.lengthSq()
+            if (lenSq > 1e-8) {
+                const bi = svc.b.value[outIdx] ?? 0
+                const len = Math.sqrt(lenSq)
+                const vecINorm = vecI.clone().normalize()
+                const tBoundary = -bi / len
+                const n = svc.config.inputDim
+                for (let j = 0; j < n; j++) {
+                    if (j === outIdx) continue
+                    const vecJ = featureVec(W, embDim, j)
+                    const tJ = vecJ.dot(vecINorm)
+                    if (tJ > tBoundary) litVecSet.add(j)
+                }
+            }
+
+            // If hovering a feature while output is selected, also light up that vector
+            if (hov && FEATURE_KINDS.has(hov.kind) && 'idx' in hov) {
+                litVecSet.add(hov.idx)
+            }
+        } else if (isCrossCase) {
             dimVecs = true
             const featureTarget = FEATURE_KINDS.has(sel!.kind) ? sel! : hov!
-            litVecIdx = 'idx' in featureTarget ? featureTarget.idx : null
+            const idx = 'idx' in featureTarget ? featureTarget.idx : null
+            litVecSet = idx !== null ? new Set([idx]) : null
         } else if (primary) {
             switch (primary.kind) {
                 case 'feature':
@@ -415,38 +447,37 @@ export function useEmbeddingScene(
                 case 'bias':
                 case 'relu':
                     dimVecs = true
-                    litVecIdx = primary.idx
+                    litVecSet = new Set([primary.idx])
                     break
                 case 'weight':
                     dimVecs = true
-                    litVecIdx = primary.col
+                    litVecSet = new Set([primary.col])
                     break
                 case 'emb':
-                    // Embedding axis hover: no vector dimming (all vectors connect to every axis)
                     dimVecs = false
                     break
             }
         }
 
         for (const vv of vecs) {
-            const dim = dimVecs && vv.idx !== litVecIdx
-            const col = dim ? DIM_COLOR : vv.color
-            const opacity = dim ? (isOutputActive ? HALF_DIM_OPACITY : DIM_OPACITY) : 1.0
+            const isLit = !dimVecs || (litVecSet !== null && litVecSet.has(vv.idx))
+            const col = isLit ? vv.color : DIM_COLOR
+            const opacity = isLit ? 1.0 : (isOutputActive ? HALF_DIM_OPACITY : DIM_OPACITY)
             const sm = vv.shaft.material as THREE.MeshBasicMaterial
             const hm = vv.head.material as THREE.MeshBasicMaterial
-            sm.color.copy(col);
-            sm.opacity = opacity
-            hm.color.copy(col);
-            hm.opacity = opacity
+            sm.color.copy(col); sm.opacity = opacity
+            hm.color.copy(col); hm.opacity = opacity
         }
 
         // ── Axis highlighting ─────────────────────────────────────────
         let litAxisIdx: number | null = null
 
         if (isCrossCase) {
-            // Cross-case: highlight the emb axis
             const embTarget = sel!.kind === 'emb' ? sel! : hov!
             litAxisIdx = embTarget.idx
+        } else if (isOutputActive && hov?.kind === 'emb') {
+            // Output selected + emb hovered → highlight the axis
+            litAxisIdx = hov.idx
         } else if (primary?.kind === 'emb') {
             litAxisIdx = primary.idx
         } else if (primary?.kind === 'weight') {
@@ -456,11 +487,10 @@ export function useEmbeddingScene(
         for (let a = 0; a < axisMaterials.length; a++) {
             const highlight = litAxisIdx === a
             for (const mat of axisMaterials[a]) {
-                const m = mat as THREE.MeshBasicMaterial  // works for both MeshBasicMaterial and LineBasicMaterial
+                const m = mat as THREE.MeshBasicMaterial
                 m.color.setHex(highlight ? AXIS_HIGHLIGHT_COLOR : AXIS_COLOR)
                 m.opacity = highlight ? AXIS_HIGHLIGHT_OPACITY : AXIS_OPACITY
             }
-            // Update label text color
             if (axisLabels[a]) {
                 axisLabels[a].element.style.color = highlight ? AXIS_LABEL_COLOR_HIGHLIGHT : AXIS_LABEL_COLOR_DEFAULT
             }

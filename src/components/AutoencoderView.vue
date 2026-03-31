@@ -369,17 +369,58 @@ const isOutputTargetActive = computed(() => {
   const hov = selSvc.hovered.value
   const sel = selSvc.selected.value
   if (hov?.kind === 'output') return true
-  if (sel?.kind === 'output' && !hov) return true
+  if (sel?.kind === 'output') return true
   return false
+})
+
+/** The effective output index when output is active (hover priority). */
+const activeOutputIdx = computed<number | null>(() => {
+  const hov = selSvc.hovered.value
+  const sel = selSvc.selected.value
+  if (hov?.kind === 'output') return hov.idx
+  if (sel?.kind === 'output') return sel.idx
+  return null
+})
+
+/** Set of feature indices that are "lit" when an output is active:
+ *  the output's own feature + all interfering features. */
+const outputLitFeatures = computed<Set<number>>(() => {
+  const outIdx = activeOutputIdx.value
+  if (outIdx === null) return new Set()
+  const lit = new Set([outIdx])
+
+  const W = svc.W.value
+  const embDim = svc.config.embeddingDim
+  const bi = svc.b.value[outIdx] ?? 0
+
+  // Compute vecI = W[:, outIdx]
+  const vecI = [W[0]?.[outIdx] ?? 0, embDim >= 2 ? (W[1]?.[outIdx] ?? 0) : 0, embDim >= 3 ? (W[2]?.[outIdx] ?? 0) : 0]
+  const lenSq = vecI[0] ** 2 + vecI[1] ** 2 + vecI[2] ** 2
+  if (lenSq < 1e-8) return lit
+
+  const len = Math.sqrt(lenSq)
+  const norm = [vecI[0] / len, vecI[1] / len, vecI[2] / len]
+  const tBoundary = -bi / len
+
+  for (let j = 0; j < svc.config.inputDim; j++) {
+    if (j === outIdx) continue
+    const vj = [W[0]?.[j] ?? 0, embDim >= 2 ? (W[1]?.[j] ?? 0) : 0, embDim >= 3 ? (W[2]?.[j] ?? 0) : 0]
+    const tJ = vj[0] * norm[0] + vj[1] * norm[1] + vj[2] * norm[2]
+    if (tJ > tBoundary) lit.add(j)
+  }
+  return lit
 })
 
 function inputDimClass(i: number): string {
   if (!isInputDimmed(i)) return ''
-  return isOutputTargetActive.value ? 'half-dimmed' : 'dimmed'
+  if (!isOutputTargetActive.value) return 'dimmed'
+  // When output is active: interfering features get half-dim, non-interfering get full dim
+  return outputLitFeatures.value.has(i) ? 'half-dimmed' : 'dimmed'
 }
 function outputDimClass(i: number): string {
   if (!isOutputDimmed(i)) return ''
-  return isOutputTargetActive.value ? 'half-dimmed' : 'dimmed'
+  if (!isOutputTargetActive.value) return 'dimmed'
+  return outputLitFeatures.value.has(i) ? 'half-dimmed' : 'dimmed'
 }
 function embDimClass(k: number): string {
   if (!isEmbDimmed(k)) return ''

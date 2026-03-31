@@ -11,7 +11,16 @@ const LABEL_OFFSET = 0.12   // perpendicular offset for the label
  * Dot on the feature vector at the ReLU threshold (bias) point, with a
  * LaTeX label `b_n` beside it.
  *
- * The bias point is at:  p = (-b_i / ||W[:,i]||²) · W[:,i]
+ * The bias point is where the ReLU boundary hyperplane (W[:,i]ᵀ · h = −bᵢ)
+ * intersects the W[:,i] direction line:
+ *
+ *   p = (−bᵢ / ||W[:,i]||²) · W[:,i]
+ *
+ * The ||²  divisor is correct even when ||W[:,i]|| ≠ 1. Proof:
+ *   W[:,i]ᵀ · p = W[:,i]ᵀ · (−bᵢ/||W[:,i]||²) · W[:,i] = −bᵢ · ||W[:,i]||²/||W[:,i]||² = −bᵢ  ✓
+ *
+ * Dividing by just ||W[:,i]|| instead would give an incorrect point at
+ * W[:,i]ᵀ · p′ = −bᵢ · ||W[:,i]||, which ≠ −bᵢ unless ||W[:,i]|| = 1.
  *
  * Composable: use with ReluRegionOverlay + InterferenceLinesOverlay.
  */
@@ -37,7 +46,7 @@ export class BiasPointOverlay implements SceneOverlay {
       new THREE.SphereGeometry(ORIGIN_RADIUS, DOT_SEGMENTS, DOT_SEGMENTS),
       this.dotMat,
     )
-    this.dot.renderOrder = 10
+    this.dot.renderOrder = 15
     ctx.scene.add(this.dot)
 
     // LaTeX label  b_{n}

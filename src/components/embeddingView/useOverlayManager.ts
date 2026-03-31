@@ -100,6 +100,25 @@ function resolveOverlays(
     ]
   }
 
+  // ── Output selected + emb hovered → output overlays + axis gradient ──
+  if (_sel?.kind === 'output' && _hov?.kind === 'emb') {
+    return [
+      new BiasPointOverlay(_sel.idx),
+      new ReluRegionOverlay(_sel.idx),
+      new InterferenceLinesOverlay(_sel.idx),
+      new AxisGradientOverlay(_hov.idx),
+    ]
+  }
+
+  // ── Output selected + feature hovered → keep output overlays ──
+  if (_sel?.kind === 'output' && _hov && FEATURE_KINDS.has(_hov.kind)) {
+    return [
+      new BiasPointOverlay(_sel.idx),
+      new ReluRegionOverlay(_sel.idx),
+      new InterferenceLinesOverlay(_sel.idx),
+    ]
+  }
+
   // ── Cross-case: one is a feature-kind, the other is an emb axis ──
   if (_sel && _hov) {
     const selIsFeature = FEATURE_KINDS.has(_sel.kind)
