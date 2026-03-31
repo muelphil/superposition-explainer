@@ -533,20 +533,24 @@ function onOutputClick(i: number) {
     <!-- ── Per-feature rows (rows 3 … n+2) ───────────────── -->
     <template v-for="(_, i) in n" :key="i">
       <!-- Input value: col 1 -->
-      <InputValue
-          :modelValue="userInputs[i] ?? 0"
-          :label="`x${i + 1}`"
-          :disabled="svc.isTraining.value"
-          :featureIdx="i"
-          :featureCount="n"
+      <div
+          class="cell-hover-zone"
           :class="{ dimmed: isInputDimmed(i) }"
-          @update:modelValue="onInputChange(i, $event)"
-          @resample="resampleInput(i)"
-          @featureClick="onInputClick(i)"
+          :style="{ gridColumn: '1', gridRow: String(i + dataRowStart) }"
           @mouseenter="onInputEnter(i)"
           @mouseleave="onInputLeave"
-          :style="{ gridColumn: '1', gridRow: String(i + dataRowStart) }"
-      />
+      >
+        <InputValue
+            :modelValue="userInputs[i] ?? 0"
+            :label="`x${i + 1}`"
+            :disabled="svc.isTraining.value"
+            :featureIdx="i"
+            :featureCount="n"
+            @update:modelValue="onInputChange(i, $event)"
+            @resample="resampleInput(i)"
+            @featureClick="onInputClick(i)"
+        />
+      </div>
 
       <!-- Input neuron: col 3 -->
       <div
@@ -579,19 +583,23 @@ function onOutputClick(i: number) {
 
       <!-- Output neuron: col 10 — also scales with importance -->
       <div
-          :ref="(el) => { outputNeuronRefs[i] = el as HTMLElement }"
-          class="neuron"
-          :class="{ dimmed: isOutputDimmed(i), 'neuron-selected': isOutputSelected(i) }"
-          :style="{
-          gridColumn: '10',
-          gridRow: String(i + dataRowStart),
-          background: neuronColor(svc.currentOutput.value[i] ?? 0),
-          transform: `scale(${neuronScale(i)})`,
-        }"
+          class="neuron-wrap"
+          :class="{ dimmed: isOutputDimmed(i) }"
+          :style="{ gridColumn: '10', gridRow: String(i + dataRowStart) }"
           @mouseenter="onOutputEnter(i)"
           @mouseleave="onOutputLeave"
           @click="onOutputClick(i)"
-      />
+      >
+        <div
+            :ref="(el) => { outputNeuronRefs[i] = el as HTMLElement }"
+            class="neuron"
+            :class="{ 'neuron-selected': isOutputSelected(i) }"
+            :style="{
+            background: neuronColor(svc.currentOutput.value[i] ?? 0),
+            transform: `scale(${neuronScale(i)})`,
+          }"
+        />
+      </div>
 
       <!-- Output value: col 11 -->
       <div
@@ -655,7 +663,7 @@ function onOutputClick(i: number) {
     [gap-s-right]     1.2rem
     [outputs]         82px;
   column-gap: 0;
-  row-gap: var(--row-gap);
+  row-gap: 0;
   align-items: center;
   justify-content: space-around;
   justify-items: center;
@@ -731,12 +739,14 @@ function onOutputClick(i: number) {
 }
 
 :deep(.input-value.dimmed),
+.cell-hover-zone.dimmed,
 .output-value.dimmed {
   opacity: 0.18;
 }
 
 .neuron-wrap,
 .neuron,
+.cell-hover-zone,
 :deep(.input-value),
 .output-value {
   transition: opacity 0.15s;
@@ -755,6 +765,16 @@ function onOutputClick(i: number) {
   justify-content: center;
   overflow: visible;
   cursor: pointer;
+  align-self: stretch;
+}
+
+.cell-hover-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  width: 100%;
+  position: relative;
 }
 
 .neuron-wrap:hover .neuron-tooltip {
