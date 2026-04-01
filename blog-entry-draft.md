@@ -29,18 +29,42 @@ As you can see, the 2 features are represented by 2 normalized, orthogonal vecto
 
 But we have a problem: embedding dimensions are limited. Modern llms use up to TODO latent dimensions, but this is not nearly enough to fully capture all concepts -- there are more words in the english dicitonary than latent dimension.
 
-* lets try it out: 4 features of varying importance, 2 emb dimensions (full sparcity) run the simulation.
+* lets try it out: 4 features of varying importance, 2 emb dimensions (sparsity=1.0) run the simulation.
   * What do you notice?
   * What role does importance I of the vectors play? Check which features are embedded, and which ones are ignored
   * Check the bias used for the features that are unused in embedding space -- compare it to the [mean of  the half-normal distribution](https://en.wikipedia.org/wiki/Half-normal_distribution)
 
+-> the 2 lesser important features will vanish and receive a bias of ~0.8, matching the mean of the half-normal distribution we are sampling from
 
+## Sparsity
+* features in the embeddings are highly sparse
+* imagine all different sort of features: is sweet, is red, is car, is female, is Einstein, can jump, has e as second letter, ...
+* many of these will not be represented in the embedding space at the same time; moreover, most of the features will be 0 most of the time -- this is called sparsity
+* in the autoencoder we can model this by employing sparsity in our synthetic training data
+  * with a sparcity s, each vector has a chance of s to be sampled from the half-normal distribution, otherwise it is 0
+* let's try it again and see how this affects the outcome
+1. run training with sparsity=0.2 -> all 4 vectors are represented
+2. Now, activate different inputs individually and observe the reconstruction error
+3. Set all features to 0; then, using the slider, increase the input for 2 features that are pointing in opposite directions to 1.0 and observe what happens in the embedding view. What do you notice? What happens regarding the weighted loss, when these two features are activated at the same time?
 
+TODO: maybe correlate 2 features directly, train again, see how it changes
 
+Great! This doubled the amount of features we can encode as long as there is high sparsity of features -- but doubling is not good enough.
 
 
 
 So the big question is: how do llms seemingly encode more features than embedding dimensions into latent space?
+
+Lets use an experimental approach and try to explain the bahaviour after having observed it.
+1. create yet one more input neuron -- totaling 5 features to be encoded in 2 latent embedding dimensions
+2. using a sparsity of s=0.15, train the model
+3. what do you perceive? Check out the statistics regarding the min angle -- compare this to splitting the full 360deg into 5
+
+
+## Superposition
+
+The behaviour you just observed is called "Superposition". 
+
 
 Two important concepts make this possible:
 * RELU activation function
