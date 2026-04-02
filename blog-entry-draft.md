@@ -4,10 +4,24 @@
   * maybe give the user a slider modifies embedding space size and visualizes resulting model size
   * both important for model size as well as computational efficiency
 
-* explain the idea of embeddings
-  * TODO: maybe visualize this as one numerical vector in the center, and tons of different features around them -- consult neuronpedia.
-* 
+Trend: <https://chatgpt.com/c/69ce9603-14d8-8329-8cb8-cffee6eec5e3>
+* 7–8B models are very often 3072–4096
+* 13–20B often 5120–6144
+* 70B often 8192
+* 175B-class dense models often 12288
+![](./plots/model_size_depending_on_emb_dim.png)
 
+
+-> put this into contrast:
+* Oxford Dictionary lists approximately 171,476 english words in current use https://en.wikipedia.org/wiki/List_of_dictionaries_by_number_of_words (english only! Missing complex relationships)
+* As of early 2026, there are over 7.14 million articles in the English Wikipedia.
+
+* explain the idea of embeddings
+    * TODO: maybe visualize this as one numerical vector in the center, and tons of different features around them -- consult neuronpedia.
+
+![](./plots/latent_space.png)
+
+* TODO: Note that LLMs are trained end to end, and while researchers have identified certain individual features, we do not fully know what the language models learn/ what features are present in embedding space and whether they align with our semantic conception of the world
 
 
 * What are features
@@ -20,6 +34,7 @@
 * a simple toy model autoencoder (+formulaic description) 
   * symmetric decoder W^T
   * explain that we are using synthetic data
+  * define loss function
   * explain feature importance (loss function)
 
 * mathematical writedown on bases
@@ -27,14 +42,21 @@
   * using orthogonal basis: no interference between the directions, easy computation per projection, energy dissolved additively (Signalzerlegung)
   * using orthonormal basis: maximally decoupled, coefficients are dot products and easy to interpret, lengths are retained, most importantly: the basis matrix is orthogonal, so Q^{-1} = Q^T
     * motivate this as basically projecting the input onto the bases, measuring the length of the projection
+
+![](./plots/basis_types.png)
+
   * TODO: 3 visualizations of the bases, and a short example of basis transformation
   * TODO: change of basis example/ visualization
     * see https://www.youtube.com/watch?v=P2LTAUO1TdA as supplementary material
-* you have already seen the W^T to decode something that was previously encoded
-* in theory, when encoding only 2 features (with an embedding dim of 2), this would allow the autoencoder to encode features without any loss, by using an orthonormal basis
-  * try it out!
+* you have already seen the W^T to decode something that was previously encoded -- in the simple autoencoder definition
+* Lets put this to the test in theory, when encoding only 2 features (with an embedding dim of 2), this would allow the autoencoder to encode features without any loss, by using an orthonormal basis
 
-As you can see, the 2 features are represented by 2 normalized, orthogonal vectors -- the loss is 0. This would also be possible by one-hot-encoding the features, representing the features with the standard orthonormal basis that aligns with the axes of the coordinate system -- very intuitivie
+Try it out!
+* input dimension and vector dimension 2
+* run training
+* observe min vector angle and vector length
+
+As you can see, the 2 features are represented by 2 normalized, orthogonal vectors -- the loss is constant 0. This would also be possible by one-hot-encoding the features, representing the features with the standard orthonormal basis that aligns with the axes of the coordinate system -- very intuitive
 
 But we have a problem: embedding dimensions are limited. Modern llms use up to TODO latent dimensions, but this is not nearly enough to fully capture all concepts -- there are more words in the english dicitonary than latent dimension.
 
@@ -56,15 +78,14 @@ But we have a problem: embedding dimensions are limited. Modern llms use up to T
 2. Now, activate different inputs individually and observe the reconstruction error
 3. Set all features to 0; then, using the slider, increase the input for 2 features that are pointing in opposite directions to 1.0 and observe what happens in the embedding view. What do you notice? What happens regarding the weighted loss, when these two features are activated at the same time?
 
-TODO: maybe correlate 2 features directly, train again, see how it changes
+TODO: maybe allow user to correlate 2 features directly, train again, see how it changes
 
 Great! This doubled the amount of features we can encode as long as there is high sparsity of features -- but doubling is not good enough.
 
 
-
 So the big question is: how do llms seemingly encode more features than embedding dimensions into latent space?
 
-Lets use an experimental approach and try to explain the bahaviour after having observed it.
+Lets use an experimental approach and try to explain the behaviour after having observed it.
 1. create yet one more input neuron -- totaling 5 features to be encoded in 2 latent embedding dimensions
 2. using a sparsity of s=0.15, train the model
 3. what do you perceive? Check out the statistics regarding the min angle -- compare this to splitting the full 360deg into 5
@@ -72,7 +93,9 @@ Lets use an experimental approach and try to explain the bahaviour after having 
 
 ## Superposition
 
-The behaviour you just observed is called "Superposition". 
+The behaviour you just observed is called "Superposition", meaning that dimension pattern can simultaneously encode multiple overlapping features/concepts, rather than each concept having its own clean, separate direction.
+
+
 
 
 Two important concepts make this possible:
@@ -103,7 +126,9 @@ Two important concepts make this possible:
 
 todo:
 * orthogonal != min angle of 90 degree to one another, but to each other, be clear about this in the post and dont use "orthogonal" lightly
-
+* explain that we are only considering presence of features, sparsity allowing for negative vectors representing individual, but sparse features
+  * full range (negative to positive makes sense for a subset of features, but not for all and not even for many
+  * for many features, presence alone is important
 
 
 
