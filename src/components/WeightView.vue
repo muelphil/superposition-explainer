@@ -1,17 +1,31 @@
 <script setup lang="ts">
 import { inject, computed } from 'vue'
+import katex from 'katex'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
 import type { SelectionServiceType, SelectionTarget } from '../services/SelectionService'
 
 const svc    = inject<AutoencoderServiceType>('autoencoderService')!
 const selSvc = inject<SelectionServiceType>('selectionService')!
 
-const m = computed(() => svc.config.embeddingDim)  // rows  (h₁…hₘ)
-const n = computed(() => svc.config.inputDim)       // cols  (f₁…fₙ)
+const m = computed(() => svc.config.embeddingDim)
+const n = computed(() => svc.config.inputDim)
+
+// ─── KaTeX helper ──────────────────────────────────────────────────────────
+function kx(formula: string): string {
+  return katex.renderToString(formula, { throwOnError: false, output: 'html' })
+}
+
+// Static rendered strings (do not depend on reactive state)
+const eqEncoder = kx('\\mathbf{h} = \\mathbf{W}\\mathbf{x}')
+const eqDecoder = kx('\\hat{\\mathbf{x}} = \\operatorname{ReLU}(\\mathbf{W}^{\\!\\top}\\mathbf{h} + \\mathbf{b})')
+const titleW    = kx('\\mathbf{W}')
+const titleB    = kx('\\mathbf{b}')
+
+// Per-index labels (called in template loop)
+function colLabel(c: number) { return kx(`f_{${c + 1}}`) }
+function rowLabel(r: number) { return kx(`h_{${r + 1}}`) }
 
 // ─── Illumination ─────────────────────────────────────────────────────────────
-// null = everything lit (no active hover/selection)
-
 interface WvIllum {
   wRows: Set<number> | 'all'
   wCols: Set<number> | 'all'
@@ -22,19 +36,15 @@ interface WvIllum {
 function illumForTarget(t: SelectionTarget): WvIllum | null {
   if (!t) return null
   switch (t.kind) {
-    // Feature, input, output all map to the same column + bias
     case 'feature':
     case 'input':
     case 'output':
       return { wRows: 'all', wCols: new Set([t.idx]), wCell: null, bCols: new Set([t.idx]) }
-    // Embedding → entire row of W; bias has no embedding connection
     case 'emb':
       return { wRows: new Set([t.idx]), wCols: 'all', wCell: null, bCols: new Set() }
-    // Bias and relu → only the bias cell (W fully dimmed per spec)
     case 'bias':
     case 'relu':
       return { wRows: new Set(), wCols: new Set(), wCell: null, bCols: new Set([t.idx]) }
-    // Weight cell → only that specific cell
     case 'weight':
       return { wRows: new Set(), wCols: new Set(), wCell: { r: t.row, c: t.col }, bCols: new Set() }
     default:
@@ -42,7 +52,6 @@ function illumForTarget(t: SelectionTarget): WvIllum | null {
   }
 }
 
-// Selection takes precedence over hover
 const activeIllum = computed<WvIllum | null>(() => {
   const sel = selSvc.selected.value
   if (sel) return illumForTarget(sel)
@@ -51,9 +60,7 @@ const activeIllum = computed<WvIllum | null>(() => {
   return null
 })
 
-function isActive(): boolean {
-  return activeIllum.value !== null
-}
+function isActive(): boolean { return activeIllum.value !== null }
 
 function inSet(s: Set<number> | 'all', idx: number): boolean {
   return s === 'all' || (s as Set<number>).has(idx)
@@ -88,8 +95,7 @@ function rowHeaderHighlighted(r: number): boolean {
   return (illum.wRows as Set<number>).has(r)
 }
 
-// ─── Selection indicators (outline/border on selected items) ──────────────────
-
+// ─── Selection indicators ─────────────────────────────────────────────────────
 function isColSelected(c: number): boolean {
   const sel = selSvc.selected.value
   if (!sel) return false
@@ -114,43 +120,20 @@ function isBiasSelected(c: number): boolean {
   return sel.kind === 'bias' && sel.idx === c
 }
 
-function clearHover() {
-  selSvc.clearHover()
-}
+function clearHover() { selSvc.clearHover() }
 
-// ── Selection service wrappers ─────────────────────────────────
-function onColEnter(c: number) {
-  selSvc.setHover({ kind: 'feature', idx: c }, 'weights')
-}
-function onColClick(c: number) {
-  selSvc.setSelected({ kind: 'feature', idx: c }, 'weights')
-}
+// ─── Hover / click wrappers ───────────────────────────────────────────────────
+function onColEnter(c: number) { selSvc.setHover({ kind: 'feature', idx: c }, 'weights') }
+function onColClick(c: number) { selSvc.setSelected({ kind: 'feature', idx: c }, 'weights') }
+function onRowEnter(r: number) { selSvc.setHover({ kind: 'emb', idx: r }, 'weights') }
+function onRowClick(r: number) { selSvc.setSelected({ kind: 'emb', idx: r }, 'weights') }
+function onCellEnter(r: number, c: number) { selSvc.setHover({ kind: 'weight', row: r, col: c }, 'weights') }
+function onCellClick(r: number, c: number) { selSvc.setSelected({ kind: 'weight', row: r, col: c }, 'weights') }
+function onBiasEnter(c: number) { selSvc.setHover({ kind: 'bias', idx: c }, 'weights') }
+function onBiasClick(c: number) { selSvc.setSelected({ kind: 'bias', idx: c }, 'weights') }
 
-function onRowEnter(r: number) {
-  selSvc.setHover({ kind: 'emb', idx: r }, 'weights')
-}
-function onRowClick(r: number) {
-  selSvc.setSelected({ kind: 'emb', idx: r }, 'weights')
-}
-
-function onCellEnter(r: number, c: number) {
-  selSvc.setHover({ kind: 'weight', row: r, col: c }, 'weights')
-}
-function onCellClick(r: number, c: number) {
-  selSvc.setSelected({ kind: 'weight', row: r, col: c }, 'weights')
-}
-
-// Bias hover/select uses 'bias' kind — highlights only the bias cell
-function onBiasEnter(c: number) {
-  selSvc.setHover({ kind: 'bias', idx: c }, 'weights')
-}
-function onBiasClick(c: number) {
-  selSvc.setSelected({ kind: 'bias', idx: c }, 'weights')
-}
-
-// ── Color matching AutoencoderView neuron colors ──────────────
-// Negative → blue #3b82f6, Zero → white, Positive → orange #f97316
-function valColor(val: number, alpha = 1): string {
+// ─── Color / value helpers ────────────────────────────────────────────────────
+function valColor(val: number): string {
   const t = Math.max(-1, Math.min(1, val))
   let r: number, g: number, b: number
   if (t >= 0) {
@@ -163,21 +146,16 @@ function valColor(val: number, alpha = 1): string {
     g = Math.round(255 + (130 - 255) * s)
     b = Math.round(255 + (246 - 255) * s)
   }
-  return alpha < 1 ? `rgba(${r},${g},${b},${alpha})` : `rgb(${r},${g},${b})`
+  return `rgb(${r},${g},${b})`
 }
 
 function fmt(v: number): string {
   const s = v.toFixed(2)
-  return v >= 0 ? `\u200b${s}` : s  // zero-width space for positive alignment
+  return v >= 0 ? `\u200b${s}` : s
 }
 
-function wVal(r: number, c: number): number {
-  return svc.W.value[r]?.[c] ?? 0
-}
-
-function bVal(c: number): number {
-  return svc.b.value[c] ?? 0
-}
+function wVal(r: number, c: number): number { return svc.W.value[r]?.[c] ?? 0 }
+function bVal(c: number): number             { return svc.b.value[c] ?? 0 }
 
 function featureVecLength(c: number): number {
   let sum = 0
@@ -187,25 +165,24 @@ function featureVecLength(c: number): number {
   }
   return Math.sqrt(sum)
 }
-
-// Subscript helpers
-function sub(i: number): string {
-  return String(i + 1)
-    .split('')
-    .map(d => '₀₁₂₃₄₅₆₇₈₉'[Number(d)])
-    .join('')
-}
 </script>
 
 <template>
   <div class="wv-root" @mouseleave="clearHover">
 
+    <!-- ══ Equations reference bar ══════════════════════════════ -->
+    <div class="eq-bar">
+      <span class="eq-item" v-html="eqEncoder" />
+      <span class="eq-sep" />
+      <span class="eq-item" v-html="eqDecoder" />
+    </div>
+
     <!-- ══ Weight matrix W ══════════════════════════════════════ -->
     <div class="matrix-section">
-      <div class="matrix-title">W</div>
+      <div class="matrix-title" v-html="titleW" />
 
       <div class="matrix-layout">
-        <!-- Column headers row -->
+        <!-- Column headers -->
         <div class="col-headers-row">
           <div class="corner" />
           <div class="col-header-spacer" />
@@ -214,16 +191,15 @@ function sub(i: number): string {
             class="col-header"
             :class="{
               highlighted: colHeaderHighlighted(c - 1),
-              dimmed: isActive() && !colHeaderHighlighted(c - 1),
-              selected: isColSelected(c - 1),
+              dimmed:      isActive() && !colHeaderHighlighted(c - 1),
+              selected:    isColSelected(c - 1),
             }"
-            :title="`f${sub(c - 1)}  |f| = ${featureVecLength(c - 1).toFixed(3)}`"
+            :title="`f_${c}  ‖v‖ = ${featureVecLength(c - 1).toFixed(3)}`"
             @mouseenter="onColEnter(c - 1)"
             @mouseleave="clearHover"
             @click="onColClick(c - 1)"
-          >
-            <span class="ann-bold">f</span><span class="ann-sub">{{ sub(c - 1) }}</span>
-          </div>
+            v-html="colLabel(c - 1)"
+          />
           <div class="col-header-spacer" />
         </div>
 
@@ -235,15 +211,14 @@ function sub(i: number): string {
               class="row-header"
               :class="{
                 highlighted: rowHeaderHighlighted(r - 1),
-                dimmed: isActive() && !rowHeaderHighlighted(r - 1),
-                selected: isRowSelected(r - 1),
+                dimmed:      isActive() && !rowHeaderHighlighted(r - 1),
+                selected:    isRowSelected(r - 1),
               }"
               @mouseenter="onRowEnter(r - 1)"
               @mouseleave="clearHover"
               @click="onRowClick(r - 1)"
-            >
-              <span class="ann-bold">h</span><span class="ann-sub">{{ sub(r - 1) }}</span>
-            </div>
+              v-html="rowLabel(r - 1)"
+            />
           </div>
           <div class="bracket bracket-left" />
           <div class="cell-grid" :style="{ gridTemplateColumns: `repeat(${n}, 1fr)` }">
@@ -253,8 +228,8 @@ function sub(i: number): string {
                 class="matrix-cell"
                 :class="{
                   highlighted: cellHighlighted(r - 1, c - 1),
-                  dimmed: isActive() && !cellHighlighted(r - 1, c - 1),
-                  selected: isCellSelected(r - 1, c - 1),
+                  dimmed:      isActive() && !cellHighlighted(r - 1, c - 1),
+                  selected:    isCellSelected(r - 1, c - 1),
                 }"
                 :style="{ background: valColor(wVal(r - 1, c - 1)) }"
                 @mouseenter="onCellEnter(r - 1, c - 1)"
@@ -272,7 +247,7 @@ function sub(i: number): string {
 
     <!-- ══ Bias vector b ════════════════════════════════════════ -->
     <div class="matrix-section">
-      <div class="matrix-title">b</div>
+      <div class="matrix-title" v-html="titleB" />
 
       <div class="matrix-layout">
         <div class="matrix-body-row">
@@ -286,8 +261,8 @@ function sub(i: number): string {
               class="matrix-cell"
               :class="{
                 highlighted: biasHighlighted(c - 1),
-                dimmed: isActive() && !biasHighlighted(c - 1),
-                selected: isBiasSelected(c - 1),
+                dimmed:      isActive() && !biasHighlighted(c - 1),
+                selected:    isBiasSelected(c - 1),
               }"
               :style="{ background: valColor(bVal(c - 1)) }"
               @mouseenter="onBiasEnter(c - 1)"
@@ -309,85 +284,120 @@ function sub(i: number): string {
 .wv-root {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.1rem;
   align-items: flex-start;
-  padding: 0.25rem;
-  font-family: 'Georgia', 'Times New Roman', serif;
+  padding: 0.15rem 0.25rem;
 }
 
-/* ── Section ──────────────────────────────────────────────────── */
+/* ══ Equation reference bar ══════════════════════════════════════ */
+.eq-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.45rem 0.6rem;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.eq-item :deep(.katex) {
+  font-size: 0.82rem;
+  color: var(--color-text-primary);
+}
+
+.eq-sep {
+  display: block;
+  width: 1px;
+  align-self: stretch;
+  background: var(--color-border);
+  flex-shrink: 0;
+}
+
+/* ══ Matrix section ══════════════════════════════════════════════ */
 .matrix-section {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.2rem;
 }
 
 .matrix-title {
-  font-size: 1.15rem;
-  font-style: italic;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  font-family: 'Georgia', 'Times New Roman', serif;
+  padding-left: 2.4rem; /* aligns above the cells, past corner + bracket */
   line-height: 1;
-  padding-left: 2.5rem; /* indent past corner + bracket so it aligns above cells */
 }
 
-/* ── Layout grid (col-headers + body stacked) ─────────────────── */
+.matrix-title :deep(.katex) {
+  font-size: 1rem;
+  color: var(--color-text-primary);
+}
+
+/* ══ Layout ══════════════════════════════════════════════════════ */
 .matrix-layout {
   display: flex;
   flex-direction: column;
 }
 
-/* ── Column headers row ───────────────────────────────────────── */
 .col-headers-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  padding-bottom: 0.15rem;
 }
 
 .corner {
-  width: 2rem;  /* matches row-label width */
+  width: 1.9rem;
   flex-shrink: 0;
 }
 
 .col-header-spacer {
-  width: 8px;   /* matches bracket width */
+  width: 7px;
   flex-shrink: 0;
 }
 
+/* ══ Column headers ══════════════════════════════════════════════ */
 .col-header {
-  min-width: 3.2rem;
+  min-width: 3rem;
   text-align: center;
-  padding-bottom: 0.2rem;
-  font-size: 0.75rem;
-  color: var(--color-text-label);
   cursor: pointer;
   border-radius: 3px 3px 0 0;
-  transition: opacity 0.15s, color 0.15s;
+  transition: opacity 0.15s;
   user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.col-header-ghost {
-  min-width: 3.2rem;
-  cursor: default;
-  pointer-events: none;
+.col-header :deep(.katex) {
+  font-size: 0.78rem;
+  color: var(--color-text-label);
+  transition: color 0.15s;
 }
 
-.col-header.highlighted {
+.col-header.highlighted :deep(.katex) {
   color: var(--color-text-primary);
   font-weight: 700;
 }
 
-/* ── Matrix body row ──────────────────────────────────────────── */
+.col-header.dimmed {
+  opacity: 0.3;
+}
+
+.col-header.selected :deep(.katex) {
+  color: #6366f1;
+  font-weight: 700;
+}
+
+/* ══ Matrix body ═════════════════════════════════════════════════ */
 .matrix-body-row {
   display: flex;
   align-items: stretch;
 }
 
-/* ── Row labels ───────────────────────────────────────────────── */
+/* ══ Row labels ══════════════════════════════════════════════════ */
 .row-labels {
   display: flex;
   flex-direction: column;
-  width: 2rem;
+  width: 1.9rem;
   flex-shrink: 0;
 }
 
@@ -395,104 +405,100 @@ function sub(i: number): string {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 0.35rem;
-  font-size: 0.75rem;
-  color: var(--color-text-label);
+  padding-right: 0.3rem;
   cursor: pointer;
   border-radius: 3px 0 0 3px;
-  transition: opacity 0.15s, color 0.15s;
+  transition: opacity 0.15s;
   user-select: none;
-  min-height: 2rem;
+  min-height: 1.9rem;
 }
 
-.row-header-ghost {
-  pointer-events: none;
-  min-height: 2rem;
+.row-header :deep(.katex) {
+  font-size: 0.78rem;
+  color: var(--color-text-label);
+  transition: color 0.15s;
 }
 
-.row-header.highlighted {
+.row-header.highlighted :deep(.katex) {
   color: var(--color-text-primary);
   font-weight: 700;
 }
 
-/* ── Brackets ─────────────────────────────────────────────────── */
+.row-header.dimmed {
+  opacity: 0.3;
+}
+
+.row-header.selected :deep(.katex) {
+  color: #6366f1;
+  font-weight: 700;
+}
+
+.row-header-ghost {
+  pointer-events: none;
+  min-height: 1.9rem;
+}
+
+/* ══ Brackets ════════════════════════════════════════════════════ */
 .bracket {
-  width: 8px;
+  width: 7px;
   flex-shrink: 0;
-  border-top: 2px solid #6b7280;
-  border-bottom: 2px solid #6b7280;
+  border-top: 1.5px solid var(--color-text-label);
+  border-bottom: 1.5px solid var(--color-text-label);
 }
 
 .bracket-left {
-  border-left: 2px solid #6b7280;
-  border-radius: 3px 0 0 3px;
+  border-left: 1.5px solid var(--color-text-label);
+  border-radius: 2px 0 0 2px;
 }
 
 .bracket-right {
-  border-right: 2px solid #6b7280;
-  border-radius: 0 3px 3px 0;
+  border-right: 1.5px solid var(--color-text-label);
+  border-radius: 0 2px 2px 0;
 }
 
-/* ── Cell grid ────────────────────────────────────────────────── */
+/* ══ Cell grid ═══════════════════════════════════════════════════ */
 .cell-grid {
   display: grid;
   gap: 2px;
-  padding: 4px;
-  background: #f8fafc; /* slate-50, inset feel */
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 3px;
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
-/* ── Individual cell ──────────────────────────────────────────── */
+/* ══ Individual cell ═════════════════════════════════════════════ */
 .matrix-cell {
-  min-width: 3.2rem;
-  min-height: 2rem;
+  min-width: 3rem;
+  min-height: 1.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 3px;
   cursor: pointer;
-  transition: opacity 0.15s, filter 0.15s;
-  position: relative;
+  transition: opacity 0.15s;
   border: 1px solid transparent;
 }
 
 .matrix-cell.highlighted {
-  border-color: #9ca3af;
-  box-shadow: 0 0 0 2px rgba(0,0,0,0.06);
+  border-color: var(--color-text-secondary);
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.05);
 }
 
 .matrix-cell.selected {
   border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99,102,241,0.3);
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.25);
 }
 
 .matrix-cell.dimmed {
-  opacity: 0.35;
+  opacity: 0.3;
 }
 
 .cell-val {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
   font-variant-numeric: tabular-nums;
-  color: #1e293b;
+  color: var(--color-text-primary);
   letter-spacing: -0.02em;
   white-space: nowrap;
-}
-
-/* ── Annotation text helpers ──────────────────────────────────── */
-.ann-bold { font-style: italic; }
-.ann-sub  { font-size: 0.65em; vertical-align: sub; line-height: 0; }
-
-/* ── Dimmed state ─────────────────────────────────────────────── */
-.col-header.dimmed,
-.row-header.dimmed {
-  opacity: 0.35;
-}
-
-.col-header.selected,
-.row-header.selected {
-  color: #6366f1;
-  font-weight: 700;
 }
 </style>
