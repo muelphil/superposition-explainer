@@ -101,28 +101,22 @@ const latestValue = computed(() => {
 <template>
   <div class="stats-panel">
 
-    <!-- ── Tab bar ──────────────────────────────────────────── -->
-    <div class="tab-bar" role="radiogroup" aria-label="Statistic">
-      <label
-        v-for="tab in tabs"
-        :key="tab.key"
-        class="tab-label"
-        :class="{ active: selected === tab.key }"
-        :style="selected === tab.key ? { '--tab-color': tab.color } : {}"
-      >
-        <input type="radio" v-model="selected" :value="tab.key" class="sr-only" />
-        {{ tab.label }}
-      </label>
+    <!-- ── Header: dropdown + current value badge ───────────── -->
+    <div class="stats-header">
+      <select class="metric-select" v-model="selected">
+        <option v-for="tab in tabs" :key="tab.key" :value="tab.key">
+          {{ tab.label }}
+        </option>
+      </select>
+      <div class="chart-badge" v-if="latestValue !== null">
+        <span class="badge-val" :style="{ color: activeTab.color }">{{ latestValue }}</span>
+        <span class="badge-unit">{{ activeTab.yLabel }}</span>
+      </div>
     </div>
 
     <!-- ── Chart ────────────────────────────────────────────── -->
     <div class="chart-wrap">
       <template v-if="history.length >= 2">
-        <div class="chart-badge" v-if="latestValue !== null">
-          <span class="badge-val" :style="{ color: activeTab.color }">{{ latestValue }}</span>
-          <span class="badge-unit">{{ activeTab.yLabel }}</span>
-        </div>
-
         <svg
           :viewBox="`0 0 ${VW} ${VH}`"
           width="100%"
@@ -193,43 +187,29 @@ const latestValue = computed(() => {
 .stats-panel {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
 }
 
-.tab-bar {
+.stats-header {
   display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem 0.5rem;
 }
 
-.tab-label {
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--color-text-label);
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
+.metric-select {
+  font-size: 0.78rem;
+  font-family: inherit;
+  color: var(--color-text-primary);
+  background: var(--color-bg);
   border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.15rem 0.3rem;
   cursor: pointer;
-  user-select: none;
-  background: var(--color-bg-secondary);
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
-  white-space: nowrap;
+  outline: none;
+  height: 1.6rem;
 }
-.tab-label:hover {
-  border-color: #d1d5db;
-  background: var(--color-bg);
-}
-.tab-label.active {
-  background: var(--color-bg);
-  border-color: var(--tab-color, var(--color-interactive));
-  color: var(--tab-color, var(--color-interactive));
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px; height: 1px;
-  overflow: hidden; clip: rect(0,0,0,0);
-  white-space: nowrap; border: 0;
+.metric-select:focus {
+  border-color: var(--color-interactive);
 }
 
 .chart-wrap {
@@ -240,13 +220,9 @@ const latestValue = computed(() => {
 .chart-svg { display: block; }
 
 .chart-badge {
-  position: absolute;
-  top: 4px; right: 4px;
   display: flex;
   align-items: baseline;
   gap: 3px;
-  pointer-events: none;
-  z-index: 1;
 }
 .badge-val {
   font-size: 0.9rem;
@@ -267,6 +243,7 @@ const latestValue = computed(() => {
   color: var(--color-text-secondary);
   border: 1px dashed var(--color-border);
   border-radius: 6px;
+  margin: 0.75rem 1.25rem;
 }
 </style>
 

@@ -100,7 +100,7 @@ function onReluClick()  { selSvc.setSelected({ kind: 'relu', idx: props.featureI
 }
 
 .bias-label :deep(.katex) {
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   color: #374151;
 }
 

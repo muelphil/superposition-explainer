@@ -31,7 +31,7 @@ const showSettings = ref(false)
 <template>
   <div class="main-view">
     <header class="app-header">
-      <h1 class="app-title">Superposition Visualization</h1>
+      <h1 class="app-title">SuperPosition Explainer</h1>
       <button class="header-icon-btn" @click="showSettings = true" title="Settings">
         <Settings :size="16" />
       </button>
@@ -61,10 +61,9 @@ const showSettings = ref(false)
 
 
           <!-- Combined tabbed panel -->
-          <div class="panel combined-panel">
-
-            <!-- Tab bar -->
-            <div class="combined-tab-bar">
+          <div>
+            <!-- Tab headers — above the panel, like the Embedding Space title -->
+            <div class="combined-tab-bar" style="margin-bottom: 10px; margin-top:6px;">
               <button
                 v-for="tab in (['training', 'statistics', 'weights'] as PanelTab[])"
                 :key="tab"
@@ -76,23 +75,27 @@ const showSettings = ref(false)
               </button>
             </div>
 
-            <!-- Tab panes — keep all mounted so state is preserved -->
-            <div class="tab-pane" v-show="activeTab === 'training'">
-              <TrainingConfigView />
-            </div>
-            <div class="tab-pane" v-show="activeTab === 'statistics'">
-              <TrainingStatsView />
-            </div>
-            <div class="tab-pane tab-pane--weights" v-show="activeTab === 'weights'">
-              <WeightView />
+            <div class="panel combined-panel">
+
+              <!-- Tab panes — keep all mounted so state is preserved -->
+              <div class="tab-pane" v-show="activeTab === 'training'">
+                <TrainingConfigView />
+              </div>
+              <div class="tab-pane tab-pane--flush" v-show="activeTab === 'statistics'">
+                <TrainingStatsView />
+              </div>
+              <div class="tab-pane tab-pane--weights" v-show="activeTab === 'weights'">
+                <WeightView />
+              </div>
+
             </div>
 
-            <!-- Always-visible training footer -->
+            <!-- Training footer — below the panel -->
             <div class="training-footer">
-              <div class="footer-meta">
-                <span class="footer-step">Step {{ svc.step.value.toLocaleString() }}</span>
-                <span v-if="svc.step.value > 0" class="footer-loss">Loss {{ lossDisplay }}</span>
-              </div>
+<!--              <div class="footer-meta">-->
+<!--                <span class="footer-step">Step {{ svc.step.value.toLocaleString() }}</span>-->
+<!--                <span v-if="svc.step.value > 0" class="footer-loss">Loss {{ lossDisplay }}</span>-->
+<!--              </div>-->
               <div class="footer-btns">
                 <button
                   class="reset-btn"
@@ -247,10 +250,8 @@ const showSettings = ref(false)
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: 10px;
-  padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
 }
 
 /* Strip all padding/gap from the embedding panel — the canvas fills it flush */
@@ -280,40 +281,40 @@ const showSettings = ref(false)
 
 /* ── Combined panel tabs ─────────────────────────────────────── */
 .combined-panel {
-  gap: 0;
+  /* inherits .panel — no extra overrides needed */
 }
 
 .combined-tab-bar {
   display: flex;
-  border-bottom: 1px solid var(--color-border);
-  margin: 0 -1.25rem 0.75rem;
-  padding: 0 1.25rem;
+  gap: 1rem;
 }
 
 .combined-tab-btn {
-  padding: 0.35rem 0.75rem;
-  font-size: 0.78rem;
-  font-weight: 500;
+  font-size: 0.82rem;
+  font-weight: 700;
   font-family: inherit;
-  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-tertiary);
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
+  padding: 0;
   cursor: pointer;
-  margin-bottom: -1px;
-  transition: color 0.12s, border-color 0.12s;
-  text-transform: capitalize;
+  transition: color 0.12s;
 }
 .combined-tab-btn:hover {
   color: var(--color-text-primary);
 }
 .combined-tab-btn.active {
-  color: var(--color-interactive);
-  border-bottom-color: var(--color-interactive);
+  color: var(--color-text-secondary);
 }
 
 .tab-pane {
-  padding: 0.25rem 0 0.5rem;
+  padding: 1rem 1.25rem;
+}
+
+.tab-pane--flush {
+  padding: 0;
 }
 
 .tab-pane--weights {
@@ -325,9 +326,7 @@ const showSettings = ref(false)
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  padding-top: 0.75rem;
-  margin-top: auto;
-  border-top: 1px solid var(--color-border);
+  margin-top: 0.75rem;
 }
 
 .footer-meta {

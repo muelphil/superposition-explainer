@@ -578,7 +578,9 @@ function onOutputClick(i: number) {
     </svg>
 
     <!-- ── Row 1: Column headings ──────────────────────────── -->
-    <div class="col-heading" style="grid-column: 1; grid-row: 1">Features</div>
+    <div class="col-heading" style="grid-column: 1; grid-row: 1">
+<!--      Features-->
+    </div>
     <div class="col-heading" style="grid-column: 3; grid-row: 1">Input</div>
     <div class="col-heading" style="grid-column: 4/6; grid-row: 1">Encoder</div>
     <div class="col-heading" style="grid-column: 6; grid-row: 1">Embedding</div>
@@ -927,7 +929,7 @@ function onOutputClick(i: number) {
   width: var(--neuron-size);
   height: var(--neuron-size);
   border-radius: 50%;
-  border: 2px solid #9ca3af;
+  border: 1px solid #bcc5d3;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -937,10 +939,11 @@ function onOutputClick(i: number) {
   position: relative;
   z-index: 2;
   cursor: pointer;
+  filter: drop-shadow(2px 4px 6px #2222);
 }
 
 .emb-neuron {
-  border-color: #6b7280;
+  /*border-color: #6b7280;*/
 }
 
 .emb-value {
