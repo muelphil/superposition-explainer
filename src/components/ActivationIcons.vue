@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue'
 import { renderLatexHtml } from '../utils/latex'
+import { valColorRgb } from '../utils/featureColor'
 import reluIconSvg from '../assets/relu-icon.svg?raw'
 import type { SelectionServiceType } from '../services/SelectionService'
 
@@ -13,23 +14,8 @@ const props = defineProps<{
 const selSvc = inject<SelectionServiceType>('selectionService')!
 
 /** Same colour scale as WeightView — positive→orange, negative→blue, zero→white */
-function valColor(val: number): string {
-  const t = Math.max(-1, Math.min(1, val))
-  let r: number, g: number, b: number
-  if (t >= 0) {
-    r = Math.round(255 + (249 - 255) * t)
-    g = Math.round(255 + (115 - 255) * t)
-    b = Math.round(255 + (22  - 255) * t)
-  } else {
-    const s = -t
-    r = Math.round(255 + (59  - 255) * s)
-    g = Math.round(255 + (130 - 255) * s)
-    b = Math.round(255 + (246 - 255) * s)
-  }
-  return `rgb(${r},${g},${b})`
-}
 
-const biasBackground = computed(() => valColor(props.biasVal))
+const biasBackground = computed(() => valColorRgb(props.biasVal))
 const biasLabel      = computed(() => renderLatexHtml(`b_{${props.featureIdx + 1}}`))
 
 /** ReLU clips when pre-activation ≤ 0 */
@@ -81,7 +67,7 @@ function onReluClick()  { selSvc.setSelected({ kind: 'relu', idx: props.featureI
 .act-icon {
   width: 19px;
   height: 19px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-interactive-disabled);
   border-radius: 5px;
   display: flex;
   align-items: center;
@@ -101,17 +87,17 @@ function onReluClick()  { selSvc.setSelected({ kind: 'relu', idx: props.featureI
 
 .bias-label :deep(.katex) {
   font-size: 0.75rem;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 /* ── ReLU icon ────────────────────────────────────────────── */
 .relu-icon {
-  background: #ffffff;
+  background: var(--color-bg);
   transition: background 0.2s;
 }
 
 .relu-icon.relu-clipping {
-  background: #dbeafe;
+  background: var(--color-bg-activation);
 }
 
 .relu-svg {
@@ -120,7 +106,7 @@ function onReluClick()  { selSvc.setSelected({ kind: 'relu', idx: props.featureI
   justify-content: center;
   width: 14px;
   height: 11px;
-  color: #6b7280;
+  color: var(--color-text-label);
   pointer-events: none;
 }
 

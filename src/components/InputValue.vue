@@ -51,7 +51,7 @@ const thumbColor = computed(() => {
 })
 
 /** Slider track gradient: white → feature color */
-const sliderGradient = computed(() => `linear-gradient(to right, #ffffff, ${featureHex.value})`)
+const sliderGradient = computed(() => `linear-gradient(to right, var(--color-bg), ${featureHex.value})`)
 
 // ── SVG paths (coordinate system: 0 0 88 36 via viewBox) ──────
 const strokePath = computed(() => {
@@ -96,7 +96,7 @@ function onSliderChange(event: Event) {
     >
       <defs>
         <linearGradient :id="gradId" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3"/>
+          <stop offset="0%" :style="{ stopColor: 'var(--color-bg)' }" stop-opacity="0.3"/>
           <stop offset="100%" :stop-color="featureHex" stop-opacity="0.7"/>
         </linearGradient>
       </defs>
@@ -150,7 +150,7 @@ function onSliderChange(event: Event) {
 
 .dist-stroke {
   fill: none;
-  stroke: #cbd5e1;
+  stroke: var(--color-slider-track);
   stroke-width: 1;
 }
 
@@ -162,7 +162,7 @@ function onSliderChange(event: Event) {
   user-select: none;
 }
 .feature-label:hover :deep(.katex) {
-  color: var(--color-interactive, #6366f1);
+  color: var(--color-interactive);
 }
 .feature-label :deep(.katex) {
   font-size: 0.8rem;
@@ -192,7 +192,7 @@ function onSliderChange(event: Event) {
 }
 
 .value-label:hover {
-  color: var(--color-interactive, #6366f1);
+  color: var(--color-interactive);
 }
 
 .dist-slider {
@@ -221,8 +221,8 @@ function onSliderChange(event: Event) {
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background: var(--thumb-color, #94a3b8);
-  border: 1.5px solid rgba(0, 0, 0, 0.15);
+  background: var(--thumb-color, var(--color-thumb-default));
+  border: 1.5px solid var(--color-thumb-border);
   cursor: pointer;
 }
 
@@ -230,8 +230,8 @@ function onSliderChange(event: Event) {
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background: var(--thumb-color, #94a3b8);
-  border: 1.5px solid rgba(0, 0, 0, 0.15);
+  background: var(--thumb-color, var(--color-thumb-default));
+  border: 1.5px solid var(--color-thumb-border);
   cursor: pointer;
 }
 </style>

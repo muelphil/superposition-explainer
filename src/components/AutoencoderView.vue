@@ -5,6 +5,7 @@ import {renderLatexHtml} from '../utils/latex'
 import type {AutoencoderServiceType} from '../services/AutoencoderService'
 import {INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX} from '../services/AutoencoderService'
 import type {SelectionServiceType} from '../services/SelectionService'
+import {neuronColorRgb} from '../utils/featureColor'
 import InputValue from './InputValue.vue'
 import ActivationIcons from './ActivationIcons.vue'
 
@@ -32,19 +33,6 @@ const dataRowStart = 3
 const dataRowEnd = computed(() => n.value + 3)
 
 // ─── Color helpers ────────────────────────────────────────────────────────────
-function neuronColor(v: number): string {
-  const t = Math.abs(Math.max(-1, Math.min(1, v / 2)))
-  if (v >= 0) {
-    const g = Math.round(255 - t * (255 - 146))
-    const b = Math.round(255 - t * (255 - 60))
-    return `rgb(255,${g},${b})`
-  } else {
-    const r = Math.round(255 - t * (255 - 96))
-    const g = Math.round(255 - t * (255 - 165))
-    return `rgb(${r},${g},255)`
-  }
-}
-
 /** Scale so that neuron AREA ∝ importance (area = π r² → r ∝ √imp → scale ∝ √imp) */
 function neuronScale(i: number): number {
   const imp = svc.featureImportance.value[i] ?? 1
@@ -671,7 +659,7 @@ function onOutputClick(i: number) {
             class="neuron"
             :class="{ 'neuron-selected': isInputSelected(i) }"
             :style="{
-            background: neuronColor(svc.currentInput.value[i] ?? 0),
+            background: neuronColorRgb(svc.currentInput.value[i] ?? 0),
             transform: `scale(${neuronScale(i)})`,
           }"
         />
@@ -700,7 +688,7 @@ function onOutputClick(i: number) {
             class="neuron"
             :class="{ 'neuron-selected': isOutputSelected(i) }"
             :style="{
-            background: neuronColor(svc.currentOutput.value[i] ?? 0),
+            background: neuronColorRgb(svc.currentOutput.value[i] ?? 0),
             transform: `scale(${neuronScale(i)})`,
           }"
         />
@@ -734,7 +722,7 @@ function onOutputClick(i: number) {
             :ref="(el) => { embNeuronRefs[k] = el as HTMLElement }"
             class="neuron emb-neuron"
             :class="[embDimClass(k), { 'neuron-selected': isEmbSelected(k) }]"
-            :style="{ background: neuronColor(svc.currentEmbedding.value[k] ?? 0) }"
+            :style="{ background: neuronColorRgb(svc.currentEmbedding.value[k] ?? 0) }"
             :title="`h${k + 1} = ${fmt(svc.currentEmbedding.value[k] ?? 0)}`"
             @mouseenter="onEmbNeuronEnter(k)"
             @mouseleave="onEmbNeuronLeave"
@@ -823,7 +811,7 @@ function onOutputClick(i: number) {
 }
 
 .col-loss-val.zero {
-  color: #d1d5db;
+  color: var(--color-interactive-disabled);
 }
 
 .col-loss-label {
@@ -872,8 +860,8 @@ function onOutputClick(i: number) {
 }
 
 .neuron.neuron-selected {
-  box-shadow: 0 0 0 2.5px #6366f1, 0 0 8px rgba(99, 102, 241, 0.4);
-  border-color: #6366f1;
+  box-shadow: 0 0 0 2.5px var(--color-selection), 0 0 8px var(--color-selection-glow);
+  border-color: var(--color-selection);
 }
 
 
@@ -907,13 +895,13 @@ function onOutputClick(i: number) {
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-bg-hover);
   border-radius: 5px;
   padding: 3px 7px;
   font-size: 0.72rem;
-  color: #374151;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-popup);
   opacity: 0;
   transition: opacity 0.12s;
   z-index: 100;
@@ -922,14 +910,14 @@ function onOutputClick(i: number) {
 
 .neuron-tooltip :deep(.katex) {
   font-size: 0.72rem;
-  color: #374151;
+  color: var(--color-text-primary);
 }
 
 .neuron {
   width: var(--neuron-size);
   height: var(--neuron-size);
   border-radius: 50%;
-  border: 1px solid #bcc5d3;
+  border: 1px solid var(--color-neuron-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -939,20 +927,19 @@ function onOutputClick(i: number) {
   position: relative;
   z-index: 2;
   cursor: pointer;
-  filter: drop-shadow(2px 4px 6px #2222);
+  filter: drop-shadow(2px 4px 6px var(--shadow-neuron-drop));
 }
 
 .emb-neuron {
-  /*border-color: #6b7280;*/
 }
 
 .emb-value {
   font-size: 0.58rem;
   font-variant-numeric: tabular-nums;
-  color: #374151;
+  color: var(--color-text-primary);
   font-weight: 700;
   pointer-events: none;
-  text-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
+  text-shadow: 0 0 3px var(--color-label-text-shadow);
 }
 
 /* ── Embedding column ─────────────────────────────────────── */
@@ -999,7 +986,7 @@ function onOutputClick(i: number) {
 }
 
 .out-err.zero {
-  color: #d1d5db;
+  color: var(--color-interactive-disabled);
 }
 
 /* ── Column sub-header row (row 2) ────────────────────────── */
@@ -1009,10 +996,10 @@ function onOutputClick(i: number) {
   padding: 2px 6px;
   height: 20px;
   background: transparent;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-interactive-disabled);
   border-radius: 4px;
   cursor: pointer;
-  color: #64748b;
+  color: var(--color-text-action);
   white-space: nowrap;
   transition: background 0.15s, color 0.15s;
   z-index: 2;
@@ -1020,8 +1007,8 @@ function onOutputClick(i: number) {
 }
 
 .resample-all-btn:hover:not(:disabled) {
-  background: #f1f5f9;
-  color: #334155;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-strong);
 }
 
 .resample-all-btn:disabled {
@@ -1070,22 +1057,21 @@ function onOutputClick(i: number) {
   width: 1.4rem;
   height: 1.4rem;
   border-radius: 50%;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-interactive-disabled);
   padding: 0;
   font-size: 0.85rem;
-  /* font-weight: 600; */
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-action);
   transition: opacity 0.15s, background 0.15s;
 }
 
 .dim-btn:hover:not(:disabled) {
-  background: #e2e8f0;
+  background: var(--color-bg-hover);
 }
 
 .dim-btn:disabled {

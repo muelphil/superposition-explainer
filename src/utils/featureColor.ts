@@ -1,3 +1,43 @@
+// ── Weight / neuron interpolation RGB endpoints ────────────────────────────────
+// These define the white → color interpolation used for weight cells, bias icons,
+// and neuron circle backgrounds.  Extracted here so all components share one source.
+
+/** orange-500 = #f97316 — endpoint for positive weight/bias cell backgrounds */
+export const VAL_POSITIVE_RGB: readonly [number, number, number] = [249, 115, 22]
+/** blue-500 = #3b82f6 — endpoint for negative weight/bias cell backgrounds */
+export const VAL_NEGATIVE_RGB: readonly [number, number, number] = [59, 130, 246]
+/** orange-400 (R fixed at 255) — endpoint for positive neuron circle backgrounds */
+export const NEURON_POSITIVE_RGB: readonly [number, number, number] = [255, 146, 60]
+/** blue-400 (B fixed at 255) — endpoint for negative neuron circle backgrounds */
+export const NEURON_NEGATIVE_RGB: readonly [number, number, number] = [96, 165, 255]
+
+/** Linear interpolation from white to a target rgb at t ∈ [0,1]. */
+function lerpWhite(t: number, [r1, g1, b1]: readonly [number, number, number]): string {
+  return `rgb(${Math.round(255 + (r1 - 255) * t)},${Math.round(255 + (g1 - 255) * t)},${Math.round(255 + (b1 - 255) * t)})`
+}
+
+/**
+ * Background color for a weight or bias cell.
+ * v ∈ [−1, 1]: 0 → white, +1 → orange-500, −1 → blue-500.
+ */
+export function valColorRgb(v: number): string {
+  const t = Math.max(-1, Math.min(1, v))
+  return t >= 0 ? lerpWhite(t, VAL_POSITIVE_RGB) : lerpWhite(-t, VAL_NEGATIVE_RGB)
+}
+
+/**
+ * Background color for a neuron circle.
+ * v ≥ 0 → white → orange-400; v < 0 → white → blue-400.
+ * Scaled so |v| = 2 → full saturation.
+ */
+export function neuronColorRgb(v: number): string {
+  const t = Math.abs(Math.max(-2, Math.min(2, v))) / 2
+  return v >= 0 ? lerpWhite(t, NEURON_POSITIVE_RGB) : lerpWhite(t, NEURON_NEGATIVE_RGB)
+}
+
+/** Color used for the min-angle statistics chart line */
+export const MIN_ANGLE_CHART_COLOR = '#22c55e'  // green-500 = --color-add-btn
+
 // ── Gradient definition ────────────────────────────────────────────────────────
 // Add/remove/reorder CSS hex stops to change the feature color gradient.
 // Sampling is done in sRGB space (matching CSS color-mix(in srgb, ...)),

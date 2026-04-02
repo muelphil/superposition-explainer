@@ -48,6 +48,53 @@
   --color-add-btn:         #22c55e;  /* green-500 */
   --color-remove-btn:      #ef4444;  /* red-500 */
 
+  /* Monospace font stack */
+  --font-family-mono: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+
+  /* Selection / focus highlight */
+  --color-selection:      #6366f1;  /* indigo-500 */
+  --color-selection-glow: rgba(99, 102, 241, 0.40);
+  --color-selection-ring: rgba(99, 102, 241, 0.25);
+
+  /* Background tones */
+  --color-bg-subtle:      #f1f5f9;  /* slate-100 */
+  --color-bg-hover:       #e2e8f0;  /* slate-200 */
+  --color-bg-activation:  #dbeafe;  /* blue-100 */
+  --color-bg-emb-title:   rgba(255, 255, 255, 0.50);
+
+  /* Extra text tones */
+  --color-text-strong:      #334155;  /* slate-700 */
+  --color-text-action:      #64748b;  /* slate-500 */
+  --color-text-action-hover:#475569;  /* slate-600 */
+
+  /* Chart */
+  --color-chart-grid:     #f0f0f0;
+
+  /* Neuron / input controls */
+  --color-neuron-border:  #bcc5d3;
+  --color-slider-track:   #cbd5e1;  /* slate-300 */
+  --color-thumb-default:  #94a3b8;  /* slate-400 */
+  --color-thumb-border:   rgba(0, 0, 0, 0.15);
+
+  /* Overlays / modals */
+  --color-modal-overlay:      rgba(0, 0, 0, 0.45);
+  --color-label-text-shadow:  rgba(255, 255, 255, 0.80);
+
+  /* Shadows */
+  --shadow-popup:         0 2px 8px rgba(0, 0, 0, 0.12);
+  --shadow-ring-subtle:   0 0 0 2px rgba(0, 0, 0, 0.05);
+  --shadow-neuron-drop:   rgba(34, 34, 34, 0.13);
+
+  /* Debug bar (dark overlay) */
+  --color-debug-bg:         rgba(15, 23, 42, 0.88);
+  --color-debug-border:     rgba(255, 255, 255, 0.08);
+  --color-debug-text:       #94a3b8;  /* slate-400 */
+  --color-debug-highlight:  #e2e8f0;  /* slate-200 */
+  --color-debug-coords:     #7dd3fc;  /* sky-300 */
+  --color-debug-btn-bg:     rgba(255, 255, 255, 0.06);
+  --color-debug-btn-border: rgba(255, 255, 255, 0.10);
+  --color-debug-btn-hover:  rgba(255, 255, 255, 0.12);
+
   /* Shadow */
   --shadow-card: 0 4px 6px -1px rgba(3, 7, 18, 0.10), 0 2px 4px -2px rgba(3, 7, 18, 0.06);
 

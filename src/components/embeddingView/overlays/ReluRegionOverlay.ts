@@ -3,12 +3,14 @@ import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import type { SceneCtx, SceneOverlay } from '../types'
 import { setCylinderEnds } from '../sceneHelpers'
 import { createLatexElement } from '../../../utils/latex'
+import {
+  RELU_REGION_COLOR, RELU_LABEL_COLOR, RELU_LABEL_BORDER_COLOR, RELU_LABEL_BG,
+  RELU_DISC_OPAQUE, RELU_DISC_TRANSPARENT,
+} from '../constants'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const REGION_OPACITY_2D = 0.7
 const REGION_OPACITY_3D = 0.85
-const REGION_COLOR    = 0x9ca3af      // grey-400 (lighter)
-const SURFACE_COLOR   = 0x9ca3af      // grey-400
 const SURFACE_OPACITY = 0.5
 const SURFACE_RADIUS  = 0.003
 const SURFACE_EXTENT  = 20            // large enough to always span the viewport (2D)
@@ -30,9 +32,9 @@ function getFadeTexture(): THREE.CanvasTexture {
   const ctx = canvas.getContext('2d')!
   const half = size / 2
   const grad = ctx.createRadialGradient(half, half, 0, half, half, half)
-  grad.addColorStop(0,    'rgba(255,255,255,1)')
-  grad.addColorStop(0.8,  'rgba(255,255,255,1)')   // stay opaque through most of disc
-  grad.addColorStop(1,    'rgba(255,255,255,0)')   // fade to transparent at edge
+  grad.addColorStop(0,    RELU_DISC_OPAQUE)
+  grad.addColorStop(0.8,  RELU_DISC_OPAQUE)   // stay opaque through most of disc
+  grad.addColorStop(1,    RELU_DISC_TRANSPARENT)   // fade to transparent at edge
   ctx.fillStyle = grad
   ctx.fillRect(0, 0, size, size)
   _fadeTexture = new THREE.CanvasTexture(canvas)
@@ -79,7 +81,7 @@ export class ReluRegionOverlay implements SceneOverlay {
 
     // ── Inactive-region surface ────────────────────────────────
     this.regionMat = new THREE.MeshBasicMaterial({
-      color:       REGION_COLOR,
+      color:       RELU_REGION_COLOR,
       opacity:     is3D ? REGION_OPACITY_3D : REGION_OPACITY_2D,
       transparent: true,
       depthTest:   false,
@@ -95,7 +97,7 @@ export class ReluRegionOverlay implements SceneOverlay {
 
     // ── Perpendicular surface (thin cylinder) ──────────────────
     this.surfaceMat = new THREE.MeshBasicMaterial({
-      color:       SURFACE_COLOR,
+      color:       RELU_REGION_COLOR,
       opacity:     SURFACE_OPACITY,
       transparent: true,
       depthTest:   false,
@@ -109,14 +111,14 @@ export class ReluRegionOverlay implements SceneOverlay {
     // Wrap in a container so CSS2DRenderer controls the outer transform
     // while we rotate the inner element independently.
     const inner = createLatexElement('\\text{Masked by ReLU}', {
-      color: '#9ca3af',
+      color: RELU_LABEL_COLOR,
       fontSize: '0.68rem',
       pointerEvents: 'none',
       userSelect: 'none',
-      border: '1px solid #d1d5db',
+      border: `1px solid ${RELU_LABEL_BORDER_COLOR}`,
       borderRadius: '3px',
       padding: '1px 5px',
-      background: 'rgba(255,255,255,0.85)',
+      background: RELU_LABEL_BG,
     })
     const wrapper = document.createElement('div')
     wrapper.style.pointerEvents = 'none'

@@ -20,16 +20,13 @@ import {
     ARROW_HEAD_MAX_LEN, ARROW_HEAD_MAX_W, ARROW_HEAD_LEN_FRAC, ARROW_HEAD_W_FRAC,
     ARROW_SHAFT_RADIUS, ARROW_SHAFT_SEGMENTS, VEC_HIT_RADIUS, VEC_HIT_EXTRA,
     DIM_COLOR_HEX, DIM_OPACITY,
+    AXIS_HIGHLIGHT_COLOR, AXIS_LABEL_COLOR_DEFAULT, AXIS_LABEL_COLOR_HIGHLIGHT,
 } from './constants'
 
 const Y_UP = new THREE.Vector3(0, 1, 0)
 const DIM_COLOR = new THREE.Color(DIM_COLOR_HEX)
 
-// Axis highlight: dark grey when an emb axis is hovered/selected
-const AXIS_HIGHLIGHT_COLOR = 0x374151   // grey-700 TODO too dark
 const AXIS_HIGHLIGHT_OPACITY = 1.0
-const AXIS_LABEL_COLOR_DEFAULT = '#6b7280'   // grey-500 (matches makeAxisLabel)
-const AXIS_LABEL_COLOR_HIGHLIGHT = '#1f2937'   // grey-800
 
 export function useEmbeddingScene(
     canvasRef: Ref<HTMLCanvasElement | null>,

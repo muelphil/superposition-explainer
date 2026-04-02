@@ -362,10 +362,10 @@ const showSettings = ref(false)
   border: 1px solid var(--color-border);
   cursor: pointer;
   transition: background 0.15s, opacity 0.15s;
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-action-hover);
 }
-.reset-btn:hover:not(:disabled) { background: #e2e8f0; }
+.reset-btn:hover:not(:disabled) { background: var(--color-bg-hover); }
 .reset-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .train-btn {
@@ -379,12 +379,12 @@ const showSettings = ref(false)
   cursor: pointer;
   transition: background 0.15s;
   background: var(--color-interactive);
-  color: #fff;
+  color: var(--color-bg);
   letter-spacing: 0.02em;
 }
 .train-btn:hover { background: var(--color-interactive-hover); }
-.train-btn--stop { background: #64748b; }
-.train-btn--stop:hover { background: #475569; }
+.train-btn--stop { background: var(--color-text-action); }
+.train-btn--stop:hover { background: var(--color-text-action-hover); }
 
 /* ── Blog post section ───────────────────────────────────────── */
 .blog-section {
@@ -402,12 +402,12 @@ const showSettings = ref(false)
   gap: 0.6rem;
   height: 1.75rem;
   padding: 0 1rem;
-  background: rgba(15, 23, 42, 0.88);
+  background: var(--color-debug-bg);
   backdrop-filter: blur(4px);
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid var(--color-debug-border);
   font-size: 0.7rem;
-  font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
-  color: #94a3b8;
+  font-family: var(--font-family-mono);
+  color: var(--color-debug-text);
   user-select: none;
 }
 
@@ -415,33 +415,33 @@ const showSettings = ref(false)
 
 .debug-label {
   font-weight: 600;
-  color: #64748b;
+  color: var(--color-text-action);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 0.62rem;
 }
 
-.debug-kind   { color: #e2e8f0; font-weight: 600; }
-.debug-coords { color: #7dd3fc; }
-.debug-origin { color: #64748b; font-style: italic; }
-.debug-none   { color: #334155; }
-.debug-divider { color: #334155; }
+.debug-kind   { color: var(--color-debug-highlight); font-weight: 600; }
+.debug-coords { color: var(--color-debug-coords); }
+.debug-origin { color: var(--color-text-action); font-style: italic; }
+.debug-none   { color: var(--color-text-strong); }
+.debug-divider { color: var(--color-text-strong); }
 
 .debug-deselect {
   margin-left: auto;
   font-size: 0.65rem;
   font-family: inherit;
-  color: #94a3b8;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--color-debug-text);
+  background: var(--color-debug-btn-bg);
+  border: 1px solid var(--color-debug-btn-border);
   border-radius: 3px;
   padding: 0.1rem 0.4rem;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 .debug-deselect:hover {
-  background: rgba(255,255,255,0.12);
-  color: #e2e8f0;
+  background: var(--color-debug-btn-hover);
+  color: var(--color-debug-highlight);
 }
 
 

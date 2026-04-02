@@ -11,7 +11,7 @@ const selected = ref<MetricKey>('loss')
 const tabs: { key: MetricKey; label: string; color: string; yLabel: string }[] = [
   { key: 'loss',     label: 'Loss',            color: 'var(--color-interactive)', yLabel: 'loss' },
   { key: 'presence', label: 'Feature Presence', color: 'var(--color-positive)',   yLabel: 'features' },
-  { key: 'angle',    label: 'Min Angle',        color: '#22c55e',                 yLabel: '°' },
+  { key: 'angle',    label: 'Min Angle',        color: 'var(--color-add-btn)',       yLabel: '°' },
 ]
 const activeTab = computed(() => tabs.find(t => t.key === selected.value)!)
 
@@ -129,7 +129,7 @@ const latestValue = computed(() => {
             v-for="tick in yTicks" :key="`yg-${tick.y}`"
             :x1="PL" :y1="tick.y.toFixed(1)"
             :x2="PL + PW" :y2="tick.y.toFixed(1)"
-            stroke="#f0f0f0" stroke-width="0.8"
+            stroke="var(--color-chart-grid)" stroke-width="0.8"
           />
 
           <!-- Area fill with gradient -->
@@ -153,7 +153,7 @@ const latestValue = computed(() => {
           <text
             v-for="tick in yTicks" :key="`yl-${tick.y}`"
             :x="PL - 3" :y="(tick.y + 1.8).toFixed(1)"
-            text-anchor="end" font-size="7" fill="#9ca3af"
+            text-anchor="end" font-size="7" :style="{ fill: 'var(--color-text-secondary)' }"
           >{{ tick.label }}</text>
 
           <!-- X axis ticks + labels -->
@@ -161,17 +161,17 @@ const latestValue = computed(() => {
             <line
               :x1="tick.x.toFixed(1)" :y1="PT + PH"
               :x2="tick.x.toFixed(1)" :y2="PT + PH + 2.5"
-              stroke="#d1d5db" stroke-width="0.6"
+              stroke="var(--color-interactive-disabled)" stroke-width="0.6"
             />
             <text
               :x="tick.x.toFixed(1)" :y="PT + PH + 9"
-              text-anchor="middle" font-size="7" fill="#9ca3af"
+              text-anchor="middle" font-size="7" :style="{ fill: 'var(--color-text-secondary)' }"
             >{{ tick.label }}</text>
           </g>
 
           <!-- Axes -->
-          <line :x1="PL" :y1="PT" :x2="PL" :y2="PT + PH" stroke="#e5e7eb" stroke-width="0.6" />
-          <line :x1="PL" :y1="PT + PH" :x2="PL + PW" :y2="PT + PH" stroke="#e5e7eb" stroke-width="0.6" />
+          <line :x1="PL" :y1="PT" :x2="PL" :y2="PT + PH" stroke="var(--color-border)" stroke-width="0.6" />
+          <line :x1="PL" :y1="PT + PH" :x2="PL + PW" :y2="PT + PH" stroke="var(--color-border)" stroke-width="0.6" />
         </svg>
       </template>
 

@@ -42,3 +42,16 @@ export const VEC_HIT_EXTRA        = 0.12
 // ── Hover dimming ────────────────────────────────────────────
 export const DIM_COLOR_HEX = 0xadadad
 export const DIM_OPACITY   = 0.35
+
+// ── Colors (Three.js / CSS2D — cannot use CSS custom properties) ─────────────
+export const AXIS_LABEL_COLOR_DEFAULT   = '#6b7280'   // grey-500 (≈ --color-text-label)
+export const AXIS_LABEL_COLOR_HIGHLIGHT = '#1f2937'   // grey-900
+export const AXIS_HIGHLIGHT_COLOR       = 0x374151    // grey-700 (≈ --color-text-primary)
+export const BIAS_DOT_COLOR             = 0x4b5563    // grey-600
+export const BIAS_LABEL_COLOR           = '#6b7280'   // grey-500 (≈ --color-text-label)
+export const RELU_REGION_COLOR          = 0x9ca3af    // grey-400 (≈ --color-text-secondary)
+export const RELU_LABEL_COLOR           = '#9ca3af'   // grey-400
+export const RELU_LABEL_BORDER_COLOR    = '#d1d5db'   // grey-300 (≈ --color-interactive-disabled)
+export const RELU_LABEL_BG              = 'rgba(255,255,255,0.85)'
+export const RELU_DISC_OPAQUE           = 'rgba(255,255,255,1)'   // canvas gradient: opaque white
+export const RELU_DISC_TRANSPARENT      = 'rgba(255,255,255,0)'   // canvas gradient: transparent edge

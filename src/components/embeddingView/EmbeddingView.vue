@@ -77,7 +77,7 @@ const inputDim = computed(() => svc.config.inputDim)
 }
 
 .legend-pill {
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--color-bg-emb-title);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border: 1px solid var(--color-border);

@@ -3,6 +3,7 @@ import { inject, computed } from 'vue'
 import katex from 'katex'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
 import type { SelectionServiceType, SelectionTarget } from '../services/SelectionService'
+import { valColorRgb } from '../utils/featureColor'
 
 const svc    = inject<AutoencoderServiceType>('autoencoderService')!
 const selSvc = inject<SelectionServiceType>('selectionService')!
@@ -133,21 +134,6 @@ function onBiasEnter(c: number) { selSvc.setHover({ kind: 'bias', idx: c }, 'wei
 function onBiasClick(c: number) { selSvc.setSelected({ kind: 'bias', idx: c }, 'weights') }
 
 // ─── Color / value helpers ────────────────────────────────────────────────────
-function valColor(val: number): string {
-  const t = Math.max(-1, Math.min(1, val))
-  let r: number, g: number, b: number
-  if (t >= 0) {
-    r = Math.round(255 + (249 - 255) * t)
-    g = Math.round(255 + (115 - 255) * t)
-    b = Math.round(255 + (22  - 255) * t)
-  } else {
-    const s = -t
-    r = Math.round(255 + (59  - 255) * s)
-    g = Math.round(255 + (130 - 255) * s)
-    b = Math.round(255 + (246 - 255) * s)
-  }
-  return `rgb(${r},${g},${b})`
-}
 
 function fmt(v: number): string {
   const s = v.toFixed(2)
@@ -231,7 +217,7 @@ function featureVecLength(c: number): number {
                   dimmed:      isActive() && !cellHighlighted(r - 1, c - 1),
                   selected:    isCellSelected(r - 1, c - 1),
                 }"
-                :style="{ background: valColor(wVal(r - 1, c - 1)) }"
+                :style="{ background: valColorRgb(wVal(r - 1, c - 1)) }"
                 @mouseenter="onCellEnter(r - 1, c - 1)"
                 @mouseleave="clearHover"
                 @click="onCellClick(r - 1, c - 1)"
@@ -264,7 +250,7 @@ function featureVecLength(c: number): number {
                 dimmed:      isActive() && !biasHighlighted(c - 1),
                 selected:    isBiasSelected(c - 1),
               }"
-              :style="{ background: valColor(bVal(c - 1)) }"
+              :style="{ background: valColorRgb(bVal(c - 1)) }"
               @mouseenter="onBiasEnter(c - 1)"
               @mouseleave="clearHover"
               @click="onBiasClick(c - 1)"
@@ -383,7 +369,7 @@ function featureVecLength(c: number): number {
 }
 
 .col-header.selected :deep(.katex) {
-  color: #6366f1;
+  color: var(--color-selection);
   font-weight: 700;
 }
 
@@ -429,7 +415,7 @@ function featureVecLength(c: number): number {
 }
 
 .row-header.selected :deep(.katex) {
-  color: #6366f1;
+  color: var(--color-selection);
   font-weight: 700;
 }
 
@@ -481,12 +467,12 @@ function featureVecLength(c: number): number {
 
 .matrix-cell.highlighted {
   border-color: var(--color-text-secondary);
-  box-shadow: 0 0 0 2px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-ring-subtle);
 }
 
 .matrix-cell.selected {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99,102,241,0.25);
+  border-color: var(--color-selection);
+  box-shadow: 0 0 0 2px var(--color-selection-ring);
 }
 
 .matrix-cell.dimmed {
@@ -495,7 +481,7 @@ function featureVecLength(c: number): number {
 
 .cell-val {
   font-size: 0.68rem;
-  font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  font-family: var(--font-family-mono);
   font-variant-numeric: tabular-nums;
   color: var(--color-text-primary);
   letter-spacing: -0.02em;

@@ -50,9 +50,10 @@ Defined in **`src/style.css`** `:root`:
 
 **Monospace** (used for numeric cell values in `WeightView`, debug bar in `MainView`):
 ```css
-font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+/* src/style.css */
+--font-family-mono: 'SF Mono', 'Fira Code', 'Courier New', monospace;
 ```
-Defined inline in component scoped styles — not a CSS variable.
+Components reference it via `font-family: var(--font-family-mono)`.
 
 **Math / LaTeX** (used in `WeightView`, axis labels, `ActivationIcons`, `InputValue`):  
 KaTeX renders its own fonts (loaded via `katex/dist/katex.min.css`). Font size is controlled per-component via `:deep(.katex) { font-size: ... }`.
@@ -94,7 +95,7 @@ These are the core semantic colors used by the value→color interpolation in `W
 | `--color-negative-strong` | `#2563eb` | blue-600 | Stronger negative emphasis |
 | `--color-neuron-zero` | `#ffffff` | white | Zero / neutral state |
 
-The interpolation formula used in `WeightView.vue`, `ActivationIcons.vue`, and `AutoencoderView.vue` is implemented as `valColor(v)` / `neuronColor(v)` — **not** done via CSS, but in TypeScript, directly mirroring the above variable values. This is a known duplication: the RGB channel targets in the JS functions should stay in sync with the CSS variables.
+The interpolation formula used in `WeightView.vue`, `ActivationIcons.vue`, and `AutoencoderView.vue` is now consolidated in **`src/utils/featureColor.ts`** as `valColorRgb(v)` and `neuronColorRgb(v)`. RGB channel endpoints are defined as exported constants (`VAL_POSITIVE_RGB`, etc.) in the same file.
 
 ### Error
 
@@ -137,11 +138,26 @@ The interpolation formula used in `WeightView.vue`, `ActivationIcons.vue`, and `
 
 **`src/utils/featureColor.ts`** — the single source of truth for per-feature colors.
 
-Feature vectors are colored on a **green → yellow** gradient, where `f₁` (highest importance) is green and `fₙ` (lowest) is yellow. This is used consistently across `AutoencoderView`, `EmbeddingView`, `InputValue`, and `EmbeddingLegend`.
+Feature vectors are colored on a **orange → pink → blue** gradient (configurable via `GRADIENT_STOPS`). Interpolation is in sRGB space (matching `color-mix(in srgb, ...)`), so no muddy midpoints.
 
 ```ts
-const GREEN_RGB  = [34,  197, 94]   // #22c55e  — feature 1
-const YELLOW_RGB = [234, 179,  8]   // #eab308  — feature n
+const GRADIENT_STOPS: string[] = [
+    '#F69F16',  // orange — most important feature
+    '#F73361',  // pink
+    '#097AFA',  // blue   — least important feature
+]
+```
+
+**Value→color interpolation** (weights, bias cells, neuron backgrounds) is also in this file:
+
+```ts
+export const VAL_POSITIVE_RGB  = [249, 115, 22]   // orange-500 — weight/bias endpoint
+export const VAL_NEGATIVE_RGB  = [59, 130, 246]    // blue-500
+export const NEURON_POSITIVE_RGB = [255, 146, 60]  // orange-400 (R fixed at 255)
+export const NEURON_NEGATIVE_RGB = [96, 165, 255]  // blue-400 (B fixed at 255)
+
+export function valColorRgb(v: number): string     // for WeightView, ActivationIcons
+export function neuronColorRgb(v: number): string  // for AutoencoderView neuron circles
 ```
 
 **Exported functions:**
@@ -164,15 +180,13 @@ export const EMBEDDING_POINT_COLOR_HEX = 0xa855f7    // violet-500 — same, for
 
 ## 5. Selection / Highlight Color
 
-There is no CSS variable for the selection/highlight accent. It is hardcoded as **`#6366f1`** (indigo-500) in multiple places:
+`--color-selection: #6366f1` (indigo-500) is defined in `src/style.css` and used consistently via CSS variables:
 
-| File | Lines | Usage |
+| Variable | Value | Usage |
 |---|---|---|
-| `src/components/AutoencoderView.vue` | ~833–834 | `.selected-neuron` glow ring |
-| `src/components/WeightView.vue` | ~386, ~432, ~488 | Selected row/col/cell border |
-| `src/components/MainView.vue` | combined tab active indicator | via `--color-interactive` (blue-500, not indigo) |
-
-> **Note:** The selection ring color (`#6366f1`) differs slightly from `--color-interactive` (`#3b82f6`). If a single selection token is ever desired, introduce `--color-selection: #6366f1` in `style.css`.
+| `--color-selection` | `#6366f1` | Selected neuron ring, selected row/col/cell borders |
+| `--color-selection-glow` | `rgba(99,102,241,0.40)` | Neuron selection glow |
+| `--color-selection-ring` | `rgba(99,102,241,0.25)` | Matrix cell selection ring |
 
 ---
 
@@ -182,74 +196,41 @@ Three.js cannot read CSS variables. All 3D scene colors are defined as hex liter
 
 ### `src/components/embeddingView/constants.ts`
 
-```ts
-AXIS_COLOR     = 0xd1d5db   // gray-200  — axis shaft and ticks
-DIM_COLOR_HEX  = 0xadadad   // ~gray-400 — dimmed/inactive vector opacity
-```
-
-### `src/components/embeddingView/useEmbeddingScene.ts`
+All Three.js scene colors (axis, overlay, label, canvas gradient) now live here alongside the geometry constants:
 
 ```ts
-AXIS_HIGHLIGHT_COLOR      = 0x374151   // gray-700  — hovered axis (note: TODO too dark)
-AXIS_LABEL_COLOR_DEFAULT  = '#6b7280'  // gray-500  — KaTeX label default color
-AXIS_LABEL_COLOR_HIGHLIGHT= '#1f2937'  // gray-800  — KaTeX label hovered color
+AXIS_COLOR                 = 0xd1d5db   // gray-200  — axis shaft and ticks
+DIM_COLOR_HEX              = 0xadadad   // ~gray-400 — dimmed vector
+AXIS_HIGHLIGHT_COLOR       = 0x374151   // gray-700  — hovered axis
+AXIS_LABEL_COLOR_DEFAULT   = '#6b7280'  // gray-500  — KaTeX axis label
+AXIS_LABEL_COLOR_HIGHLIGHT = '#1f2937'  // gray-900  — KaTeX hovered label
+BIAS_DOT_COLOR             = 0x4b5563   // gray-600  — bias point sphere
+BIAS_LABEL_COLOR           = '#6b7280'  // gray-500
+RELU_REGION_COLOR          = 0x9ca3af   // gray-400  — inactive ReLU region
+RELU_LABEL_COLOR           = '#9ca3af'  // gray-400
+RELU_LABEL_BORDER_COLOR    = '#d1d5db'  // gray-300
+RELU_LABEL_BG              = 'rgba(255,255,255,0.85)'
+RELU_DISC_OPAQUE           = 'rgba(255,255,255,1)'   // canvas texture gradient stop
+RELU_DISC_TRANSPARENT      = 'rgba(255,255,255,0)'   // canvas texture gradient stop
 ```
-
-### `src/components/embeddingView/overlays/`
-
-| File | Constant | Value | Tailwind equiv. | Meaning |
-|---|---|---|---|---|
-| `ProjectionLineOverlay.ts` | `POSITIVE_COLOR` | `0xfb923c` | orange-400 | Mirrors `--color-positive` |
-| `ProjectionLineOverlay.ts` | `NEGATIVE_COLOR` | `0x60a5fa` | blue-400 | Mirrors `--color-negative` |
-| `AxisGradientOverlay.ts` | `ORANGE` | `0xfb923c` | orange-400 | Mirrors `--color-positive` |
-| `AxisGradientOverlay.ts` | `BLUE` | `0x60a5fa` | blue-400 | Mirrors `--color-negative` |
-| `InterferenceLinesOverlay.ts` | `COLOR` | `0xef4444` | red-500 | Mirrors `--color-error` |
-| `ReluRegionOverlay.ts` | `REGION_COLOR` | `0x9ca3af` | gray-400 | Inactive ReLU region surface |
-| `ReluRegionOverlay.ts` | `SURFACE_COLOR` | `0x9ca3af` | gray-400 | ReLU boundary plane |
-| `DropLineOverlay.ts` | `COLOR` | `0xd1d5db` | gray-200 | Drop lines to projection |
-| `InputDirectionOverlay.ts` | `DOT_COLOR` | `0x6b7280` | gray-500 | Input direction anchor dot |
-| `BiasPointOverlay.ts` | `color` | `0x4b5563` | gray-600 | Bias point sphere |
-
-> **Pattern:** Three.js overlays that need to match CSS semantic colors (positive/negative/error) manually duplicate the `style.css` values. There is no runtime bridge. Keep these in sync manually.
 
 ---
 
-## 7. Hardcoded Colors (Not Yet Tokenized)
+## 7. Additional CSS Custom Properties
 
-These colors appear in component scoped styles and are not covered by CSS variables. Most follow the Tailwind **slate** palette (a cool-gray scale) and are used exclusively for the dark debug bar and button chrome.
+All colors are now fully tokenized. Beyond the core palette, `src/style.css` also defines:
 
-### `src/components/MainView.vue`
-
-| Color | Tailwind | Usage |
+| Group | Variable | Notes |
 |---|---|---|
-| `#f1f5f9` | slate-100 | Reset button background |
-| `#e2e8f0` | slate-200 | Reset button hover |
-| `#475569` | slate-700 | Reset button text; Stop Training hover |
-| `#64748b` | slate-500 | Stop Training button background |
-| `rgba(15,23,42,0.88)` | slate-900/88% | Debug bar background |
-| `#94a3b8` | slate-400 | Debug bar text, deselect button |
-| `#7dd3fc` | sky-300 | Debug bar coordinate highlights |
-| `#e2e8f0` | slate-200 | Debug bar kind text on hover |
-| `#334155` | slate-800 | Debug bar dividers, "none" state |
-| `#64748b` | slate-500 | Debug bar label text |
-
-### `src/components/AutoencoderView.vue`
-
-| Color | Tailwind | Usage |
-|---|---|---|
-| `#6366f1` | indigo-500 | Selected neuron glow ring |
-| `#d1d5db` / `#e2e8f0` | gray-200 / slate-200 | Connector lines, borders |
-| `#f1f5f9` | slate-100 | Control row backgrounds |
-| `#334155` | slate-800 | Row label text |
-
-### `src/components/TrainingStatsView.vue`
-
-| Color | Tailwind | Usage |
-|---|---|---|
-| `#22c55e` | green-500 | Min Angle chart line (defined in the `tabs` array, not CSS) |
-| `#9ca3af` | gray-400 | SVG axis tick labels |
-| `#d1d5db` | gray-200 | SVG tick lines |
-| `#e5e7eb` | gray-200 | SVG axis base lines, grid |
+| Font | `--font-family-mono` | `'SF Mono', 'Fira Code', 'Courier New', monospace` |
+| Selection | `--color-selection`, `--color-selection-glow`, `--color-selection-ring` | Indigo-500 accent |
+| Backgrounds | `--color-bg-subtle` (slate-100), `--color-bg-hover` (slate-200), `--color-bg-activation` (blue-100), `--color-bg-emb-title` | Button chrome, hover states, ReLU active |
+| Text | `--color-text-strong` (slate-700), `--color-text-action` (slate-500), `--color-text-action-hover` (slate-600) | Buttons, labels |
+| Neuron | `--color-neuron-border`, `--color-slider-track`, `--color-thumb-default`, `--color-thumb-border` | InputValue sliders |
+| Chart | `--color-chart-grid` | SVG grid lines in TrainingStatsView |
+| Shadows | `--shadow-popup`, `--shadow-ring-subtle`, `--shadow-neuron-drop` | Tooltips, rings |
+| Overlays | `--color-modal-overlay`, `--color-label-text-shadow`, `--color-bg-emb-title` | Modal backdrop, text glow |
+| Debug bar | `--color-debug-bg/border/text/highlight/coords/btn-*` | Dark bottom debug bar |
 
 ---
 

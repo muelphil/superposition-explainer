@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import type { SceneCtx, SceneOverlay } from '../types'
-import { ORIGIN_RADIUS } from '../constants'
+import { ORIGIN_RADIUS, BIAS_DOT_COLOR, BIAS_LABEL_COLOR } from '../constants'
 import { createLatexElement } from '../../../utils/latex'
 
 const DOT_SEGMENTS = 12
@@ -39,7 +39,7 @@ export class BiasPointOverlay implements SceneOverlay {
 
     // Dot color: dark grey for visibility against any vector color
     this.dotMat = new THREE.MeshBasicMaterial({
-      color: 0x4b5563,   // grey-600
+      color: BIAS_DOT_COLOR,
       depthTest: false,
     })
     this.dot = new THREE.Mesh(
@@ -52,7 +52,7 @@ export class BiasPointOverlay implements SceneOverlay {
     // LaTeX label  b_{n}
     const formula = `b_{${this.featureIdx + 1}}`
     const el = createLatexElement(formula, {
-      color: '#6b7280',
+      color: BIAS_LABEL_COLOR,
       fontSize: '0.72rem',
       pointerEvents: 'none',
       userSelect: 'none',
