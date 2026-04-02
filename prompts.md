@@ -381,6 +381,9 @@ Make sure that:
 * the header (containing the "Superposition Visualization" headline) should be sticky, same background-color as the background, using a fade to the bottom (last 5%) 
 * the blog post underneath
 
+provide a summary file called something like DESIGN_OVERVIEW.md, detailing where fonts, css and colors are definied (partially in the individual compontents, partially in css files, partially in the constants.)
+
+
 ---
 
 I am aiming to next do a visual redesign of the app. This will require a lot of refactoring. Please go over the files and prepare everything for the refactor, by making sure that colors and font-families are generally using css variables defined on :root or in case of the embeddingView and its overlays colors that are defined in constants (overlays should not define their own colors, they need to be in constants). 

@@ -42,6 +42,7 @@ function onClick(i: number) { selSvc.setSelected({ kind: 'feature', idx: i }, 'e
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  gap: 0 0.1rem;
 }
 
 .legend-item {

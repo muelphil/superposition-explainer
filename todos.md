@@ -55,3 +55,11 @@ bug:
 hovering weights directly not implemented/missing hover logic
 
 e
+
+
+
+
+---
+
+
+https://fonts.google.com/specimen/Sora

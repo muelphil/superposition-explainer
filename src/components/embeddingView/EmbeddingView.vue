@@ -28,6 +28,9 @@ const inputDim = computed(() => svc.config.inputDim)
       @mousedown="onCanvasMouseDown"
       @click="onCanvasClick"
     />
+
+
+    <!-- Camera reset — upper right -->
     <button
       class="camera-reset-btn"
       title="Reset camera"
@@ -35,15 +38,18 @@ const inputDim = computed(() => svc.config.inputDim)
     >
       <Compass :size="14" />
     </button>
-    <EmbeddingLegend :inputDim="inputDim" />
+
+    <!-- Legend — center bottom overlay -->
+    <div class="legend-overlay">
+      <div class="legend-pill">
+        <EmbeddingLegend :inputDim="inputDim" />
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .emb-root {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
   position: relative;
 }
 
@@ -52,11 +58,35 @@ const inputDim = computed(() => svc.config.inputDim)
   aspect-ratio: 1;
   display: block;
   cursor: grab;
-  border-radius: 4px;
-  border: 1px solid grey;
+  border-radius: inherit;
 }
 .emb-canvas:active { cursor: grabbing; }
 
+
+
+/* ── Legend overlay — center bottom ─────────────────────────── */
+.legend-overlay {
+  position: absolute;
+  bottom: 0.65rem;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.legend-pill {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 0.2rem 0.65rem;
+  pointer-events: auto;
+}
+
+/* ── Camera reset — upper right ─────────────────────────────── */
 .camera-reset-btn {
   position: absolute;
   top: 6px;
@@ -70,11 +100,12 @@ const inputDim = computed(() => svc.config.inputDim)
   background: transparent;
   border: none;
   border-radius: 5px;
-  color: var(--color-text-secondary, #94a3b8);
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: color 0.15s;
+  z-index: 2;
 }
 .camera-reset-btn:hover {
-  color: var(--color-text, #334155);
+  color: var(--color-text-primary);
 }
 </style>

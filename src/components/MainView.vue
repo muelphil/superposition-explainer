@@ -58,10 +58,15 @@ const showSettings = ref(false)
         <div class="right-col">
 
           <!-- Embedding Space -->
-          <section class="panel embedding-panel">
-            <h2 class="panel-title">Embedding Space</h2>
-            <EmbeddingView />
-          </section>
+          <div>
+            <div class="section-title" style="margin-bottom:10px;">Embedding Space</div>
+
+            <section class="panel embedding-panel">
+              <EmbeddingView />
+            </section>
+          </div>
+
+
 
           <!-- Combined tabbed panel -->
           <div class="panel combined-panel">
@@ -261,7 +266,13 @@ const showSettings = ref(false)
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  box-shadow: var(--shadow-card);
+}
+
+/* Strip all padding/gap from the embedding panel — the canvas fills it flush */
+.embedding-panel {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
 }
 
 .panel-title {
@@ -468,4 +479,6 @@ const showSettings = ref(false)
   background: rgba(255,255,255,0.12);
   color: #e2e8f0;
 }
+
+
 </style>
