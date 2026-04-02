@@ -1,4 +1,13 @@
 
+* highlight embedding space size (latent dimension) as a core parameter that determines model size
+  * TODO figure out for GPT-3.5, what the relationship is -- i.e. quadratic? etc
+  * maybe give the user a slider modifies embedding space size and visualizes resulting model size
+  * both important for model size as well as computational efficiency
+
+* explain the idea of embeddings
+  * TODO: maybe visualize this as one numerical vector in the center, and tons of different features around them -- consult neuronpedia.
+* 
+
 
 
 * What are features
@@ -72,10 +81,28 @@ Two important concepts make this possible:
 
 
 
+## It's exponential
+* we now visualized the emergence of superposition for an embedding dimension size of 2
+* we saw how the model was fitting 5 vectors into a 2d space, by not placing the vectors so that their minimum angle to one another was lower than 90 degrees, causing some interference
+* now the question is: how does this behave in higher dimension?
+* the exiting answer is: It scales exponentially!
+
+![](./plots/vectors_vs_angle.png)
+
+* reference to https://spherical-codes.org/ + explanation of the plot
+  * mention there is no closed form to determine this
+* as you can see, while in 3d and with a threshold angle of \alpha = 63deg we can fit 10 vectors (~3.3x the dimension), by tripling the dimensions to 15D, we can fit 1000 vectors (~66x the dimension)
+* [How might LLMs store facts | Deep Learning Chapter 7](https://youtu.be/9-Jl0dxWQs8?si=1JIOc0Yfg0T_H5iJ&t=1025)
+  * In this video, 3B1B shows via experimentation, that it is possible to fit 10.000 vectors into a space of dimension of only 100D, while all vectors maintain an angle between 89 and 90 degrees to one another (almost orthogonal to one another!)
+* John-Lindenstrauss Lemma
+
+
+## Recap
 
 
 
-
+todo:
+* orthogonal != min angle of 90 degree to one another, but to each other, be clear about this in the post and dont use "orthogonal" lightly
 
 
 
