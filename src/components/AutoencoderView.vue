@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {inject, ref, computed, watch, onMounted, onUnmounted, nextTick} from 'vue'
-import {RefreshCw} from 'lucide-vue-next'
+import {RefreshCw, Plus, Minus} from 'lucide-vue-next'
 import {renderLatexHtml} from '../utils/latex'
 import type {AutoencoderServiceType} from '../services/AutoencoderService'
 import {INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX} from '../services/AutoencoderService'
@@ -277,32 +277,32 @@ function resampleAll() {
 type IllumSet = Set<number> | 'all'
 
 interface Illumination {
-  inputs:  IllumSet
+  inputs: IllumSet
   outputs: IllumSet
-  embs:    IllumSet
-  paths:   (row: number, col: number) => boolean
+  embs: IllumSet
+  paths: (row: number, col: number) => boolean
 }
 
 const FEATURE_LIKE = new Set(['feature', 'input', 'output', 'bias', 'relu'])
 
 function illuminationFor(t: ReturnType<typeof selSvc.selected.valueOf> | null): Illumination {
-  if (!t) return { inputs: 'all', outputs: 'all', embs: 'all', paths: () => true }
+  if (!t) return {inputs: 'all', outputs: 'all', embs: 'all', paths: () => true}
   if (FEATURE_LIKE.has(t.kind)) {
     const i = (t as { idx: number }).idx
-    return { inputs: new Set([i]), outputs: new Set([i]), embs: 'all', paths: (_r, c) => c === i }
+    return {inputs: new Set([i]), outputs: new Set([i]), embs: 'all', paths: (_r, c) => c === i}
   }
   if (t.kind === 'emb') {
-    return { inputs: 'all', outputs: 'all', embs: new Set([t.idx]), paths: (r) => r === t.idx }
+    return {inputs: 'all', outputs: 'all', embs: new Set([t.idx]), paths: (r) => r === t.idx}
   }
   if (t.kind === 'weight') {
     return {
-      inputs:  new Set([t.col]),
+      inputs: new Set([t.col]),
       outputs: new Set([t.col]),
-      embs:    new Set([t.row]),
-      paths:   (r, c) => r === t.row && c === t.col,
+      embs: new Set([t.row]),
+      paths: (r, c) => r === t.row && c === t.col,
     }
   }
-  return { inputs: 'all', outputs: 'all', embs: 'all', paths: () => true }
+  return {inputs: 'all', outputs: 'all', embs: 'all', paths: () => true}
 }
 
 function intersectSet(a: IllumSet, b: IllumSet): IllumSet {
@@ -314,18 +314,18 @@ function intersectSet(a: IllumSet, b: IllumSet): IllumSet {
 
 function intersectIllum(sel: Illumination, hov: Illumination): Illumination {
   return {
-    inputs:  intersectSet(sel.inputs,  hov.inputs),
+    inputs: intersectSet(sel.inputs, hov.inputs),
     outputs: intersectSet(sel.outputs, hov.outputs),
-    embs:    intersectSet(sel.embs,    hov.embs),
-    paths:   (r, c) => sel.paths(r, c) && hov.paths(r, c),
+    embs: intersectSet(sel.embs, hov.embs),
+    paths: (r, c) => sel.paths(r, c) && hov.paths(r, c),
   }
 }
 
 /** Hover is compatible when it is on a different "axis" than the selection.
  *  Same-axis, different-index hovers are ignored (selection has precedence). */
 function hovIsCompatible(
-  sel: NonNullable<ReturnType<typeof selSvc.selected.valueOf>>,
-  hov: NonNullable<ReturnType<typeof selSvc.hovered.valueOf>>,
+    sel: NonNullable<ReturnType<typeof selSvc.selected.valueOf>>,
+    hov: NonNullable<ReturnType<typeof selSvc.hovered.valueOf>>,
 ): boolean {
   const selF = FEATURE_LIKE.has(sel.kind)
   const hovF = FEATURE_LIKE.has(hov.kind)
@@ -348,21 +348,29 @@ const activeIllumination = computed<Illumination>(() => {
   if (!sel) return illuminationFor(hov)
   if (!hov) return illuminationFor(sel)
   return hovIsCompatible(sel, hov)
-    ? intersectIllum(illuminationFor(sel), illuminationFor(hov))
-    : illuminationFor(sel)
+      ? intersectIllum(illuminationFor(sel), illuminationFor(hov))
+      : illuminationFor(sel)
 })
 
 const isAnyActive = computed(() =>
-  selSvc.selected.value !== null || selSvc.hovered.value !== null
+    selSvc.selected.value !== null || selSvc.hovered.value !== null
 )
 
 function inSet(s: IllumSet, i: number): boolean {
   return s === 'all' || (s as Set<number>).has(i)
 }
 
-function isInputDimmed(i: number):  boolean { return isAnyActive.value && !inSet(activeIllumination.value.inputs,  i) }
-function isOutputDimmed(i: number): boolean { return isAnyActive.value && !inSet(activeIllumination.value.outputs, i) }
-function isEmbDimmed(k: number):    boolean { return isAnyActive.value && !inSet(activeIllumination.value.embs,    k) }
+function isInputDimmed(i: number): boolean {
+  return isAnyActive.value && !inSet(activeIllumination.value.inputs, i)
+}
+
+function isOutputDimmed(i: number): boolean {
+  return isAnyActive.value && !inSet(activeIllumination.value.outputs, i)
+}
+
+function isEmbDimmed(k: number): boolean {
+  return isAnyActive.value && !inSet(activeIllumination.value.embs, k)
+}
 
 /** When an output neuron is the effective target, use half-dim instead of full dim. */
 const isOutputTargetActive = computed(() => {
@@ -417,11 +425,13 @@ function inputDimClass(i: number): string {
   // When output is active: interfering features get half-dim, non-interfering get full dim
   return outputLitFeatures.value.has(i) ? 'half-dimmed' : 'dimmed'
 }
+
 function outputDimClass(i: number): string {
   if (!isOutputDimmed(i)) return ''
   if (!isOutputTargetActive.value) return 'dimmed'
   return outputLitFeatures.value.has(i) ? 'half-dimmed' : 'dimmed'
 }
+
 function embDimClass(k: number): string {
   if (!isEmbDimmed(k)) return ''
   return isOutputTargetActive.value ? 'half-dimmed' : 'dimmed'
@@ -434,9 +444,20 @@ function pathOpacity(row: number, col: number, base: number): number {
 }
 
 /** Selection outline — reads selected only, independent of hover. */
-function isInputSelected(i: number):  boolean { const t = selSvc.selected.value; return !!t && (t.kind === 'input' || t.kind === 'feature') && (t as {idx:number}).idx === i }
-function isOutputSelected(i: number): boolean { const t = selSvc.selected.value; return !!t && t.kind === 'output' && t.idx === i }
-function isEmbSelected(k: number):    boolean { const t = selSvc.selected.value; return t?.kind === 'emb' && t.idx === k }
+function isInputSelected(i: number): boolean {
+  const t = selSvc.selected.value;
+  return !!t && (t.kind === 'input' || t.kind === 'feature') && (t as { idx: number }).idx === i
+}
+
+function isOutputSelected(i: number): boolean {
+  const t = selSvc.selected.value;
+  return !!t && t.kind === 'output' && t.idx === i
+}
+
+function isEmbSelected(k: number): boolean {
+  const t = selSvc.selected.value;
+  return t?.kind === 'emb' && t.idx === k
+}
 
 
 function onWeightEnter(row: number, col: number) {
@@ -549,7 +570,7 @@ function onOutputClick(i: number) {
     <div class="col-heading" style="grid-column: 6; grid-row: 1">Embedding</div>
     <div class="col-heading" style="grid-column: 7 / 9; grid-row: 1">Decoder</div>
     <div class="col-heading" style="grid-column: 10 ; grid-row: 1">Output</div>
-<!--    <div class="col-heading" style="grid-column: 12; grid-row: 1">Reconstruction</div>-->
+    <!--    <div class="col-heading" style="grid-column: 12; grid-row: 1">Reconstruction</div>-->
 
     <!-- ── Row 2: Sub-header info / controls ────────────────── -->
     <!-- Input col: resample-all button -->
@@ -567,9 +588,12 @@ function onOutputClick(i: number) {
     <div class="sub-header-ctrl" style="grid-column: 3; grid-row: 2">
       <span class="neuron-count">{{ n }} neurons</span>
       <div class="dim-btns">
-        <button class="dim-btn" @click="removeInputNeuron" :disabled="!canRemoveInput" title="Remove input feature">−
+        <button class="dim-btn" @click="removeInputNeuron" :disabled="!canRemoveInput" title="Remove input feature">
+          <Minus :size="12"/>
         </button>
-        <button class="dim-btn" @click="addInputNeuron" :disabled="!canAddInput" title="Add input feature">+</button>
+        <button class="dim-btn" @click="addInputNeuron" :disabled="!canAddInput" title="Add input feature">
+          <Plus :size="12"/>
+        </button>
       </div>
     </div>
 
@@ -578,9 +602,11 @@ function onOutputClick(i: number) {
       <span class="neuron-count">{{ m }} neurons</span>
       <div class="dim-btns">
         <button class="dim-btn" @click="removeEmbeddingNeuron" :disabled="!canRemoveEmb" title="Remove embedding dim">
-          −
+          <Minus :size="12"/>
         </button>
-        <button class="dim-btn" @click="addEmbeddingNeuron" :disabled="!canAddEmb" title="Add embedding dim">+</button>
+        <button class="dim-btn" @click="addEmbeddingNeuron" :disabled="!canAddEmb" title="Add embedding dim">
+          <Plus :size="12"/>
+        </button>
       </div>
     </div>
 
@@ -633,7 +659,7 @@ function onOutputClick(i: number) {
             transform: `scale(${neuronScale(i)})`,
           }"
         />
-        <div class="neuron-tooltip" v-html="inputNeuronTooltip(i)" />
+        <div class="neuron-tooltip" v-html="inputNeuronTooltip(i)"/>
       </div>
 
       <!-- Activation icons (bias + ReLU): col 8 -->
