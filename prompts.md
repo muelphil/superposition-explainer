@@ -390,8 +390,14 @@ I am aiming to next do a visual redesign of the app. This will require a lot of 
 
 ---
 
+Please rework the Training config. Some of the parameters belong in a new advanced training parameters section in the settings: Learning Rate and Batch Size. Fully Scrap the concept of steps. The training loop may go forever. Remove the input in the settings as well as the progress bar.
+
+
+---
+
 Here comes the hard part: The goal is that when the user scrolls down to the blog entry, the superposition visualization moves with the scroll, by:
 * consensing the autoencoder view (using smaller margins)
 * putting the autoencoder view and the embedding space view stacked as a side panel to the right side of the blog entry. They should take up space roughly 50/50 for now.
 
 It would be cool if its possible to animate the autoencoder view and the embedding space view moving down in their new position as the user scrolls. At the top, they should still be present in the full vh visualization and only move into the side panel and condense when the user scrolls. Please review what html/css tricks are necessary and how to approach this/ if this is even doable. Let me test it out afterwards.
+

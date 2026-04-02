@@ -15,7 +15,6 @@ export interface AutoencoderConfig {
   featureDecay: number    // α: importance = α^i
   learningRate: number
   batchSize: number
-  trainingSteps: number   // how many steps per training run
 }
 
 export interface AutoencoderState {
@@ -78,7 +77,6 @@ export function createAutoencoderService() {
     featureDecay: 0.9,
     learningRate: 0.015,
     batchSize: 64,
-    trainingSteps: 10000,
   }
 
   // Reactive state
@@ -361,7 +359,7 @@ export function createAutoencoderService() {
   }
 
   function updateConfig(partial: Partial<Pick<AutoencoderConfig,
-    'sparsity' | 'featureDecay' | 'learningRate' | 'batchSize' | 'trainingSteps'
+    'sparsity' | 'featureDecay' | 'learningRate' | 'batchSize'
   >>) {
     if (partial.sparsity !== undefined) config.sparsity = partial.sparsity
     if (partial.featureDecay !== undefined) {
@@ -370,7 +368,6 @@ export function createAutoencoderService() {
     }
     if (partial.learningRate !== undefined) config.learningRate = partial.learningRate
     if (partial.batchSize !== undefined) config.batchSize = partial.batchSize
-    if (partial.trainingSteps !== undefined) config.trainingSteps = partial.trainingSteps
     resetTraining()
   }
 
@@ -378,17 +375,10 @@ export function createAutoencoderService() {
     if (isTraining.value) return
     isTraining.value = true
     trainingStartStep.value = step.value
-    const targetStep = step.value + config.trainingSteps
 
     const tick = () => {
       if (!isTraining.value) return
-      for (let i = 0; i < 5; i++) {
-        stepTrain()
-        if (step.value >= targetStep) {
-          stopTraining()
-          return
-        }
-      }
+      for (let i = 0; i < 5; i++) stepTrain()
       trainingHandle = setTimeout(tick, 16)
     }
     tick()

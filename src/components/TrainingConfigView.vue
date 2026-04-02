@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { inject, computed } from 'vue'
+import { inject, computed, ref } from 'vue'
+import { ChevronDown } from 'lucide-vue-next'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
 
 const svc = inject<AutoencoderServiceType>('autoencoderService')!
 
 const isTraining = computed(() => svc.isTraining.value)
+const showAdvanced = ref(false)
 
-// ── Helpers ──────────────────────────────────────────────────
 function numVal(e: Event) {
   return parseFloat((e.target as HTMLInputElement).value)
 }
@@ -29,7 +30,7 @@ function fmtLR(lr: number) {
 <template>
   <div class="config-panel">
 
-    <!-- ── Parameter rows ──────────────────────────────── -->
+    <!-- Main parameters -->
     <div class="cfg-grid">
 
       <label class="cfg-label" title="Probability a feature is non-zero in a training sample">Sparsity</label>
@@ -44,6 +45,17 @@ function fmtLR(lr: number) {
         @input="svc.updateConfig({ featureDecay: numVal($event) })" />
       <span class="cfg-val">{{ svc.config.featureDecay.toFixed(2) }}</span>
 
+    </div>
+
+    <!-- Advanced toggle -->
+    <button class="advanced-toggle" @click="showAdvanced = !showAdvanced">
+      <ChevronDown :size="12" :class="{ rotated: showAdvanced }" />
+      Advanced
+    </button>
+
+    <!-- Advanced parameters -->
+    <div v-if="showAdvanced" class="cfg-grid">
+
       <label class="cfg-label">Learning rate</label>
       <input type="range" class="cfg-slider" min="-4" max="-1" step="0.1"
         :value="lrLog" :disabled="isTraining"
@@ -57,12 +69,6 @@ function fmtLR(lr: number) {
       </select>
       <span class="cfg-val" />
 
-      <label class="cfg-label">Steps</label>
-      <input type="range" class="cfg-slider" min="1000" max="50000" step="1000"
-        :value="svc.config.trainingSteps" :disabled="isTraining"
-        @input="svc.updateConfig({ trainingSteps: numVal($event) })" />
-      <span class="cfg-val">{{ svc.config.trainingSteps.toLocaleString() }}</span>
-
     </div>
 
   </div>
@@ -72,10 +78,9 @@ function fmtLR(lr: number) {
 .config-panel {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.6rem;
 }
 
-/* ── Parameter grid ──────────────────────────────────────── */
 .cfg-grid {
   display: grid;
   grid-template-columns: auto 1fr 4ch;
@@ -104,10 +109,7 @@ function fmtLR(lr: number) {
   padding: 0;
   margin: 0;
 }
-.cfg-slider:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+.cfg-slider:disabled { opacity: 0.4; cursor: not-allowed; }
 .cfg-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 10px;
@@ -151,15 +153,25 @@ function fmtLR(lr: number) {
   outline: none;
   height: 1.6rem;
 }
-.cfg-select:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.cfg-select:focus {
-  border-color: var(--color-interactive);
-}
+.cfg-select:disabled { opacity: 0.4; cursor: not-allowed; }
+.cfg-select:focus { border-color: var(--color-interactive); }
 
-/* ── Progress ──────────────────────────────────────────────── */
-/* (progress bar and start/stop button live in MainView's combined panel footer) */
+.advanced-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--color-text-label);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: fit-content;
+  user-select: none;
+}
+.advanced-toggle:hover { color: var(--color-text-secondary); }
+.advanced-toggle svg { transition: transform 0.15s ease; }
+.advanced-toggle svg.rotated { transform: rotate(180deg); }
 </style>
-

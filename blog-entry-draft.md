@@ -72,9 +72,10 @@ But we have a problem: embedding dimensions are limited. Modern llms use up to T
 * imagine all different sort of features: is sweet, is red, is car, is female, is Einstein, can jump, has e as second letter, ...
 * many of these will not be represented in the embedding space at the same time; moreover, most of the features will be 0 most of the time -- this is called sparsity
 * in the autoencoder we can model this by employing sparsity in our synthetic training data
-  * with a sparcity s, each vector has a chance of s to be sampled from the half-normal distribution, otherwise it is 0
+  * with a sparcity s, each vector has a chance of s to be sampled from the half-normal distribution, otherwise it is 0 (mathematical definition/ formula!)
 * let's try it again and see how this affects the outcome
-1. run training with sparsity=0.2 -> all 4 vectors are represented
+1. resample a few times using the resample button on the left -- then, decrease the sparsity to 0.2 and resample again, observing the effect of the sparsity parameter
+2. run training with sparsity=0.2 -> all 4 vectors are represented
 2. Now, activate different inputs individually and observe the reconstruction error
 3. Set all features to 0; then, using the slider, increase the input for 2 features that are pointing in opposite directions to 1.0 and observe what happens in the embedding view. What do you notice? What happens regarding the weighted loss, when these two features are activated at the same time?
 

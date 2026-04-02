@@ -21,16 +21,8 @@ provide('selectionService', selSvc)
 type PanelTab = 'training' | 'statistics' | 'weights'
 const activeTab = ref<PanelTab>('training')
 
-// ── Training footer (progress + button) ───────────────────────
+// ── Training footer ────────────────────────────────────────────
 const svc = autoencoderService
-
-const progressFrac = computed(() => {
-  const done = svc.step.value - svc.trainingStartStep.value
-  return Math.min(1, Math.max(0, done / svc.config.trainingSteps))
-})
-const stepsCompleted = computed(() =>
-  Math.max(0, svc.step.value - svc.trainingStartStep.value)
-)
 const lossDisplay = computed(() => svc.loss.value.toFixed(4))
 
 const showSettings = ref(false)
@@ -97,16 +89,9 @@ const showSettings = ref(false)
 
             <!-- Always-visible training footer -->
             <div class="training-footer">
-              <div class="footer-progress">
-                <div class="progress-meta">
-                  <span class="progress-steps">
-                    {{ stepsCompleted.toLocaleString() }} / {{ svc.config.trainingSteps.toLocaleString() }}
-                  </span>
-                  <span v-if="svc.step.value > 0" class="progress-loss">loss {{ lossDisplay }}</span>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill" :style="{ width: `${progressFrac * 100}%` }" />
-                </div>
+              <div class="footer-meta">
+                <span class="footer-step">Step {{ svc.step.value.toLocaleString() }}</span>
+                <span v-if="svc.step.value > 0" class="footer-loss">Loss {{ lossDisplay }}</span>
               </div>
               <div class="footer-btns">
                 <button
@@ -345,42 +330,22 @@ const showSettings = ref(false)
   border-top: 1px solid var(--color-border);
 }
 
-.footer-progress {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.progress-meta {
+.footer-meta {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
 }
 
-.progress-steps {
+.footer-step {
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-label);
 }
 
-.progress-loss {
+.footer-loss {
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary);
-}
-
-.progress-track {
-  height: 4px;
-  background: var(--color-border);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--color-interactive);
-  border-radius: 2px;
-  transition: width 0.1s linear;
 }
 
 .footer-btns {
