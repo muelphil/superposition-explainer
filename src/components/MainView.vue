@@ -9,6 +9,7 @@ import WeightView from './WeightView.vue'
 import TrainingConfigView from './TrainingConfigView.vue'
 import TrainingStatsView from './TrainingStatsView.vue'
 import SettingsModal from './SettingsModal.vue'
+import BlogPost from './BlogPost.vue'
 
 const autoencoderService = createAutoencoderService()
 provide('autoencoderService', autoencoderService)
@@ -125,6 +126,11 @@ const showSettings = ref(false)
       </div>
     </main>
 
+    <!-- ── Blog post ──────────────────────────────────────── -->
+    <div class="blog-section">
+      <BlogPost />
+    </div>
+
     <!-- ── Selection debug bar ─────────────────────────────── -->
     <SettingsModal :show="showSettings" @close="showSettings = false" />
     <div class="debug-bar">
@@ -167,21 +173,25 @@ const showSettings = ref(false)
 </template>
 
 <style scoped>
+/* ── Layout variables ────────────────────────────────────────── */
 .main-view {
-  min-height: 100vh;
+  --header-height: 3.25rem;
   background: var(--color-bg-secondary);
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 2rem;
 }
 
 .app-header {
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--header-height);
+  padding: 0 1rem;
+  background: var(--color-bg-secondary);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* Soft fade below the header into the page content */
+  -webkit-mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
 }
 
 .app-title {
@@ -210,12 +220,14 @@ const showSettings = ref(false)
 }
 
 .app-content {
-  padding: 1.5rem 2rem;
-  flex: 1;
+  height: 100vh;
+  padding: var(--header-height) 2rem 1.5rem;
   width: 100%;
   max-width: 1200px;
   align-self: center;
   box-sizing: border-box;
+  /* center within the page */
+  margin: 0 auto;
 }
 
 /* ── Two-column layout ───────────────────────────────────────── */
@@ -398,6 +410,12 @@ const showSettings = ref(false)
 .train-btn:hover { background: var(--color-interactive-hover); }
 .train-btn--stop { background: #64748b; }
 .train-btn--stop:hover { background: #475569; }
+
+/* ── Blog post section ───────────────────────────────────────── */
+.blog-section {
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+}
 
 /* ── Selection debug bar ─────────────────────────────────────── */
 .debug-bar {

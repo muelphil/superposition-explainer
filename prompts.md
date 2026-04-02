@@ -376,6 +376,17 @@ better but still not good.
 I want to slowly move on from the visualization from now. The app contains a visualization, but the goal is that it also contains a writedown/ blog entry, similar to Transformer explainer under the explainer.
 Please create a component with the blog entry. For now, it should only contain a title, a subtitle and 2 authors. For the contents, use Lorem ipsum (~8 min read blog entry).
 Put the component underneath the main visualization.
+Make sure that:
+* the main view visualization is using 100vh, using padding top to make room for the header
+* the header (containing the "Superposition Visualization" headline) should be sticky, same background-color as the background, using a fade to the bottom (last 5%) 
+* the blog post underneath
+
+---
+
+I am aiming to next do a visual redesign of the app. This will require a lot of refactoring. Please go over the files and prepare everything for the refactor, by making sure that colors and font-families are generally using css variables defined on :root or in case of the embeddingView and its overlays colors that are defined in constants (overlays should not define their own colors, they need to be in constants). 
+
+---
+
 Here comes the hard part: The goal is that when the user scrolls down to the blog entry, the superposition visualization moves with the scroll, by:
 * consensing the autoencoder view (using smaller margins)
 * putting the autoencoder view and the embedding space view stacked as a side panel to the right side of the blog entry. They should take up space roughly 50/50 for now.
