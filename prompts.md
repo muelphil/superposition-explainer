@@ -332,7 +332,7 @@ Better, but still not perfect.
 ---
 
 * please implement a quadratic matrix in the selection/hover service of booleans, where columns/rows are selection targets (output, feature, input, bias, relu, ...). The cells indicate whether when the first target in the dimension is selected, if the second can be hovered/ if hovering should have an effect. I.e. output-feature cell being true means that while an output is selected, a feature may be hovered for an effect; output-output being True means while one output is selected, another may be hovered to overwrite. This should make the logic in useOverlayManager easier and also useEmbeddingScene easier. 
-* please use a surface for the relu area instead of the axis gradient approach -- it does look good.
+* please use a surface for the relu area instead of the axis gradient approach -- it doesnt look good.
 * please rotate the "Masked by RELU" text so that it is parallel to the surface line of this relu surface; if it is more upside down, rotate it around an additional 180 degree so that it is readable by the user.
 * please put a lighter grey border around "Masked by RELU" text, so that it is always visible. Again, reuse colors.
 
@@ -344,3 +344,40 @@ Better, but still not perfect.
 ---
 
 show feature vector and length when hovering the input feature or the embedding legend.
+
+
+---
+
+* in 2D this looks good enough, in 3D its rough
+* please unrestrict the camera, currently in 3D its not fully unrestricted regarding movement
+* please make sure in the EmbeddingView that hover events (on embedding axes and feature vectors) are only fired when the mouse is not down (i.e. when the user is not currently rotating)
+* make sure (in the quadratic matrix) that when output is selected, embedding axes cannot be hovered
+* find a fix for the problem that the surface separating the area where relus is masking due to negative output, and the area that is untouched is visually hard to separate in 3D, as it is just one continuous color. Maybe apply a special texture with a grid? Maybe restrict the user from going under the relu surface with the camera (this would require rotating upon hover/selection of output neurons onto the vector that is selected)?
+
+
+---
+
+better but still not good.
+* the texture is confusing and hard to look at. Make it just a light grey surface again, that should have some higher opacity so that you see from which side you look at it. The "Masked by RELU" text should still be rendered on top, not obfuscated by the area.
+* In 3d, can you instead make the relu surface just not a full endless surface, but a circular cutout of a surface with a radius of maybe 1.2, centered on the bias point?
+* the constant focus on the vector in 3D is annoying and doesnt work well. It points the camera directly at the vector so you only see the top, which basically hides the vector. It also restricts movement incorrectly, I can still go under the relu surface in 3D.
+* the "Masked by RELU" text was supposed to be parallel to the relu surface line. I.e. in 2d, it should be rotated so that it is always parallel to the line separating the relu mask area from the non relu mask area. 
+
+---
+
+* make it fade out more abruptly (gradient not so far spread) and use a lighter grey for the surface.
+* review the positioning of the "masked by relu" label, specifically in 3d. The rotation code specifically is making the text rotate into the area. In 2D its working correctly.
+* make the red dashed interference line continuous instead of dashed
+
+
+
+---
+
+I want to slowly move on from the visualization from now. The app contains a visualization, but the goal is that it also contains a writedown/ blog entry, similar to Transformer explainer under the explainer.
+Please create a component with the blog entry. For now, it should only contain a title, a subtitle and 2 authors. For the contents, use Lorem ipsum (~8 min read blog entry).
+Put the component underneath the main visualization.
+Here comes the hard part: The goal is that when the user scrolls down to the blog entry, the superposition visualization moves with the scroll, by:
+* consensing the autoencoder view (using smaller margins)
+* putting the autoencoder view and the embedding space view stacked as a side panel to the right side of the blog entry. They should take up space roughly 50/50 for now.
+
+It would be cool if its possible to animate the autoencoder view and the embedding space view moving down in their new position as the user scrolls. At the top, they should still be present in the full vh visualization and only move into the side panel and condense when the user scrolls. Please review what html/css tricks are necessary and how to approach this/ if this is even doable. Let me test it out afterwards.

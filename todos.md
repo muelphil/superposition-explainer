@@ -50,4 +50,8 @@ Linearkombination von Vektoren für Embeddings anzeigen
 
 
 bug:
-* when moving the 3d view, hover logic is still triggered when mouse is down -- should not be the case.
+
+
+hovering weights directly not implemented/missing hover logic
+
+e
