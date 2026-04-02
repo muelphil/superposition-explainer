@@ -527,7 +527,7 @@ function onOutputClick(i: number) {
       ref="containerRef"
       :style="{ gridTemplateRows }"
   >
-    <!-- SVG overlay — paths masked at neuron circles, pointer-events on stroke only -->
+    <!-- SVG overlay — visible paths masked at neuron circles; wide transparent hit paths for easy hover -->
     <svg
         ref="svgRef"
         class="connections-svg"
@@ -546,21 +546,35 @@ function onOutputClick(i: number) {
           />
         </mask>
       </defs>
+
+      <!-- Visible styled paths — masked so they hide inside neurons -->
       <g mask="url(#neuron-mask)">
         <path
             v-for="(p, pi) in svgPathsData"
             :key="pi"
+            class="vis-path"
             :d="p.d"
             fill="none"
             :stroke="p.color"
             :stroke-width="p.width"
             :opacity="pathOpacity(p.row, p.col, p.opacity)"
-            style="pointer-events: stroke; cursor: pointer;stroke-linecap: round;"
-            @mouseenter="onWeightEnter(p.row, p.col)"
-            @mouseleave="onWeightLeave"
-            @click.stop="onWeightClick(p.row, p.col)"
+            style="pointer-events: none; stroke-linecap: round;"
         />
       </g>
+
+      <!-- Invisible hit paths — wide transparent stroke for easy hover, outside mask -->
+      <path
+          v-for="(p, pi) in svgPathsData"
+          :key="`hit-${pi}`"
+          :d="p.d"
+          fill="none"
+          stroke="transparent"
+          stroke-width="12"
+          style="pointer-events: stroke; cursor: pointer;"
+          @mouseenter="onWeightEnter(p.row, p.col)"
+          @mouseleave="onWeightLeave"
+          @click.stop="onWeightClick(p.row, p.col)"
+      />
     </svg>
 
     <!-- ── Row 1: Column headings ──────────────────────────── -->
@@ -770,7 +784,7 @@ function onOutputClick(i: number) {
 }
 
 /* Dashed lines — only shown and animated during training */
-.connections-svg path {
+.connections-svg .vis-path {
   stroke-dasharray: none;
 }
 
@@ -783,7 +797,7 @@ function onOutputClick(i: number) {
   }
 }
 
-.connections-svg.training-active path {
+.connections-svg.training-active .vis-path {
   stroke-dasharray: 1 6; /*When updating this, also update dash-flow above (dashoffset=sum)*/
   animation: dash-flow 0.35s linear infinite;
 }
