@@ -401,3 +401,21 @@ Here comes the hard part: The goal is that when the user scrolls down to the blo
 
 It would be cool if its possible to animate the autoencoder view and the embedding space view moving down in their new position as the user scrolls. At the top, they should still be present in the full vh visualization and only move into the side panel and condense when the user scrolls. Please review what html/css tricks are necessary and how to approach this/ if this is even doable. Let me test it out afterwards.
 
+---
+
+We need to update and fix the visualization in source/components/embeddingView/overlays/ that is responsible for showing the relu area and the interference when hovering/ selecting output neurons. The current implementation is flawed as it does not accuratley represent the interference mathematically. Currently, the interference is visualized as a red line from the tip of the feature vector to the relu surface. This is not correct, as the interference is not represented by the distance from the tip of the vector to the relu surface. It would only have been correct, if all feature vectors had a length of 1, but they dont.
+
+To fix the visualization, do the following:
+* for every vector v causing interference (non negative loss), display the projection of the input (big purple dot) onto the vector as a small purple dot going along that vector v (as the vectors are most of the time 1 this should place the small purple dot close to the vector tip).
+* the interferences should then be placed using a red line from this projection to the relu surface.
+* Please validate both the approach mathematically before implementation (remember, scalar product is commutative, which is why i am projecting onto the feature vector instead, which has the advantage of showing 1 bias/relu surface for all projections).
+* also validate it numerically. The red line length should always be the same as the error.
+
+* , show the interference as a red line from the projection of the feature vector onto the feature vector direction to the relu surface. This way, the interference is not represented by the distance from the tip of the vector to the relu surface,
+
+but rather how the projection of the distance of the input projected onto the feat distance to the relu surface is. Please adjust the visualization  so that the projection of the input (purple dot) per vector that causes interference is visualized as smaller purple dots (so smaller purple dots per feature vector causing interference )
+
+, so that the interference is represented by a line from the projection of the input onto the feature vector to the relu surface. This will require some mathematical adjustments, as well as adjustments to the Three.js code. Please also review if the bias visualization is correct, as this also needs to be projected onto the feature vector for correct visualization.
+
+
+

@@ -2,9 +2,7 @@
 * Hover and Selection System
     * it should trigger visualization in different components
         * No feature selected, but feature hovered:
-            * Embedding Space Vector View: highlight vector, make other vectors greyscale, show relu regarding selected vector (hyperspace going through coordinate origin + bias value along the vector)
             * Weights: highlight corresponding column or row in the weights matrix
-            * Autoencoder: highlight feature (input neuron), showcase effect on embedding (show values contributed to embedding space weights at the end of the connections going into the embedding neurons)
         * Feature selected, another feature hovered:
             * Embedding Space Vector View: highlight both vectors, project hovered vector on selected vector and show the result as inference -- red if positive inference, not masked by RELU, dark grey if negative inference, masked by RELU, put amount of inference and if masked as info, if close to 0 (<0.001) say no inference.
 * Autoencoder View
@@ -49,13 +47,21 @@ Linearkombination von Vektoren für Embeddings anzeigen
 * role of bias
 
 
-bug:
-
-
-hovering weights directly not implemented/missing hover logic
-
-e
-
+TODOs 02.04.2026:
+* interaction with weights: hovering weights directly not implemented/missing hover logic
+* font families + central styling
+* svg backdrop weight connections coloring
+* neuron selection css
+* BIG: Interference Visualization
+* input/output neuron colors -- align with features (perhaps make this a setting?)
+* rework Settings Modal visualization
+* implement more statistics as necessary
+* cursor: pointer on vector hover
+* f1-f5 hover color change removal
+* move weights panel to embedding space panel
+* show bias amount on hover (i.e. importance)
+* invert sparsity to be correct
+* 
 
 
 
