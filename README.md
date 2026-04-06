@@ -11,6 +11,15 @@ npm run build      # Production build (also used for type-checking — fix TS er
 npm run preview    # Preview production build locally
 ```
 
+## Update
+```bash
+# minor
+npm update
+# mayor
+npx npm-check-updates -u
+npm install
+```
+
 ## Experiment
 For a breakdown of the experiment consult EXPERIMENT.md
 
