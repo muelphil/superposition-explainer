@@ -97,3 +97,9 @@ In general, keep the important, educational beneficial information, remove dupli
 * bases / geometry section
 * then formal model equations + loss + sparsity + importance of autoencoders
 * interactive experiment
+
+
+
+---
+
+"Stop Training" should not clear statistics -- only put a vertical line in there.
