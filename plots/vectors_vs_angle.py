@@ -25,7 +25,7 @@ from pathlib import Path
 DEFAULT_MIN_ANGLE = 45  # right edge of plot (left edge is always 90°)
 DEFAULT_DIM_MIN = 3
 DEFAULT_DIM_MAX = 15
-DEFAULT_LOG_SCALE = True
+DEFAULT_LOG_SCALE = False
 DATA_FILE = "spherical_codes_table.txt"
 OUTPUT_PREFIX = "vectors_vs_angle"
 
@@ -204,7 +204,7 @@ def generate_plot(
 
     # legend: highest dimension on top, placed lower-right (values rise toward the right)
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[::-1], labels[::-1], loc="lower right", fontsize=10, framealpha=0.9)
+    ax.legend(handles[::-1], labels[::-1], loc="upper left", fontsize=10, framealpha=0.9)
 
     # Light-grey y-axis grid to emphasise the logarithmic scale
     ax.grid(axis="y", which="major", color="#d0d0d0", linewidth=0.6)
