@@ -6,6 +6,8 @@ Consider $n$ features $f_1, \ldots, f_n$. A **feature vector** $x = (x_1, \ldots
 
 The model maps $x$ into an **embedding space** $H = \mathbb{R}^m$, typically with fewer dimensions ($m < n$). Inside this space, each feature $f_i$ is represented by a learned **feature direction vector** $w_i \in \mathbb{R}^m$. These $n$ vectors form the columns of the **weight matrix** $W = [w_1 \;\; \cdots \;\; w_n] \in \mathbb{R}^{m \times n}$.
 
+![Diagram illustrating the mapping of a feature vector $x$ from feature space $F$ into embedding space $H$ and its approximate reconstruction. On the left is a light gray circular area labeled “Feature Space F” containing a black dot labeled $x$ representing the original feature vector. On the right is a light gray circular area labeled “Embedding Space H” containing a black dot labeled $y$, representing the embedded vector. A curved arrow labeled $W$ points from $x$ to $y$, and the equation $y = W x$ is placed to the right of $y$. Another curved arrow labeled $W^T$ points back from $y$ to a black dot labeled $\\hat{x}$ in the feature space. To the left of $\\hat{x}$ is a two-line equation showing the reconstruction: $\\hat{x} = W^T y = W^T W x$. The diagram emphasizes that the feature vector is embedded by the weight matrix $W$ into the lower-dimensional embedding space and can be approximately recovered via $W^T$, with the quality of reconstruction determined by the geometry of the feature directions.](../plots/mathematical_vis_of_notation.png)
+
 **Embedding with $W$** computes a linear combination of the feature direction vectors, weighted by the feature activations:
 $$y = Wx = \sum_{i=1}^{n} x_i \, w_i$$ 
 
