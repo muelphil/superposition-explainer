@@ -98,6 +98,39 @@ In general, keep the important, educational beneficial information, remove dupli
 * then formal model equations + loss + sparsity + importance of autoencoders
 * interactive experiment
 
+---
+
+We next need to work on the blog section of the website. I have written a blog draft in markdown but do not yet want to integrate it into the website, before the implementation basis is not yet set.
+
+The blog post is special in that it will have 2 sections where on the right side of the blogpost there will need to be interactive visualizations. Our main goal is setting the basis for these interactive visualizations. Please modify src/components/BlogPost.vue for this, added more components in a blogpost subfolder.
+
+The structure should be as following:
+* Blog post header
+* some paragraphs without visualization on the right
+* "Mathematical Fundamentals" section: paragraphs with "Bases" visualization on the right
+* some paragraphs without visualization on the right
+* "Autoencoder" section: paragraphs with "AutoEncoder" visualization on the right
+* some paragraphs without visualization on the right
+
+The requirements are as follows:
+* use css to make the paragraphs with and without the side nav the same size. Use e.g. css grid, in any case the most appropriate standard way to implement this
+* modularize the 2 section of the blog post with the visualizations on the side ("Mathematical Fundamentals" and "Autoencoder") into separate components
+* use paragraph tags in these sections. The scroll of the page should determine which paragraph is currently "active" (i.e. in the middle of the page). The visualization needs to respond to this.
+* highlight the active paragraph for now with a very delicate light blue color
+* "Bases" visualization: implement as custom component, using a global service for state management, which is a vertical stack of 1. a 2D coordinate system (for now use svg for this and show a simple dummy coordinate system) and 2. math in katex (for now simple show $x=1$).
+  * As the user scrolls through the paragraphs of the section, x should be the index of the active paragraph in the section +1 (as dummy, we will create the actual interactive visualization later)
+* "Autoencoder" visualization: display the autoencoder from the MainView in the side panel vertically stacked: AutoEncoder View, EmbeddingSpace View, Combined View.
+
+
+---
+
+Lets next focus on the Autoencoder visualization in the blog.
+* First, implement a .compact class you can apply to the autoencoder view. This class should make margins and paddings in the autoencoder view more compact.
+* Do not put a border on the AutoencoderView (currently done via .ae-viz-panel), only on the other two views., The autoencoder view does not need a border.
+* Make the autoencoder vis on the right side min 512px wide, put the embedding view and the combined view (training, statistics, weights) next to each other (300px for embeddingView and ~200+px for combined view)
+* Reflect this in the grid definition: vis in right column should be min 512px, but should be allowed to grow
+
+
 
 
 ---

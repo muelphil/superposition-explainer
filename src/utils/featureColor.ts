@@ -43,16 +43,16 @@ export const MIN_ANGLE_CHART_COLOR = '#22c55e'  // green-500 = --color-add-btn
 // Sampling is done in sRGB space (matching CSS color-mix(in srgb, ...)),
 // meaning gamma-encoded channel values are mixed directly — no muddy midpoints.
 
-const GRADIENT_STOPS: string[] = [
-  '#22c55e',  // green  — most important feature
-  '#fff63d',  // yellow — least important feature
-]
-
 // const GRADIENT_STOPS: string[] = [
-//     '#F69F16',  // orange — most important feature
-//     '#F73361',  // pink
-//     '#097AFA',  // blue   — least important feature
+//   '#22c55e',  // green  — most important feature
+//   '#fff63d',  // yellow — least important feature
 // ]
+
+const GRADIENT_STOPS: string[] = [
+    '#F69F16',  // orange — most important feature
+    '#F73361',  // pink
+    '#097AFA',  // blue   — least important feature
+]
 
 // ── Embedding point ────────────────────────────────────────────────────────────
 /** Purple used for the current embedding point in the 3D scene. */

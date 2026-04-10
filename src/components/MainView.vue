@@ -173,7 +173,9 @@ const showSettings = ref(false)
 }
 
 .app-header {
-  position: sticky;
+  //position: sticky;
+  position: absolute;
+  width: 100%;
   top: 0;
   z-index: 50;
   height: var(--header-height);
@@ -214,7 +216,8 @@ const showSettings = ref(false)
 
 .app-content {
   height: 100vh;
-  padding: var(--header-height) 2rem 1.5rem;
+  padding: var(--header-height) 2rem calc(3 * var(--header-height));
+  align-content: center;
   width: 100%;
   max-width: 1200px;
   align-self: center;

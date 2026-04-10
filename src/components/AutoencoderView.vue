@@ -9,6 +9,8 @@ import {neuronColorRgb} from '../utils/featureColor'
 import InputValue from './InputValue.vue'
 import ActivationIcons from './ActivationIcons.vue'
 
+const props = defineProps<{ compact?: boolean }>()
+
 const svc = inject<AutoencoderServiceType>('autoencoderService')!
 const selSvc = inject<SelectionServiceType>('selectionService')!
 
@@ -512,6 +514,7 @@ function onOutputClick(i: number) {
 <template>
   <div
       class="ae-grid"
+      :class="{ compact: props.compact }"
       ref="containerRef"
       :style="{ gridTemplateRows }"
   >
@@ -742,19 +745,25 @@ function onOutputClick(i: number) {
   position: relative;
   display: grid;
 
+  --col-features: 60px;
+  --col-gap-s: 1.2rem;
+  --col-gap-comp: 26px;
+  --col-act-icons: 26px;
+  --col-outputs: 82px;
+
   grid-template-columns:
-    [features]        60px
-    [gap-s-left]      1.2rem
+    [features]        var(--col-features)
+    [gap-s-left]      var(--col-gap-s)
     [input-neurons]   var(--neuron-size)
-    [gap-comp-l]      26px
+    [gap-comp-l]      var(--col-gap-comp)
     [gap-conn-l]      1fr
     [embedding]       calc(var(--neuron-size) * 1.4)
     [gap-conn-r]      1fr
-    [act-icons]       26px
+    [act-icons]       var(--col-act-icons)
     [gap-act]         0px
     [output-neurons]  var(--neuron-size)
-    [gap-s-right]     1.2rem
-    [outputs]         82px;
+    [gap-s-right]     var(--col-gap-s)
+    [outputs]         var(--col-outputs);
   column-gap: 0;
   row-gap: 0;
   align-items: center;
@@ -762,6 +771,17 @@ function onOutputClick(i: number) {
   justify-items: center;
   --row-height: 72px;
   padding: 0.25rem 0;
+}
+
+.ae-grid.compact {
+  --row-height: 52px;
+  --neuron-size: 1.5rem;
+  --col-features: 44px;
+  --col-gap-s: 0.6rem;
+  --col-gap-comp: 16px;
+  --col-act-icons: 18px;
+  --col-outputs: 64px;
+  padding: 0;
 }
 
 /* ── SVG overlay ──────────────────────────────────────────── */
