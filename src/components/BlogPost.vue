@@ -7,8 +7,8 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
   <article class="blog-post">
     <div class="post-body">
 
-      <!-- ── Header (spans both columns) ──────────────────────── -->
-      <header class="post-header">
+      <!-- ── Header ───────────────────────────────────────────── -->
+      <header class="post-header post-section">
         <div class="post-meta">
           <span class="post-date">April 2, 2025</span>
           <span class="post-separator">·</span>
@@ -42,8 +42,8 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
         </div>
       </header>
 
-      <!-- ── Intro paragraphs — spans both columns ─────────────── -->
-      <div class="text-only">
+      <!-- ── Intro paragraphs ──────────────────────────────────── -->
+      <div class="post-section text-section">
         <p>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
           incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
@@ -70,11 +70,11 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
         </p>
       </div>
 
-      <!-- ── Mathematical Fundamentals — own row, viz on right ─── -->
+      <!-- ── Mathematical Fundamentals — viz on right ──────────── -->
       <BasesSection />
 
-      <!-- ── Transition paragraphs — spans both columns ────────── -->
-      <div class="text-only">
+      <!-- ── Transition paragraphs ─────────────────────────────── -->
+      <div class="post-section text-section">
         <h2>The Geometry of Learned Representations</h2>
 
         <p>
@@ -102,11 +102,11 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
         </p>
       </div>
 
-      <!-- ── Autoencoder — own row, viz on right ───────────────── -->
+      <!-- ── Autoencoder — viz on right ────────────────────────── -->
       <AutoencoderSection />
 
-      <!-- ── Conclusion paragraphs — spans both columns ────────── -->
-      <div class="text-only">
+      <!-- ── Conclusion paragraphs ─────────────────────────────── -->
+      <div class="post-section text-section">
         <h2>Conclusion</h2>
 
         <p>
@@ -134,44 +134,40 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
 <style scoped>
 /* ── Blog article ──────────────────────────────────────────────── */
 .blog-post {
-  min-width: 768px;
   color: var(--color-text-primary);
 }
 
-/* ── Single grid for the entire post ──────────────────────────── */
-/*
- * Column 1: text  (1fr, grows freely)
- * Column 2: viz   (min 512px, can grow equally with text column)
- *
- * Header and text-only blocks span both columns.
- * Viz section fragments supply col-1 text + col-2 viz as direct grid children.
- */
+/* ── Post body: stacked sections, no grid ──────────────────────── */
 .post-body {
-  display: grid;
-  grid-template-columns: 1fr minmax(512px, 1fr);
-  column-gap: 3rem;
-  row-gap: 3.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
   padding: 4rem 2rem 8rem;
   font-size: 1rem;
   line-height: 1.75;
   color: var(--color-text-primary);
+  gap: 3.5rem;
 }
 
-/* Header spans both columns */
+/* Every section is horizontally centered within the page */
+.post-section {
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Text-only sections: match main app-content width */
+.text-section {
+  max-width: calc(1200px - 4rem);
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
 .post-header {
-  grid-column: 1 / -1;
+  max-width: calc(1200px - 4rem);
   border-bottom: 1px solid var(--color-border);
   padding-bottom: 2.5rem;
 }
 
-/* Text-only sections span both columns */
-.text-only {
-  grid-column: 1 / -1;
-  min-width: 0;
-}
-
+/* ── Prose ─────────────────────────────────────────────────────── */
 .post-body :deep(p) {
   margin: 0 0 1.5rem;
 }

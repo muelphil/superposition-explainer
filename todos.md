@@ -130,6 +130,17 @@ Lets next focus on the Autoencoder visualization in the blog.
 * Make the autoencoder vis on the right side min 512px wide, put the embedding view and the combined view (training, statistics, weights) next to each other (300px for embeddingView and ~200+px for combined view)
 * Reflect this in the grid definition: vis in right column should be min 512px, but should be allowed to grow
 
+---
+
+After reviewing everything, I actually found that I do not like the way the blog width behaves. We unfortunatley will need to rework it.
+
+Make the blog sections calc(1200px - 4rem) wide, consistent with the main.app-content.
+For the blog sections that have visualizations on the right, make them calc(1400px - 4rem) wide.
+To achieve this, width needs to be applied per blog section.
+The outer blog should not use css grid. Only the 2 containing sections with visualizations on the side should use css grid.
+The visualizations in the 2 sections with vis should both specify min and max width. The rest of the width should be used by the blog paragraphs on the left.
+
+
 
 
 

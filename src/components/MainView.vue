@@ -173,7 +173,7 @@ const showSettings = ref(false)
 }
 
 .app-header {
-  //position: sticky;
+  /* position: sticky; */
   position: absolute;
   width: 100%;
   top: 0;
