@@ -78,9 +78,8 @@ const {activeParagraphIndex} = useScrollActiveParagraph(paragraphRefs)
 
 <style scoped>
 /*
- * AutoencoderSection is a self-contained CSS grid row.
- * Width: calc(1400px - 4rem), centered via post-section in parent.
- * Columns: 1fr text | AE viz (min 512px, max 600px)
+ * Layout only. Shared typography and interaction styles (section-heading,
+ * text-column p, active-paragraph, viz-column, viz-sticky) live in BlogPost.vue.
  */
 .ae-section {
   max-width: calc(1400px - 4rem);
@@ -91,41 +90,5 @@ const {activeParagraphIndex} = useScrollActiveParagraph(paragraphRefs)
   grid-template-columns: 1fr minmax(512px, 600px);
   column-gap: 3rem;
   align-items: start;
-}
-
-.text-column {
-  min-width: 0;
-}
-
-.section-heading {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  margin: 0 0 0.75rem;
-  color: var(--color-text-primary);
-}
-
-.text-column p {
-  margin: 0 0 1.5rem;
-  padding: 0.5rem 0.75rem;
-  border-left: 3px solid transparent;
-  border-radius: 0 6px 6px 0;
-  transition: background-color 0.25s ease, border-color 0.25s ease;
-}
-
-.active-paragraph {
-  background-color: rgba(59, 130, 246, 0.06);
-  border-left-color: #3b82f6 !important;
-}
-
-/* Viz column stretches to row height so sticky works */
-.viz-column {
-  min-width: 0;
-  align-self: stretch;
-}
-
-.viz-sticky {
-  position: sticky;
-  top: 6rem;
 }
 </style>

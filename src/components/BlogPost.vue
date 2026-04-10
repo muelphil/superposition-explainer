@@ -255,3 +255,52 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
   color: var(--color-text-secondary);
 }
 </style>
+
+<!--
+  Non-scoped: shared styles for blog viz-section children (BasesSection, AutoencoderSection).
+  Scoped under .blog-post to avoid polluting the global namespace.
+-->
+<style>
+/* ── Shared styles for viz sections ────────────────────────────── */
+
+/* Text column — prevent overflow shrink */
+.blog-post .text-column {
+  min-width: 0;
+}
+
+/* Section headings inside viz sections */
+.blog-post .section-heading {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.75rem;
+  color: var(--color-text-primary);
+}
+
+/* Paragraphs: spacing + scroll-active indicator via border-left */
+.blog-post .text-column p {
+  margin: 0 0 1.5rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid transparent;
+  border-radius: 0 6px 6px 0;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+/* Active paragraph highlight (scroll-driven) */
+.blog-post .active-paragraph {
+  background-color: var(--color-active-paragraph-bg);
+  border-left-color: var(--color-interactive);
+}
+
+/* Viz column stretches to match text height so the sticky container works */
+.blog-post .viz-column {
+  min-width: 0;
+  align-self: stretch;
+}
+
+/* Sticky visualization panel */
+.blog-post .viz-sticky {
+  position: sticky;
+  top: 6rem;
+}
+</style>
