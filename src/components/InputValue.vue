@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed} from 'vue'
+import {computed, getCurrentInstance} from 'vue'
 import {featureColorHex} from '../utils/featureColor'
 import {renderLatexHtml} from '../utils/latex'
 
@@ -16,6 +16,10 @@ const emit = defineEmits<{
   'resample': []
   'featureClick': []
 }>()
+
+// Unique prefix per component instance — prevents SVG ID collisions when
+// multiple AutoencoderViews (e.g. main + blog compact) exist on the page.
+const instanceUid = getCurrentInstance()!.uid
 
 /** Toggle: if non-zero → set to 0; if zero → ask parent to resample */
 function onToggleClick() {
@@ -38,7 +42,7 @@ const X_MAX = 3
 
 // ── Feature color ──────────────────────────────────────────────
 const featureHex = computed(() => featureColorHex(props.featureIdx, props.featureCount))
-const gradId = computed(() => `dist-grad-${props.featureIdx}`)
+const gradId = computed(() => `dist-grad-${instanceUid}-${props.featureIdx}`)
 
 /** Thumb color: white → feature color as value increases 0→3 */
 const thumbColor = computed(() => {

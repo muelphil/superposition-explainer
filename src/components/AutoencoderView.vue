@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {inject, ref, computed, watch, onMounted, onUnmounted, nextTick} from 'vue'
+import {inject, ref, computed, watch, onMounted, onUnmounted, nextTick, getCurrentInstance} from 'vue'
 import {RefreshCw, Plus, Minus} from 'lucide-vue-next'
 import {renderLatexHtml} from '../utils/latex'
 import type {AutoencoderServiceType} from '../services/AutoencoderService'
@@ -13,6 +13,10 @@ const props = defineProps<{ compact?: boolean }>()
 
 const svc = inject<AutoencoderServiceType>('autoencoderService')!
 const selSvc = inject<SelectionServiceType>('selectionService')!
+
+// Unique SVG mask ID per instance — prevents collision when multiple
+// AutoencoderViews (e.g. main + blog compact) coexist on the page.
+const maskId = `neuron-mask-${getCurrentInstance()!.uid}`
 
 // ─── Template refs ────────────────────────────────────────────────────────────
 const containerRef = ref<HTMLElement | null>(null)
@@ -527,7 +531,7 @@ function onOutputClick(i: number) {
     >
       <defs>
         <!-- Mask: white everywhere except black circles over neurons (hides lines inside circles) -->
-        <mask id="neuron-mask" maskUnits="userSpaceOnUse">
+        <mask :id="maskId" maskUnits="userSpaceOnUse">
           <rect x="-9999" y="-9999" width="19998" height="19998" fill="white"/>
           <circle
               v-for="(c, ci) in neuronClips"
@@ -539,7 +543,7 @@ function onOutputClick(i: number) {
       </defs>
 
       <!-- Visible styled paths — masked so they hide inside neurons -->
-      <g mask="url(#neuron-mask)">
+      <g :mask="`url(#${maskId})`">
         <path
             v-for="(p, pi) in svgPathsData"
             :key="pi"

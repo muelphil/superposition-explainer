@@ -289,7 +289,7 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
 /* Active paragraph highlight (scroll-driven) */
 .blog-post .active-paragraph {
   background-color: var(--color-active-paragraph-bg);
-  border-left-color: var(--color-interactive);
+  border-left-color: var(--color-interactive) !important;
 }
 
 /* Viz column stretches to match text height so the sticky container works */
