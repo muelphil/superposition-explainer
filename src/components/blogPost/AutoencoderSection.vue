@@ -3,8 +3,8 @@ import { ref, provide, onUnmounted } from 'vue'
 import { createAutoencoderService, INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX } from '../../services/AutoencoderService'
 import { createSelectionService } from '../../services/SelectionService'
 import { useScrollActiveParagraph } from './useScrollActiveParagraph'
-import { useParagraphRanges } from './useParagraphRanges'
-import { type AeParagraphRange, AE_VIEW_CONSTRAINTS_KEY, deriveConstraints } from './aeStepTypes'
+import { useParagraphRanges, type ParagraphRange } from './useParagraphRanges'
+import { type AeConstraintSpec, AE_VIEW_CONSTRAINTS_KEY, deriveConstraints } from './aeStepTypes'
 import AutoencoderVisualization from './AutoencoderVisualization.vue'
 
 // ─── Service instances (owned here, provided to children) ─────────────────────
@@ -17,49 +17,43 @@ provide('selectionService', selSvc)
 
 onUnmounted(() => { svc.stopTraining() })
 
+// ─── Reactive constraint spec (mutated inside apply()) ────────────────────────
+
+const constraintSpec = ref<AeConstraintSpec | undefined>(undefined)
+const constraints = deriveConstraints(constraintSpec, INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX)
+provide(AE_VIEW_CONSTRAINTS_KEY, constraints)
+
 // ─── Paragraph ranges ─────────────────────────────────────────────────────────
 //
 // Each range covers [from, to] paragraph indices (inclusive).
-// `apply(activeIndex)` is called programmatically whenever the active paragraph
-// changes within the range — put all service/config mutations here.
-// `constraints` (optional) is the declarative spec injected by AutoencoderView
-// and TrainingConfigView to adapt their UI (dim buttons, hidden controls).
+// apply(activeIndex) is called whenever the active paragraph changes within the
+// range. Set constraintSpec.value to update UI constraints in AutoencoderView
+// and TrainingConfigView. Use !== guards before calling setInputDim /
+// setEmbeddingDim to avoid unnecessary resets during intra-range scrolling.
 
-const ranges: AeParagraphRange[] = [
+const ranges: ParagraphRange[] = [
   {
     from: 0, to: 1,
-    constraints: {
-      inputDim: 2,
-      embeddingDim: 2,
-      hiddenControls: ['sparsity', 'advanced'],
-    },
     apply: () => {
-      svc.setInputDim(2)
-      svc.setEmbeddingDim(2)
+      constraintSpec.value = { inputDim: 2, embeddingDim: 2, hiddenControls: ['sparsity', 'advanced'] }
+      if (svc.config.inputDim !== 2) svc.setInputDim(2)
+      if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
       svc.updateConfig({ sparsity: 0.2, learningRate: 0.015, batchSize: 64 })
     },
   },
   {
     from: 2, to: 4,
-    constraints: {
-      inputDim: { min: 2, max: 4 },
-      embeddingDim: 2,
-    },
     apply: () => {
-      svc.setEmbeddingDim(2)
+      constraintSpec.value = { inputDim: { min: 2, max: 4 }, embeddingDim: 2 }
+      if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
     },
   },
 ]
 
 const paragraphRefs = ref<(HTMLElement | null)[]>([])
 const { activeParagraphIndex } = useScrollActiveParagraph(paragraphRefs)
-const { currentRange } = useParagraphRanges(ranges, activeParagraphIndex)
-
-// Provide reactive constraints so children can adapt their UI
-const constraints = deriveConstraints(currentRange, INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX)
-provide(AE_VIEW_CONSTRAINTS_KEY, constraints)
+useParagraphRanges(ranges, activeParagraphIndex)
 </script>
-
 <template>
   <!-- Single-root section: owns its own CSS grid, centered at wider width -->
   <div class="ae-section post-section">

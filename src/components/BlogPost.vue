@@ -296,6 +296,7 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
 .blog-post .viz-column {
   min-width: 0;
   align-self: stretch;
+  align-content: center;
 }
 
 /* Sticky visualization panel */
