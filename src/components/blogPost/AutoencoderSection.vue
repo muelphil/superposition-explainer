@@ -1,10 +1,63 @@
 <script setup lang="ts">
-import {ref} from 'vue'
-import {useScrollActiveParagraph} from './useScrollActiveParagraph'
+import { ref, provide, onUnmounted } from 'vue'
+import { createAutoencoderService, INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX } from '../../services/AutoencoderService'
+import { createSelectionService } from '../../services/SelectionService'
+import { useScrollActiveParagraph } from './useScrollActiveParagraph'
+import { useParagraphRanges } from './useParagraphRanges'
+import { type AeParagraphRange, AE_VIEW_CONSTRAINTS_KEY, deriveConstraints } from './aeStepTypes'
 import AutoencoderVisualization from './AutoencoderVisualization.vue'
 
+// ─── Service instances (owned here, provided to children) ─────────────────────
+
+const svc = createAutoencoderService()
+provide('autoencoderService', svc)
+
+const selSvc = createSelectionService()
+provide('selectionService', selSvc)
+
+onUnmounted(() => { svc.stopTraining() })
+
+// ─── Paragraph ranges ─────────────────────────────────────────────────────────
+//
+// Each range covers [from, to] paragraph indices (inclusive).
+// `apply(activeIndex)` is called programmatically whenever the active paragraph
+// changes within the range — put all service/config mutations here.
+// `constraints` (optional) is the declarative spec injected by AutoencoderView
+// and TrainingConfigView to adapt their UI (dim buttons, hidden controls).
+
+const ranges: AeParagraphRange[] = [
+  {
+    from: 0, to: 1,
+    constraints: {
+      inputDim: 2,
+      embeddingDim: 2,
+      hiddenControls: ['sparsity', 'advanced'],
+    },
+    apply: () => {
+      svc.setInputDim(2)
+      svc.setEmbeddingDim(2)
+      svc.updateConfig({ sparsity: 0.2, learningRate: 0.015, batchSize: 64 })
+    },
+  },
+  {
+    from: 2, to: 4,
+    constraints: {
+      inputDim: { min: 2, max: 4 },
+      embeddingDim: 2,
+    },
+    apply: () => {
+      svc.setEmbeddingDim(2)
+    },
+  },
+]
+
 const paragraphRefs = ref<(HTMLElement | null)[]>([])
-const {activeParagraphIndex} = useScrollActiveParagraph(paragraphRefs)
+const { activeParagraphIndex } = useScrollActiveParagraph(paragraphRefs)
+const { currentRange } = useParagraphRanges(ranges, activeParagraphIndex)
+
+// Provide reactive constraints so children can adapt their UI
+const constraints = deriveConstraints(currentRange, INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX)
+provide(AE_VIEW_CONSTRAINTS_KEY, constraints)
 </script>
 
 <template>

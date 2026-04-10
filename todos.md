@@ -140,6 +140,53 @@ To achieve this, width needs to be applied per blog section.
 The outer blog should not use css grid. Only the 2 containing sections with visualizations on the side should use css grid.
 The visualizations in the 2 sections with vis should both specify min and max width. The rest of the width should be used by the blog paragraphs on the left.
 
+---
+
+There is one more small bug to fix: sparsity is defined as how sparse the input is, but the autoencoder currently inverts it -> high sparsity s = high probability of sampling values. This is incorrect. High sparsity s should mean few active features (many zeros) — i.e. low feature representation per sample. Please fix this by inverting s and setting hardcoded default values to 1.0-s.
+
+---
+
+More bugs to fix for the autoencoder view:
+* the InputValue components should not use $f_i$ as labels, but $x_i$ for feature activations
+* the EmbeddingSpace legend should not use $f_i$ as labels, but $w_i$ for feature direction vectors
+* if the amount of input neurons/ embedding space neurons is fixed (i.e. the selectable range is just one possible number), then the .dim-btns should not be shown.
+
+
+---
+
+
+We will next need to prepare for porting the blog in the Autoencoder blog section.
+Two things must be implemented for this to work. We will start with the first one:
+* The AutoencoderViews settings (what options are available, how many neurons are used) must be definable by what paragraph is currently active. This should allow for setting Autoencoder config (amount of neurons) and settings visible/accessible in the training config (i.e. sparsity, importance, advanced options.) 
+  * Review the current implementation and check what needs to be adjusted to make this possible.
+  * After rewriting them implementation, as proof of concept:
+    * for the first paragraph, set the dimensions of the autoencoder to 2 input neurons and 2 embedding space neurons (statically) and disable Sparsity and advanced options (set sparsity to 0.2, learning rate to 0.015, batch size to 64)
+    * for the third paragraph, set the dimensions of the autoencoder to 2 embedding neurons and let the user select between 2-4 input neurons
+
+Make sure this change implements a clean, easy to use high level api, so that it is easy to define per paragraph (best via ids) what they are changing in the implementation. Please be aware that we will also use this concept in the Bases Visualization section, where the visualization on the right will changed based on the currently active paragraph.
+
+For this reason, first thoroughly assess the current structure and possible implementation options, to find the best clean high level option to define changes per paragraph in the visualization, and attach the autoencoder settings/config in the Autoencoder Section to it.
+
+---
+
+We will next need to implment the concept of a task list for this blog entry. Tasks lists should be displayed as sort of todo lists in the paragraph. There can be multiple tasks lists in different paragraphs, but max 1 task list per paragraph. If the paragraph containing a task list  is active, the task lists should monitor the visualization. If the user takes actions or the training reaches a point that satisfy the task, this should check the task.  
+
+There needs to be a definable tasks for the autoencoder section, here is an example:
+
+## List of tasks
+- [ ] set input neurons to 4
+  - (should check if user set input neurons to 4, or they are already at 4; if the user changes it back, it should return to unchecked)
+- [ ] run training 
+  - (should check when training converged and stop traininng. It is necessary to allow for custom assessment of whether training has converged, as it is different for different configurations. Here, it is considered converged if all vectors are roughly of length 1 and roughly 90deg to one another for 10 subsequent trained batches; this should not uncheck -- once the user completed this task, it stays checked)
+
+Tasks need to allow for defining dependencies between tasks and optional tasks, and when they are resolved and dont unresolve anymore (i.e. after training converged, checkbox for training does not change anymore).
+There should also be a definition of when the task list is resolved (i.e. user has solved all necessary tasks to pass the experiment).
+
+Please again assess the current implementation and reason about how this should be implemented cleanly. My current guess (baseline) is that the implementation would be cleanest using:
+* a class for tasks lists, where taskslist can be specified as a list of tasks, each with an id, dependencies and a task target (which dependencies need to be resolved for it to fully resolve)
+* implementing emits for every action taken in the interactive visualization, i.e. in the Autoencoder view, that fires i.e. when configuration is changed or during training after every batch. The task list then listens to these events and updates based on them.
+
+Review this approach and improve it where you see fit, so that it allows for clean and easy definition of task lists displayed in paragraphs.
 
 
 

@@ -1,24 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, provide, onUnmounted } from 'vue'
+import { ref, computed, inject } from 'vue'
 import { RotateCcw, Play, Square } from 'lucide-vue-next'
-import { createAutoencoderService } from '../../services/AutoencoderService'
-import { createSelectionService } from '../../services/SelectionService'
+import type { AutoencoderServiceType } from '../../services/AutoencoderService'
 import AutoencoderView from '../AutoencoderView.vue'
 import EmbeddingView from '../embeddingView/EmbeddingView.vue'
 import WeightView from '../WeightView.vue'
 import TrainingConfigView from '../TrainingConfigView.vue'
 import TrainingStatsView from '../TrainingStatsView.vue'
 
-// Independent service instances for the blog visualization
-const svc = createAutoencoderService()
-provide('autoencoderService', svc)
-
-const selSvc = createSelectionService()
-provide('selectionService', selSvc)
-
-onUnmounted(() => {
-  svc.stopTraining()
-})
+// Service instances are created and provided by AutoencoderSection
+const svc = inject<AutoencoderServiceType>('autoencoderService')!
 
 // Tabbed panel state
 type PanelTab = 'training' | 'statistics' | 'weights'

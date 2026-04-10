@@ -11,7 +11,7 @@ export const EMB_DIM_MAX = 3
 export interface AutoencoderConfig {
   inputDim: number        // n: number of features
   embeddingDim: number    // m: latent dimensions (m < n)
-  sparsity: number        // S: probability a feature is active
+  sparsity: number        // S: sparsity — probability a feature is zero (1−S = activation probability)
   featureDecay: number    // α: importance = α^i
   learningRate: number
   batchSize: number
@@ -73,7 +73,7 @@ export function createAutoencoderService() {
   const defaultConfig: AutoencoderConfig = {
     inputDim: 5,
     embeddingDim: 2,
-    sparsity: 0.2,
+    sparsity: 0.8,
     featureDecay: 0.9,
     learningRate: 0.015,
     batchSize: 64,
@@ -208,7 +208,7 @@ export function createAutoencoderService() {
     // Features are non-negative (half-normal), matching the Anthropic toy model
     // assumption that x ∈ ℝ₊ⁿ — required for ReLU to achieve zero reconstruction loss.
     return Array.from({ length: config.inputDim }, () =>
-      Math.random() < config.sparsity ? Math.abs(randn()) : 0
+      Math.random() < (1 - config.sparsity) ? Math.abs(randn()) : 0
     )
   }
 

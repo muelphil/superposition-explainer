@@ -2,8 +2,13 @@
 import { inject, computed, ref } from 'vue'
 import { ChevronDown } from 'lucide-vue-next'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
+import { AE_VIEW_CONSTRAINTS_KEY } from './blogPost/aeStepTypes'
 
 const svc = inject<AutoencoderServiceType>('autoencoderService')!
+
+// Optional constraints from blog paragraph steps (undefined in MainView)
+const constraints = inject(AE_VIEW_CONSTRAINTS_KEY, undefined)
+const hiddenControls = computed(() => constraints?.value.hiddenControls ?? new Set<string>())
 
 const isTraining = computed(() => svc.isTraining.value)
 const showAdvanced = ref(false)
@@ -31,30 +36,34 @@ function fmtLR(lr: number) {
   <div class="config-panel">
 
     <!-- Main parameters -->
-    <div class="cfg-grid">
+    <div class="cfg-grid" v-if="!hiddenControls.has('sparsity') || !hiddenControls.has('importance')">
 
-      <label class="cfg-label" title="Probability a feature is non-zero in a training sample">Sparsity</label>
-      <input type="range" class="cfg-slider" min="0" max="1" step="0.05"
-        :value="svc.config.sparsity" :disabled="isTraining"
-        @input="svc.updateConfig({ sparsity: numVal($event) })" />
-      <span class="cfg-val">{{ svc.config.sparsity.toFixed(2) }}</span>
+      <template v-if="!hiddenControls.has('sparsity')">
+        <label class="cfg-label" title="Fraction of features that are zero in a training sample (higher = fewer active features)">Sparsity</label>
+        <input type="range" class="cfg-slider" min="0" max="1" step="0.05"
+          :value="svc.config.sparsity" :disabled="isTraining"
+          @input="svc.updateConfig({ sparsity: numVal($event) })" />
+        <span class="cfg-val">{{ svc.config.sparsity.toFixed(2) }}</span>
+      </template>
 
-      <label class="cfg-label" title="I_i = α^i — 1.0 = uniform, lower = first features more important">Importance α</label>
-      <input type="range" class="cfg-slider" min="0.5" max="1.0" step="0.01"
-        :value="svc.config.featureDecay" :disabled="isTraining"
-        @input="svc.updateConfig({ featureDecay: numVal($event) })" />
-      <span class="cfg-val">{{ svc.config.featureDecay.toFixed(2) }}</span>
+      <template v-if="!hiddenControls.has('importance')">
+        <label class="cfg-label" title="I_i = α^i — 1.0 = uniform, lower = first features more important">Importance α</label>
+        <input type="range" class="cfg-slider" min="0.5" max="1.0" step="0.01"
+          :value="svc.config.featureDecay" :disabled="isTraining"
+          @input="svc.updateConfig({ featureDecay: numVal($event) })" />
+        <span class="cfg-val">{{ svc.config.featureDecay.toFixed(2) }}</span>
+      </template>
 
     </div>
 
     <!-- Advanced toggle -->
-    <button class="advanced-toggle" @click="showAdvanced = !showAdvanced">
+    <button v-if="!hiddenControls.has('advanced')" class="advanced-toggle" @click="showAdvanced = !showAdvanced">
       <ChevronDown :size="12" :class="{ rotated: showAdvanced }" />
       Advanced
     </button>
 
     <!-- Advanced parameters -->
-    <div v-if="showAdvanced" class="cfg-grid">
+    <div v-if="!hiddenControls.has('advanced') && showAdvanced" class="cfg-grid">
 
       <label class="cfg-label">Learning rate</label>
       <input type="range" class="cfg-slider" min="-4" max="-1" step="0.1"

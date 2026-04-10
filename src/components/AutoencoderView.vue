@@ -5,6 +5,7 @@ import {renderLatexHtml} from '../utils/latex'
 import type {AutoencoderServiceType} from '../services/AutoencoderService'
 import {INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX} from '../services/AutoencoderService'
 import type {SelectionServiceType} from '../services/SelectionService'
+import {AE_VIEW_CONSTRAINTS_KEY} from './blogPost/aeStepTypes'
 import {neuronColorRgb} from '../utils/featureColor'
 import InputValue from './InputValue.vue'
 import ActivationIcons from './ActivationIcons.vue'
@@ -13,6 +14,9 @@ const props = defineProps<{ compact?: boolean }>()
 
 const svc = inject<AutoencoderServiceType>('autoencoderService')!
 const selSvc = inject<SelectionServiceType>('selectionService')!
+
+// Optional constraints from blog paragraph steps (undefined in MainView)
+const constraints = inject(AE_VIEW_CONSTRAINTS_KEY, undefined)
 
 // Unique SVG mask ID per instance — prevents collision when multiple
 // AutoencoderViews (e.g. main + blog compact) coexist on the page.
@@ -83,10 +87,18 @@ function removeEmbeddingNeuron() {
   svc.setEmbeddingDim(m.value - 1)
 }
 
-const canAddInput = computed(() => n.value < INPUT_DIM_MAX && !svc.isTraining.value)
-const canRemoveInput = computed(() => n.value > INPUT_DIM_MIN && !svc.isTraining.value)
-const canAddEmb = computed(() => m.value < EMB_DIM_MAX && !svc.isTraining.value)
-const canRemoveEmb = computed(() => m.value > EMB_DIM_MIN && !svc.isTraining.value)
+// Effective dimension limits — constraints override global limits
+const inputMin = computed(() => constraints?.value.inputDim.min ?? INPUT_DIM_MIN)
+const inputMax = computed(() => constraints?.value.inputDim.max ?? INPUT_DIM_MAX)
+const embMin = computed(() => constraints?.value.embeddingDim.min ?? EMB_DIM_MIN)
+const embMax = computed(() => constraints?.value.embeddingDim.max ?? EMB_DIM_MAX)
+const inputFixed = computed(() => constraints?.value.inputDim.fixed ?? false)
+const embFixed = computed(() => constraints?.value.embeddingDim.fixed ?? false)
+
+const canAddInput = computed(() => !inputFixed.value && n.value < inputMax.value && !svc.isTraining.value)
+const canRemoveInput = computed(() => !inputFixed.value && n.value > inputMin.value && !svc.isTraining.value)
+const canAddEmb = computed(() => !embFixed.value && m.value < embMax.value && !svc.isTraining.value)
+const canRemoveEmb = computed(() => !embFixed.value && m.value > embMin.value && !svc.isTraining.value)
 
 // ─── SVG connections ──────────────────────────────────────────────────────────
 
@@ -598,7 +610,7 @@ function onOutputClick(i: number) {
     <!-- Encoder col: +/- dim controls + neuron count -->
     <div class="sub-header-ctrl" style="grid-column: 3; grid-row: 2">
       <span class="neuron-count">{{ n }} neurons</span>
-      <div class="dim-btns">
+      <div v-if="!inputFixed" class="dim-btns">
         <button class="dim-btn" @click="removeInputNeuron" :disabled="!canRemoveInput" title="Remove input feature">
           <Minus :size="12"/>
         </button>
@@ -611,7 +623,7 @@ function onOutputClick(i: number) {
     <!-- Embedding col: +/- dim controls + neuron count -->
     <div class="sub-header-ctrl" style="grid-column: 6; grid-row: 2">
       <span class="neuron-count">{{ m }} neurons</span>
-      <div class="dim-btns">
+      <div v-if="!embFixed" class="dim-btns">
         <button class="dim-btn" @click="removeEmbeddingNeuron" :disabled="!canRemoveEmb" title="Remove embedding dim">
           <Minus :size="12"/>
         </button>
