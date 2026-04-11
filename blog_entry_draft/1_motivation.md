@@ -8,7 +8,7 @@
 * The purpose of such a space is to provide a compact numerical representation in which useful properties of the input can be encoded and manipulated through mathematical operations.
 * In language models, this transformation happens at every stage: tokens are mapped to vectors, and each subsequent layer transforms these vectors into new ones. All intermediate representations are vectors of the same fixed dimensionality.
 * Throughout this article, we use the term **embedding space** in a broad geometric sense: a vector space in which the model stores and processes internal information.
-* An embedding vector is not simply "meaning compressed into numbers." More precisely, different **directions** in the embedding space may correspond to different properties of the input, and the component along each direction indicates how strongly that property is present.
+* An embedding vector is not simply "meaning compressed into numbers." More precisely, different **directions** in the embedding space may correspond to different features of the input, and the component along each direction indicates how strongly that feature is present.
 
 ### Why embedding dimension matters
 
@@ -27,7 +27,7 @@
 ### What are features?
 
 * In mechanistic interpretability research, a **feature** refers to a direction or pattern inside a model's internal activations that corresponds to a recognizable property of the input.
-* Some features are relatively concrete, such as: "the current token is plural," "the text is about a person," or "the sentence is in the past tense." Others may be abstract, distributed, or difficult to name.
+* Some features are relatively concrete, such as: "it is something in plural," "this is about a person," or "this is in past tense." Others may be abstract, distributed, or difficult to name.
 * Importantly, a feature is **not necessarily a single neuron**. In modern neural networks, many features appear to be represented across directions in activation space rather than being stored cleanly in one coordinate.
 * Features are not directly observed ground truth. Models are trained end-to-end to minimize predictive loss, not to explicitly learn a predefined set of human-labeled concepts. Researchers can identify directions that correlate with meaningful concepts, but we do not have a complete list of the "true features" inside a large language model, nor do we know that the model's internal decomposition aligns perfectly with human categories.
 * Significant research effort has gone into uncovering interpretable features inside trained models. Projects such as [Neuronpedia](https://www.neuronpedia.org/) catalog discovered features and make them searchable, illustrating both the progress made and the sheer scale of the problem.
@@ -45,10 +45,10 @@
 
 ## A toy model for exploring the mismatch
 
-* To study this problem, we use an **autoencoder** — a simple neural network trained to reconstruct its input.
+* We will study this problem based on the experimental setup described in Anthropic's *Toy Models of Superposition* (2022), using an **autoencoder** — a simple neural network trained to reconstruct its input.
 * The input first passes through a smaller **embedding layer** whose dimension is lower than that of the input. The model then attempts to reconstruct the original input from this compressed embedding.
 * Because the embedding dimension is smaller than the input dimension, the model cannot simply copy the data through. It is forced to learn how to compress many features into fewer dimensions — exactly the pressure we want to study.
-* Following the spirit of Anthropic's *Toy Models of Superposition* (2022), this gives us a controlled setting to explore how learned representations deal with the mismatch between features and available dimensions. The formal architecture, loss function, and training details will be introduced in a later section.
+* this gives us a controlled setting to explore how learned representations deal with the mismatch between features and available dimensions. The formal architecture, loss function, and training details will be introduced in a later section.
 
 ---
 

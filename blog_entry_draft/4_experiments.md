@@ -24,7 +24,7 @@ We now have four features to embed in only two dimensions — more features than
 
 > **Insight:** The model does *not* use opposite directions. Instead, it represents only the two most important features ($f_1$ and $f_2$) as an orthonormal basis and ignores the rest — their feature direction vectors collapse to near-zero length. Why not use the opposite directions? Because all features are always active: placing two features in opposite directions would be catastrophic, as their embeddings would partially cancel whenever both are active — which is always. For the ignored features, the model sets the bias to approximately the mean of the half-normal distribution. Since these features are always active with expected value $\mu$, statically outputting $\mu$ minimizes the average squared error without dedicating any embedding capacity.
 
-### Feature sparsity
+### Interlude: Feature sparsity
 
 In real neural networks, not all features are active at the same time. Consider the vast space of possible features: *is_plural*, *is_question*, *refers_to_Einstein*, *is_about_cooking*. For any given input, only a small fraction of all potentially useful features will be relevant. Most features are inactive most of the time — this property is called **sparsity**.
 

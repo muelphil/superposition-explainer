@@ -16,7 +16,7 @@ The bias $b$ and the ReLU activation — whose significance we deferred in the m
 
 In the superposition regime, you will notice that the feature direction vectors are all roughly of unit length and the learned bias is approximately equal across features. Under these assumptions — normalized feature directions and uniform bias — we can visualize why the model chose this particular bias value.
 
-<!-- TODO: include plot of superposition with one active feature, showing the interference from other feature directions and the bias canceling it -->
+![plot of superposition with one active feature, showing the interference from other feature directions and the bias canceling it](../plots/interference.png)
 
 Assume only feature $f_1$ is active. The projection of the embedding onto each other feature direction $w_j$ produces a nonzero interference term proportional to the alignment between $w_j$ and $w_1$. With all feature directions of length 1, this interference is directly visible as the projection of each other feature direction onto $f_1$. The model learns a negative bias that **nearly cancels out the total expected interference** from the other feature directions. When the residual interference after bias correction is negative, ReLU clamps it to zero — correctly indicating that the feature is not present.
 

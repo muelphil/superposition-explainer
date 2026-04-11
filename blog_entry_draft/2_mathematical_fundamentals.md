@@ -63,7 +63,7 @@ Later, when we move to more features than embedding dimensions, the vectors $w_i
   $$W^T W = \begin{bmatrix} w_1 \cdot w_1 & w_1 \cdot w_2 \\ w_2 \cdot w_1 & w_2 \cdot w_2 \end{bmatrix} = \begin{bmatrix} 5 & 4 \\ 4 & 5 \end{bmatrix}$$
 * The off-diagonal entries ($= 4$) are the source of the cross-talk. Because $W^T W \neq I$, recovery via $W^T$ alone does not return the true activations.
 
-As a result, to recover the true feature activations, we would need to account for both basis vectors at once by solving the full linear system, or equivalently multiplying by $W^{-1}$ ($x=W^{-1}y$)
+As a result, to recover the true feature activations, we would need to account for both basis vectors at once by solving the full linear system, or equivalently multiplying by $W^{-1}$ ($x=W^{-1}y$, only possible when the feature directions form a square, invertible matrix.)
 
 ### Orthogonal Basis
 * Let's fix this shortcoming by placing our feature direction vectors orthogonal to one another using $w_1=\begin{pmatrix}1\\2\end{pmatrix}, w_2=\begin{pmatrix}-1\\0.5\end{pmatrix}$
@@ -99,5 +99,3 @@ $$W^T y = \begin{pmatrix} x_1\cdot 1^2  \\ x_2\cdot1^2  \end{pmatrix} = x$$
 
 * This clean encode/decode symmetry is the geometric intuition behind why the toy autoencoder uses a weight matrix and its transpose: it mirrors the idealized behavior of an orthonormal basis.
 * later, when we try to represent more features than there are orthogonal directions available, this symmetry remains — but exact orthonormality becomes impossible, and the model is forced into compromise geometries
-
-![](./plots/basis_types.png)
