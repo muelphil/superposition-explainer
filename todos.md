@@ -187,6 +187,7 @@ Please again assess the current implementation and reason about how this should 
 * implementing emits for every action taken in the interactive visualization, i.e. in the Autoencoder view, that fires i.e. when configuration is changed or during training after every batch. The task list then listens to these events and updates based on them.
 
 Review this approach and improve it where you see fit, so that it allows for clean and easy definition of task lists displayed in paragraphs.
+Then implement it and put one task list in a fitting paragraph in the Autoencoder section. Underneath the task lists, there should be an "Insights" box, that only shows info text once the task list is fully resolved.
 
 
 

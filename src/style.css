@@ -59,6 +59,15 @@
   /* Blog */
   --color-active-paragraph-bg: rgba(59, 130, 246, 0.06);
 
+  /* Task list */
+  --color-task-bg:              #fafbfc;
+  --color-task-border:          #e5e7eb;  /* gray-200 */
+  --color-task-checkbox-border: #9ca3af;  /* gray-400 */
+  --color-task-check-bg:        #22c55e;  /* green-500 */
+  --color-task-blocked:         #d1d5db;  /* gray-300 */
+  --color-task-insight-bg:      #eff6ff;  /* blue-50 */
+  --color-task-insight-border:  #bfdbfe;  /* blue-200 */
+
   /* Background tones */
   --color-bg-subtle:      #f1f5f9;  /* slate-100 */
   --color-bg-hover:       #e2e8f0;  /* slate-200 */

@@ -5,7 +5,10 @@ import { createSelectionService } from '../../services/SelectionService'
 import { useScrollActiveParagraph } from './useScrollActiveParagraph'
 import { useParagraphRanges, type ParagraphRange } from './useParagraphRanges'
 import { type AeConstraintSpec, AE_VIEW_CONSTRAINTS_KEY, deriveConstraints } from './aeStepTypes'
+import { TaskList, TaskEventBus, TASK_EVENT_BUS_KEY } from './taskSystem'
+import { createOvercompleteTaskSpecs } from './tasks/overcompleteTasks'
 import AutoencoderVisualization from './AutoencoderVisualization.vue'
+import TaskListDisplay from './TaskListDisplay.vue'
 
 // ─── Service instances (owned here, provided to children) ─────────────────────
 
@@ -15,7 +18,14 @@ provide('autoencoderService', svc)
 const selSvc = createSelectionService()
 provide('selectionService', selSvc)
 
-onUnmounted(() => { svc.stopTraining() })
+const eventBus = new TaskEventBus()
+provide(TASK_EVENT_BUS_KEY, eventBus)
+
+onUnmounted(() => {
+  svc.stopTraining()
+  taskList.stopListening()
+  eventBus.clear()
+})
 
 // ─── Reactive constraint spec (mutated inside apply()) ────────────────────────
 
@@ -23,13 +33,12 @@ const constraintSpec = ref<AeConstraintSpec | undefined>(undefined)
 const constraints = deriveConstraints(constraintSpec, INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX)
 provide(AE_VIEW_CONSTRAINTS_KEY, constraints)
 
+// ─── Task list ────────────────────────────────────────────────────────────────
+
+const taskList = new TaskList(createOvercompleteTaskSpecs())
+taskList.startListening({ svc, events: eventBus })
+
 // ─── Paragraph ranges ─────────────────────────────────────────────────────────
-//
-// Each range covers [from, to] paragraph indices (inclusive).
-// apply(activeIndex) is called whenever the active paragraph changes within the
-// range. Set constraintSpec.value to update UI constraints in AutoencoderView
-// and TrainingConfigView. Use !== guards before calling setInputDim /
-// setEmbeddingDim to avoid unnecessary resets during intra-range scrolling.
 
 const ranges: ParagraphRange[] = [
   {
@@ -82,15 +91,27 @@ useParagraphRanges(ranges, activeParagraphIndex)
         <em>x̂ = ReLU(Wᵀh + b)</em>.
       </p>
 
-      <p
+      <div
           :ref="(el) => paragraphRefs[2] = el as HTMLElement"
+          class="paragraph"
           :class="{ 'active-paragraph': activeParagraphIndex === 2 }"
       >
-        Using <em>Wᵀ</em> as the decoder is directly motivated by the geometry of
-        orthonormal bases. In the ideal case where the columns of <em>W</em> are
-        orthonormal, <em>Wᵀ</em> is the exact inverse — encoding and decoding are
-        perfectly symmetric.
-      </p>
+        <p>
+          Using <em>Wᵀ</em> as the decoder is directly motivated by the geometry of
+          orthonormal bases. In the ideal case where the columns of <em>W</em> are
+          orthonormal, <em>Wᵀ</em> is the exact inverse — encoding and decoding are
+          perfectly symmetric.
+        </p>
+        <TaskListDisplay :task-list="taskList">
+          <template #insight>
+            <p>
+              With more features than embedding dimensions, the autoencoder must
+              compromise — feature vectors can no longer all be orthogonal.
+              This is the onset of <strong>superposition</strong>.
+            </p>
+          </template>
+        </TaskListDisplay>
+      </div>
 
       <p
           :ref="(el) => paragraphRefs[3] = el as HTMLElement"

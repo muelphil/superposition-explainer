@@ -278,7 +278,8 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
 }
 
 /* Paragraphs: spacing + scroll-active indicator via border-left */
-.blog-post .text-column p {
+.blog-post .text-column p,
+.blog-post .text-column .paragraph {
   margin: 0 0 1.5rem;
   padding: 0.5rem 0.75rem;
   border-left: 3px solid transparent;
