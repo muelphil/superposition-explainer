@@ -1,4 +1,4 @@
-import { ref, watch, watchEffect, type Ref, type ComputedRef, type InjectionKey } from 'vue'
+import { ref, watchEffect, type Ref, type ComputedRef, type InjectionKey } from 'vue'
 import type { AutoencoderServiceType } from '../../services/AutoencoderService'
 
 // ─── Event bus ─────────────────────────────────────────────────────────────────
@@ -58,6 +58,8 @@ export interface TaskContext {
 export interface TaskSpec {
   id: string
   label: string
+  /** Short note displayed in smaller italic text beneath the task label. */
+  note?: string
   /** Once completed, the checkbox stays checked even if the ref later becomes false. */
   sticky?: boolean
   /** IDs of tasks that must be completed before this one is actionable. */
@@ -72,6 +74,7 @@ export interface TaskSpec {
 export interface TaskState {
   id: string
   label: string
+  note?: string
   completed: boolean
   /** True when dependencies are unmet AND task is not yet completed. */
   blocked: boolean
@@ -118,12 +121,22 @@ export class TaskList {
       this.completedRefs.set(spec.id, completedRef)
 
       if (spec.sticky) {
-        watch(completedRef, (val) => {
-          if (val && !this.stickyCompleted.has(spec.id)) {
+        // Re-check whenever the raw ref changes OR another sticky task resolves
+        // (which increments stickyTrigger and could satisfy our dependencies).
+        watchEffect(() => {
+          const rawDone = completedRef.value
+          void this.stickyTrigger.value   // reactive dep: re-run when other stickies fire
+
+          if (!rawDone) return
+          if (this.stickyCompleted.has(spec.id)) return
+
+          // Only latch if all dependencies are also satisfied
+          const depsOk = (spec.dependencies ?? []).every(depId => this.isCompleted(depId))
+          if (depsOk) {
             this.stickyCompleted.add(spec.id)
             this.stickyTrigger.value++
           }
-        }, { immediate: true })
+        })
       }
     }
 
@@ -137,6 +150,7 @@ export class TaskList {
         return {
           id: spec.id,
           label: spec.label,
+          note: spec.note,
           completed,
           blocked: !completed && depsUnmet,
           optional: spec.optional ?? false,
@@ -158,6 +172,9 @@ export class TaskList {
   }
 
   private isCompleted(id: string): boolean {
+    const spec = this.specs.find(s => s.id === id)
+    // All dependencies must be satisfied before this task can be counted as done
+    if (spec?.dependencies?.some(depId => !this.isCompleted(depId))) return false
     if (this.stickyCompleted.has(id)) return true
     return this.completedRefs.get(id)?.value ?? false
   }

@@ -161,6 +161,13 @@ Here is a list of small bugs to fix:
   * The statistics should not reset after the user pauses the training, only after they press reset
   * for every time the user paused the training, the training plot should show a vertical dashed line at the step the training was paused, when continuing
 
+---
+
+Let's improve the TaskListDisplay and TasksLists logic:
+* The Insight block should always render, even before the user has completed the task. However, the goal is that the insight is "hidden", so the concrete text should have some spoiler overlay in the vain of reddit text spoilers -- the user can see the text bricks but they are overlayed. Hovering insights (div inside the insights blocks) should show an overlay stating that the task above needs to be finished to unlock the insights.
+* Allow for small notes in the TaskListDisplay tasks that are displayed in smaller font in cursive underneath the task -- i.e. for "Run training until convergence" a note saying "Note: The experiment will automatically pause when convergence is reached. Convergent behavior may take some time to show up, consider resting the experiment if it takes long and rerunning it."
+* The tasklist logic is not working properly. Currently, it is possible to fulfill tasks, without the prior tasks that they depend on being fulfilled. This should not be possible.
+
 
 ---
 

@@ -17,6 +17,7 @@ export function createOvercompleteTaskSpecs(): TaskSpec[] {
     {
       id: 'converge',
       label: 'Run training until convergence',
+      note: 'The experiment will automatically pause when convergence is reached. Convergent behavior may take some time to appear — consider resetting and rerunning if it takes too long.',
       sticky: true,
       dependencies: ['set-input-4'],
       setup: (ctx: TaskContext) =>
