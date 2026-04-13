@@ -11,7 +11,7 @@ const blockRefs = ref<(HTMLElement | null)[]>([])
 const { activeBlockIndex } = useScrollActiveBlock(blockRefs)
 
 watch(activeBlockIndex, (idx) => {
-  svc.setActiveParagraph(idx)
+  if (idx >= 0) svc.setActiveParagraph(idx)
 })
 </script>
 
@@ -45,25 +45,19 @@ watch(activeBlockIndex, (idx) => {
         </p>
       </div>
 
-      <!-- Block 1: encoding -->
+      <!-- Block 1: encoding — plain content, not a scroll-activatable block -->
+      <p>
+        Embedding with <em>W</em> computes a linear combination of the
+        feature direction vectors, weighted by the feature activations:
+        <em>y = Wx</em>. Each activation <em>xᵢ</em> controls how much its
+        direction <em>wᵢ</em> contributes to the embedded representation.
+      </p>
+
+      <!-- Block 1 (activatable): decoding -->
       <div
         :ref="(el) => blockRefs[1] = el as HTMLElement"
         class="text-block"
         :class="{ 'active-block': activeBlockIndex === 1 }"
-      >
-        <p>
-          Embedding with <em>W</em> computes a linear combination of the
-          feature direction vectors, weighted by the feature activations:
-          <em>y = Wx</em>. Each activation <em>xᵢ</em> controls how much its
-          direction <em>wᵢ</em> contributes to the embedded representation.
-        </p>
-      </div>
-
-      <!-- Block 2: decoding -->
-      <div
-        :ref="(el) => blockRefs[2] = el as HTMLElement"
-        class="text-block"
-        :class="{ 'active-block': activeBlockIndex === 2 }"
       >
         <p>
           Recovery with <em>Wᵀ</em> reverses this process. To recover feature
@@ -73,11 +67,11 @@ watch(activeBlockIndex, (idx) => {
         </p>
       </div>
 
-      <!-- Block 3: Gram matrix / interference -->
+      <!-- Block 2 (activatable): Gram matrix / interference -->
       <div
-        :ref="(el) => blockRefs[3] = el as HTMLElement"
+        :ref="(el) => blockRefs[2] = el as HTMLElement"
         class="text-block"
-        :class="{ 'active-block': activeBlockIndex === 3 }"
+        :class="{ 'active-block': activeBlockIndex === 2 }"
       >
         <p>
           Whether this actually recovers the true feature activations depends
