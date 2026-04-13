@@ -2,6 +2,22 @@ import { ref, watch, type Ref } from 'vue'
 import type { AutoencoderServiceType } from '../../../services/AutoencoderService'
 
 /**
+ * Count the number of column vectors in W whose norm meets or exceeds `minNorm`.
+ */
+export function countSignificantColumns(W: number[][], minNorm: number = 0.3): number {
+  const m = W.length
+  if (m === 0) return 0
+  const n = W[0].length
+  let count = 0
+  for (let j = 0; j < n; j++) {
+    let norm2 = 0
+    for (let k = 0; k < m; k++) norm2 += W[k][j] ** 2
+    if (Math.sqrt(norm2) >= minNorm) count++
+  }
+  return count
+}
+
+/**
  * Check whether every column vector of W with significant norm
  * has its norm within [min, max].
  */

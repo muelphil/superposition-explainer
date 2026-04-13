@@ -36,8 +36,9 @@ defineSlots<{
       </li>
     </ul>
 
-    <!-- Insight: always rendered, but spoiler-locked until all tasks complete -->
+    <!-- Insight: rendered only when slot content is provided, spoiler-locked until all tasks complete -->
     <div
+      v-if="$slots.insight"
       class="task-insight"
       :class="{ 'task-insight--locked': !taskList.stickyResolved.value }"
     >

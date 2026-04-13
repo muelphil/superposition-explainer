@@ -208,20 +208,18 @@ Then implement it and put one task list in a fitting paragraph in the Autoencode
 
 ---
 
+Please use vue3-katex to display latex inline/display mode. See BasesSection.vue for reference on how to do that.
+
 Great! It's now time to port the blog entry draft to the website. Currently, the blog post lives in BlogPost.vue and child components.
-We now need to move the blog entry draft files contents there.
+The blog post is meant to feature interactive visualizations on the side for different parts of the blog entry.
+Currently, these two sections are the
+1. mathematical writedown on bases (2_mathematical_fundamentals.md), corresponding to the BasesSection.vue child component in BlogPost.vue. This is meant to show a visualization of the bases and the solution on the right side. The visualization is in BasesVisualization.vue and is currently underexplored -- its only a dummy which we will implement later.
+2. autoencoder definition and experimentation (3_autoencoder_toy_model.md and 4_experiments.md), corresponding to AutoencoderSection.vue. The visualization in AutoencoderVisualization.vue shows the main experiment setup, which the user can interact with. The autoencoder architecture will first be revealed step by step (during 3_autoencoder_toy_model.md) and then used for experimentation in 4_experiments.md subsection. For the experimentation, I have already implemented the tasklists workflow that is to be used for the experiments -- defining tasks the user has to solve and (optionally) showing insights when the tasks are solved. These should directly be ported from the task lists defined in experiments.md. More may follow later.
+
+Please check out the architecture/implementation of BlogPost.vue, child components, taskslists and active div.text-block s.
+Use text-block wraps for active blocks that effect the visualization only where it is already absolutely clear from the text -- i.e. in the experimentation section. For all others, I will wrap them later and define the behaviour of the visualizations myself. Dont do this without me.
+
+Plan the move, be precise and thorough, ask if anything is still unclear, then execute the port of the draft into the BlogPost.vue component and child components, without altering the text/ staying true to the draft. The only thing you should change is that the paragraphs written as bullet points for drafting can now just be paragraphs, no bullet point lists.
 
 
 
-Please use vue3-katex to display latex inline/display mode:
-In your template (don't forget to escape all backslashes):
-
-```html
-<div v-katex="'\\frac{a_i}{1+x}'"></div>
-```
-
-To render the math in display mode:
-
-```html
-<div v-katex:display="'\\frac{a_i}{1+x}'"></div>
-```

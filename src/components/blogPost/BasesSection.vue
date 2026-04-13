@@ -20,58 +20,94 @@ watch(activeBlockIndex, (idx) => {
   <div class="bases-section post-section">
     <!-- Text column -->
     <div class="text-column">
-      <h2 class="section-heading">Mathematical Fundamentals</h2>
+      <h2 class="section-heading">Geometric Foundations: Bases and Feature Representation</h2>
 
-      <!-- Block 0: feature space intro + embedding space (two related paragraphs) -->
+      <!-- Block 0: feature space, embedding space, formal definition -->
       <div
         :ref="(el) => blockRefs[0] = el as HTMLElement"
         class="text-block"
         :class="{ 'active-block': activeBlockIndex === 0 }"
       >
         <p>
-          Consider <katex-element expression="n" /> features
-          <katex-element expression="f_1, \ldots, f_n" />. A feature vector
-          <katex-element expression="\boldsymbol{x} = (x_1, \ldots, x_n)^\top" />
-          lives in feature space <katex-element expression="F = \mathbb{R}^n" />,
-          where each coordinate <katex-element expression="x_i" /> represents the activation strength
-          of feature <katex-element expression="f_i" />. In feature space, features align with the
-          standard coordinate axes, so reading off a feature activation is
-          trivial: it is simply the corresponding coordinate.
+          We want to understand how features are represented inside an embedding space — in
+          particular, how they are embedded and how they can be recovered. This section develops
+          the mathematical intuition that directly motivates the architecture of the toy
+          autoencoder.
         </p>
         <p>
-          The model maps <katex-element expression="\boldsymbol{x}" /> into an embedding space
-          <katex-element expression="H = \mathbb{R}^m" />, typically with fewer dimensions
-          (<katex-element expression="m < n" />). Inside this space, each feature
-          <katex-element expression="f_i" /> is represented by a learned feature direction vector
-          <katex-element expression="w_i \in \mathbb{R}^m" />. These
-          <katex-element expression="n" /> vectors form the columns of the weight matrix
-          <katex-element expression="\boldsymbol{W}" />.
+          Suppose a model needs to represent <katex-element expression="n" /> distinct features
+          inside an embedding space with fewer dimensions. In the original feature space, each
+          feature occupies its own coordinate axis — reading off how strongly a feature is present
+          is as simple as looking at the corresponding coordinate. The challenge arises when these
+          features must be mapped into a lower-dimensional embedding space, where each feature is
+          no longer guaranteed its own axis and must instead be represented as a learned direction.
+        </p>
+        <p>
+          Formally, a <strong>feature vector</strong> <katex-element expression="x = (x_1, \ldots, x_n)^T" /> lives in <strong>feature
+          space</strong> <katex-element expression="F = \mathbb{R}^n" />, where each coordinate <katex-element expression="x_i" /> represents the activation strength of feature
+          <katex-element expression="f_i" />. The model maps <katex-element expression="x" />
+          into an <strong>embedding space</strong> <katex-element expression="H = \mathbb{R}^m" />, typically with
+          <katex-element expression="m < n" />. Inside this space, each feature
+          <katex-element expression="f_i" /> is represented by a learned <strong>feature direction
+          vector</strong> <katex-element expression="w_i \in \mathbb{R}^m" />. These
+          <katex-element expression="n" /> vectors form the columns of the <strong>weight
+          matrix</strong> <katex-element expression="W = [w_1 \;\; \cdots \;\; w_n] \in \mathbb{R}^{m \times n}" />.
         </p>
       </div>
 
-      <!-- Block 1: encoding — plain content, not a scroll-activatable block -->
+      <figure class="post-figure">
+        <img src="/plots/mathematical_vis_of_notation.png"
+             alt="Diagram illustrating the mapping of a feature vector x from feature space F into embedding space H and its approximate reconstruction" />
+        <figcaption>
+          The feature vector <katex-element expression="x" /> is embedded by the weight matrix
+          <katex-element expression="W" /> into the lower-dimensional embedding space and can be
+          approximately recovered via <katex-element expression="W^T" />, with the quality of
+          reconstruction determined by the geometry of the feature directions.
+        </figcaption>
+      </figure>
+
+      <!-- Encoding with W -->
       <p>
-        Embedding with <katex-element expression="\boldsymbol{W}" /> computes a linear combination of the
-        feature direction vectors, weighted by the feature activations:
-        <katex-element expression="\boldsymbol{h} = \boldsymbol{W}\boldsymbol{x}" />.
-        Each activation <katex-element expression="x_i" /> controls how much its
-        direction <katex-element expression="w_i" /> contributes to the embedded representation.
+        <strong>Embedding with <katex-element expression="W" /></strong> computes a linear
+        combination of the feature direction vectors, weighted by the feature activations:
+      </p>
+      <katex-element :display-mode="true"
+        expression="y = Wx = \sum_{i=1}^{n} x_i \, w_i" />
+      <p>
+        Each activation <katex-element expression="x_i" /> controls how much its direction
+        <katex-element expression="w_i" /> contributes to the embedded representation
+        <katex-element expression="y \in \mathbb{R}^m" />. This is the key geometric picture:
+        the feature activations are the coefficients, and the feature direction vectors are the
+        directions we combine.
       </p>
 
-      <!-- Block 1 (activatable): decoding -->
+      <!-- Block 1 (activatable): decoding with W^T -->
       <div
         :ref="(el) => blockRefs[1] = el as HTMLElement"
         class="text-block"
         :class="{ 'active-block': activeBlockIndex === 1 }"
       >
         <p>
-          Recovery with <katex-element expression="\boldsymbol{W}^\top" /> reverses this process.
-          To recover feature activations from <katex-element expression="\boldsymbol{h}" />,
-          we measure how aligned <katex-element expression="\boldsymbol{h}" /> is
-          with each feature direction by computing the dot product. The
-          transpose <katex-element expression="\boldsymbol{W}^\top" /> computes all projections at once.
+          <strong>Recovery with <katex-element expression="W^T" /></strong> reverses this
+          process. To recover feature activations from <katex-element expression="y" />, we
+          measure how aligned <katex-element expression="y" /> is with each feature direction
+          by computing the dot product <katex-element expression="w_i \cdot y" />. The
+          transpose <katex-element expression="W^T" /> computes all of these projections at
+          once — the <katex-element expression="i" />-th entry of
+          <katex-element expression="W^T y" /> is precisely
+          <katex-element expression="w_i \cdot y" />:
         </p>
+        <katex-element :display-mode="true"
+          expression="W^T y = \begin{pmatrix} w_1 \cdot y \\ w_2 \cdot y \\ \vdots \\ w_n \cdot y \end{pmatrix}" />
       </div>
+
+      <p>
+        Whether this actually recovers the true feature activations depends on the geometry
+        of the feature direction vectors. Substituting
+        <katex-element expression="y = Wx" />:
+      </p>
+      <katex-element :display-mode="true"
+        expression="W^T y = W^T W \, x" />
 
       <!-- Block 2 (activatable): Gram matrix / interference -->
       <div
@@ -80,13 +116,238 @@ watch(activeBlockIndex, (idx) => {
         :class="{ 'active-block': activeBlockIndex === 2 }"
       >
         <p>
-          Whether this actually recovers the true feature activations depends
-          on the geometry of the feature direction vectors. The matrix
-          <katex-element expression="\boldsymbol{W}^\top\boldsymbol{W}" /> is the Gram matrix
-          whose entries quantify the pairwise dot products — and thus the
-          interference — between features.
+          The matrix <katex-element expression="W^T W \in \mathbb{R}^{n \times n}" /> is the
+          <strong>Gram matrix</strong> of the feature directions. Its entries
+          <katex-element expression="(W^T W)_{ij} = w_i \cdot w_j" /> are the pairwise dot
+          products. The <strong>diagonal entries</strong>
+          <katex-element expression="w_i \cdot w_i = \|w_i\|^2" /> are the squared lengths of
+          the feature directions. The <strong>off-diagonal entries</strong>
+          <katex-element expression="w_i \cdot w_j" />
+          (<katex-element expression="i \neq j" />) quantify the <strong>cross-talk</strong>
+          between features: when nonzero, projecting onto one feature direction picks up
+          contributions from others — this is <strong>interference</strong>.
+        </p>
+        <p>
+          If <katex-element expression="W^T W = I" /> (the identity matrix), then
+          <katex-element expression="W^T y = x" /> exactly — perfect recovery with no
+          interference and no scale distortion. The Gram matrix tells us precisely how far a
+          given set of feature directions deviates from this ideal.
         </p>
       </div>
+
+      <!-- ── The 2D Example ───────────────────────────────────── -->
+      <h3>The 2D Example</h3>
+
+      <p>
+        To build this intuition concretely, we walk through three progressively structured
+        choices of feature directions in a simple 2D example: two features
+        <katex-element expression="f_1" /> and <katex-element expression="f_2" />, embedded into
+        a 2-dimensional embedding space.
+      </p>
+
+      <p>
+        Since the feature space <katex-element expression="F" /> and embedding space
+        <katex-element expression="H" /> have the same dimensionality, we could represent the
+        features in the embedding space identically by choosing <katex-element expression="W" />
+        as the identity mapping. In that case, the feature directions would directly align with
+        the coordinate axes of the embedding space too, making both embedding and recovery
+        trivial. However, a learned model does not begin with such a clean construction. It
+        adjusts its weights through iterative optimization to reduce loss and may arrive at many
+        different valid representations. Additionally, this ideal choice only works as long as
+        we have at least as many embedding dimensions as features. Once we try to fit more
+        features into fewer dimensions, the clean one-feature-per-axis picture breaks down.
+        So let's study what happens when the feature directions are chosen arbitrarily, and
+        then see why orthogonal and orthonormal directions are such a special case.
+      </p>
+
+      <p>
+        In the 2D-to-2D setup below, the two embedding vectors
+        <katex-element expression="w_1, w_2" /> form a basis of the embedding space. Later, when
+        we move to more features than embedding dimensions, the vectors
+        <katex-element expression="w_i" /> are better understood as <strong>feature
+        directions</strong> rather than a basis in the strict linear-algebra sense.
+      </p>
+
+      <!-- ── Arbitrary Basis ──────────────────────────────────── -->
+      <h3>Arbitrary Basis</h3>
+
+      <p>
+        Let us choose two arbitrary embedding vectors:
+      </p>
+      <katex-element :display-mode="true"
+        expression="w_1 = (1,2)^T, \quad w_2 = (2,1)^T" />
+      <p>
+        These vectors are linearly independent, which is essential: if one were just a scalar
+        multiple of the other, they would only span a line instead of the full 2D space. In
+        that case, different feature combinations could map to the same embedding, making exact
+        recovery impossible. In this square 2D example, these two vectors form a basis of the
+        embedding space: any point in the 2D embedding space can be written as a linear
+        combination of them.
+      </p>
+
+      <p>
+        Embedding remains straightforward: we simply use the feature activations as coefficients
+        of the embedding vectors:
+      </p>
+      <katex-element :display-mode="true"
+        expression="y = Wx = x_1 w_1 + x_2 w_2" />
+      <p>
+        With our chosen feature directions, this becomes:
+      </p>
+      <katex-element :display-mode="true"
+        expression="W = \begin{bmatrix} 1 &amp; 2 \\ 2 &amp; 1 \end{bmatrix}, \qquad x = \begin{bmatrix} x_1 \\ x_2 \end{bmatrix}, \qquad y = Wx" />
+
+      <p>
+        What is more interesting is the reverse direction: given the embedded vector
+        <katex-element expression="y" />, how do we recover the original feature activations
+        <katex-element expression="x_1" /> and <katex-element expression="x_2" />?
+      </p>
+
+      <p>
+        A natural first guess is to recover the feature activations by projecting back onto each
+        feature direction separately — taking dot products with the same vectors
+        <katex-element expression="w_i" />. In matrix form, this is exactly what
+        <katex-element expression="W^T" /> does: it computes all raw projections at once.
+        Expanding a single dot product:
+      </p>
+      <katex-element :display-mode="true"
+        expression="y = x_1 w_1 + x_2 w_2" />
+      <p>
+        Then trying to recover <katex-element expression="x_1" /> via the dot product with
+        <katex-element expression="w_1" />:
+      </p>
+      <katex-element :display-mode="true"
+        expression="w_1 \cdot y = x_1 (w_1 \cdot w_1) + x_2 (w_2 \cdot w_1) = x_1 \|w_1\|^2 + x_2 (w_2 \cdot w_1)" />
+
+      <p>
+        However, as the feature vectors <katex-element expression="w_1" /> and
+        <katex-element expression="w_2" /> are not orthogonal
+        (<katex-element expression="w_2 \cdot w_1 \neq 0" />), the coordinates are coupled:
+        reading out one feature by projection is contaminated by the other. The cross-term
+        <katex-element expression="x_2 (w_2 \cdot w_1)" /> is the interference term: even
+        though we are measuring along <katex-element expression="w_1" />, feature activation
+        <katex-element expression="x_2" /> still contributes to the projection. Geometrically,
+        if we move <katex-element expression="y" /> only in the direction of
+        <katex-element expression="w_1" />, the raw projection onto
+        <katex-element expression="w_2" /> changes as well. So even though feature activation
+        <katex-element expression="x_2" /> has not changed, a naive projection-based readout
+        would incorrectly suggest that it has.
+      </p>
+
+      <p>
+        The Gram matrix <katex-element expression="W^T W" /> makes this interference structure
+        explicit:
+      </p>
+      <katex-element :display-mode="true"
+        expression="W^T W = \begin{bmatrix} w_1 \cdot w_1 &amp; w_1 \cdot w_2 \\ w_2 \cdot w_1 &amp; w_2 \cdot w_2 \end{bmatrix} = \begin{bmatrix} 5 &amp; 4 \\ 4 &amp; 5 \end{bmatrix}" />
+      <p>
+        The off-diagonal entries (<katex-element expression="= 4" />) are the source of the
+        cross-talk. Because <katex-element expression="W^T W \neq I" />, recovery via
+        <katex-element expression="W^T" /> alone does not return the true activations.
+      </p>
+
+      <p>
+        In this 2D-to-2D example, recovery is still possible despite the interference: we can
+        recover the true feature activations by accounting for both basis vectors at once —
+        solving the full linear system, or equivalently multiplying by
+        <katex-element expression="W^{-1}" />
+        (<katex-element expression="x = W^{-1}y" />). This exact inversion is only possible
+        when the feature directions form a square, invertible matrix — a condition that breaks
+        down once we have more features than dimensions.
+      </p>
+
+      <!-- ── Orthogonal Basis ─────────────────────────────────── -->
+      <h3>Orthogonal Basis</h3>
+
+      <p>
+        Let's fix this shortcoming by placing our feature direction vectors orthogonal to one
+        another using
+        <katex-element expression="w_1 = \begin{pmatrix} 1 \\ 2 \end{pmatrix}" /> and
+        <katex-element expression="w_2 = \begin{pmatrix} -1 \\ 0.5 \end{pmatrix}" />.
+        These two vectors now form an orthogonal basis of the 2D embedding space.
+      </p>
+
+      <p>
+        As the basis vectors <katex-element expression="w_i" /> are orthogonal, their dot
+        product (by definition) becomes 0. Using this in the previous equation leaves us with:
+      </p>
+      <katex-element :display-mode="true"
+        expression="y \cdot w_i = x_i \|w_i\|^2" />
+      <p>
+        And we can easily recover the individual feature activation values
+        <katex-element expression="x_i" /> by dividing by the squared length of each basis
+        vector:
+      </p>
+      <katex-element :display-mode="true"
+        expression="x_i = \frac{y \cdot w_i}{\|w_i\|^2}" />
+
+      <p>
+        In matrix form, <katex-element expression="W^T" /> again computes all projections at
+        once. Since the feature directions are orthogonal, the Gram matrix
+        <katex-element expression="W^T W" /> becomes diagonal — the off-diagonal cross-talk
+        terms vanish:
+      </p>
+      <katex-element :display-mode="true"
+        expression="W^T W = \begin{bmatrix} \|w_1\|^2 &amp; 0 \\ 0 &amp; \|w_2\|^2 \end{bmatrix} = \begin{bmatrix} 5 &amp; 0 \\ 0 &amp; 1.25 \end{bmatrix}" />
+      <p>
+        This gives us:
+      </p>
+      <katex-element :display-mode="true"
+        expression="W^T y = W^T W x = \begin{pmatrix} \|w_1\|^2 \, x_1 \\ \|w_2\|^2 \, x_2 \end{pmatrix}" />
+      <p>
+        Projecting the embedding <katex-element expression="y" /> onto the embedding vectors
+        <katex-element expression="w_i" /> no longer results in interference — the coordinates
+        are fully decoupled. Orthogonality eliminates cross-talk: each coefficient can be
+        recovered independently via projection. The only remaining artifact is a per-feature
+        scale factor <katex-element expression="\|w_i\|^2" />.
+      </p>
+
+      <!-- ── Orthonormal Basis ────────────────────────────────── -->
+      <h3>Orthonormal Basis</h3>
+
+      <p>
+        We can simplify the situation even further by normalizing the orthogonal vectors so that
+        <katex-element expression="\|w_1\| = \|w_2\| = 1" />. This gives us an orthonormal
+        basis: perpendicular directions with unit length.
+      </p>
+
+      <p>
+        This makes retrieving the embedded feature vector even easier, as the scale correction
+        disappears entirely. The Gram matrix becomes the identity:
+      </p>
+      <katex-element :display-mode="true"
+        expression="W^T W = I" />
+      <katex-element :display-mode="true"
+        expression="W^T y = \begin{pmatrix} x_1 \cdot 1^2 \\ x_2 \cdot 1^2 \end{pmatrix} = x" />
+
+      <p>
+        With unit-length perpendicular axes, the dot product with each embedding vector directly
+        gives us the corresponding feature activations in feature space — no coupling, no scale
+        correction. In this square 2D example, an orthonormal basis makes the transpose equal
+        to the inverse: <katex-element expression="W^T = W^{-1}" />. This makes both embedding
+        and recovery maximally simple: encode with <katex-element expression="W" />, decode
+        with <katex-element expression="W^T" />.
+      </p>
+
+      <p>
+        This clean encode/decode symmetry is the geometric intuition behind why the toy
+        autoencoder uses a weight matrix and its transpose: it mirrors the idealized behavior
+        of an orthonormal basis. Later, when we try to represent more features than there are
+        orthogonal directions available, this symmetry remains — but exact orthonormality
+        becomes impossible, and the model is forced into compromise geometries.
+      </p>
+
+      <!-- ── Bridging to overcomplete regime ──────────────────── -->
+      <p>
+        When the number of features exceeds the embedding dimension
+        (<katex-element expression="n > m" />), the feature direction vectors
+        <katex-element expression="w_1, \ldots, w_n" /> cannot all be mutually orthogonal —
+        there are simply not enough independent directions in
+        <katex-element expression="\mathbb{R}^m" />. The Gram matrix
+        <katex-element expression="W^T W" /> will necessarily have nonzero off-diagonal entries,
+        meaning that some degree of interference between features is unavoidable. How the model
+        navigates this forced compromise is the subject of the experiments that follow.
+      </p>
     </div>
 
     <!-- Visualization column (sticky) -->
