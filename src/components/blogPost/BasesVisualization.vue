@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue'
-import { renderLatexHtml } from '../../utils/latex'
 import type { BasesServiceType } from '../../services/BasesService'
 
 const svc = inject<BasesServiceType>('basesService')!
 
 const x = computed(() => svc.x.value)
-
-const katexHtml = computed(() => renderLatexHtml(`x = ${x.value}`))
 
 // SVG coordinate system constants
 const svgSize = 280
@@ -128,7 +125,9 @@ const tickSpacing = axisLen / tickCount
     </svg>
 
     <!-- KaTeX math display -->
-    <div class="math-display" v-html="katexHtml" />
+    <div class="math-display">
+      <katex-element :expression="`x = ${x}`" />
+    </div>
   </div>
 </template>
 

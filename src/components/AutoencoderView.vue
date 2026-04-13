@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {inject, ref, computed, watch, onMounted, onUnmounted, nextTick, getCurrentInstance} from 'vue'
 import {RefreshCw, Plus, Minus} from 'lucide-vue-next'
-import {renderLatexHtml} from '../utils/latex'
 import type {AutoencoderServiceType} from '../services/AutoencoderService'
 import {INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX} from '../services/AutoencoderService'
 import type {SelectionServiceType} from '../services/SelectionService'
@@ -47,11 +46,6 @@ const dataRowEnd = computed(() => n.value + 3)
 function neuronScale(i: number): number {
   const imp = svc.featureImportance.value[i] ?? 1
   return Math.max(0.4, Math.sqrt(imp))
-}
-
-function inputNeuronTooltip(i: number): string {
-  const imp = svc.featureImportance.value[i] ?? 1
-  return renderLatexHtml(`I_{${i + 1}}`) + ` = ${fmt(imp)}`
 }
 
 // ─── User input ───────────────────────────────────────────────────────────────
@@ -682,7 +676,10 @@ function onOutputClick(i: number) {
             transform: `scale(${neuronScale(i)})`,
           }"
         />
-        <div class="neuron-tooltip" v-html="inputNeuronTooltip(i)"/>
+        <div class="neuron-tooltip">
+          <span v-katex="`I_{${i + 1}}`" />
+          <span>&nbsp;= {{ fmt(svc.featureImportance.value[i] ?? 1) }}</span>
+        </div>
       </div>
 
       <!-- Activation icons (bias + ReLU): col 8 -->

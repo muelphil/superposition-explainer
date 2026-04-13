@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {computed, getCurrentInstance} from 'vue'
 import {featureColorHex} from '../utils/featureColor'
-import {renderLatexHtml} from '../utils/latex'
 
 const props = defineProps<{
   modelValue: number
@@ -110,7 +109,7 @@ function onSliderChange(event: Event) {
     <span class="input-label">
       <span
           class="feature-label"
-          v-html="renderLatexHtml(`x_{${props.featureIdx + 1}}`)"
+          v-katex="`x_{${props.featureIdx + 1}}`"
           aria-hidden="true"
           @click.stop="emit('featureClick')"
       />

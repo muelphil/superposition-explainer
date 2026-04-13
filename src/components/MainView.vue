@@ -31,7 +31,7 @@ const showSettings = ref(false)
 <template>
   <div class="main-view">
     <header class="app-header">
-      <h1 class="app-title">SuperPosition Explainer</h1>
+      <h1 class="app-title">Superposition Explainer</h1>
       <button class="header-icon-btn" @click="showSettings = true" title="Settings">
         <Settings :size="16" />
       </button>

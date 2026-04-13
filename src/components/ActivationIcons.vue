@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue'
-import { renderLatexHtml } from '../utils/latex'
 import { valColorRgb } from '../utils/featureColor'
 import reluIconSvg from '../assets/relu-icon.svg?raw'
 import type { SelectionServiceType } from '../services/SelectionService'
@@ -16,7 +15,6 @@ const selSvc = inject<SelectionServiceType>('selectionService')!
 /** Same colour scale as WeightView — positive→orange, negative→blue, zero→white */
 
 const biasBackground = computed(() => valColorRgb(props.biasVal))
-const biasLabel      = computed(() => renderLatexHtml(`b_{${props.featureIdx + 1}}`))
 
 /** ReLU clips when pre-activation ≤ 0 */
 const reluClipping = computed(() => props.preActivation <= 0)
@@ -38,7 +36,7 @@ function onReluClick()  { selSvc.setSelected({ kind: 'relu', idx: props.featureI
       @mouseleave="onIconLeave"
       @click="onBiasClick"
     >
-      <span class="bias-label" v-html="biasLabel" />
+      <span class="bias-label" v-katex="`b_{${props.featureIdx + 1}}`" />
     </div>
 
     <!-- ReLU icon: white = passthrough, light blue = clipping -->

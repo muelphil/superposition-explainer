@@ -300,7 +300,11 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
   border-left-color: var(--color-interactive) !important;
 }
 
-/* Viz column stretches to match text height so the sticky container works */
+/* Inline KaTeX in prose: match surrounding text size */
+.blog-post .text-column p .katex,
+.blog-post .text-section p .katex {
+  font-size: 1em;
+}
 .blog-post .viz-column {
   min-width: 0;
   align-self: stretch;

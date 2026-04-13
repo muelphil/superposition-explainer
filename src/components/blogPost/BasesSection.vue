@@ -29,28 +29,33 @@ watch(activeBlockIndex, (idx) => {
         :class="{ 'active-block': activeBlockIndex === 0 }"
       >
         <p>
-          Consider <em>n</em> features <em>f₁, …, fₙ</em>. A feature vector
-          <em>x = (x₁, …, xₙ)ᵀ</em> lives in feature space <em>F = ℝⁿ</em>,
-          where each coordinate <em>xᵢ</em> represents the activation strength
-          of feature <em>fᵢ</em>. In feature space, features align with the
+          Consider <katex-element expression="n" /> features
+          <katex-element expression="f_1, \ldots, f_n" />. A feature vector
+          <katex-element expression="\boldsymbol{x} = (x_1, \ldots, x_n)^\top" />
+          lives in feature space <katex-element expression="F = \mathbb{R}^n" />,
+          where each coordinate <katex-element expression="x_i" /> represents the activation strength
+          of feature <katex-element expression="f_i" />. In feature space, features align with the
           standard coordinate axes, so reading off a feature activation is
           trivial: it is simply the corresponding coordinate.
         </p>
         <p>
-          The model maps <em>x</em> into an embedding space <em>H = ℝᵐ</em>,
-          typically with fewer dimensions (<em>m &lt; n</em>). Inside this
-          space, each feature <em>fᵢ</em> is represented by a learned feature
-          direction vector <em>wᵢ ∈ ℝᵐ</em>. These <em>n</em> vectors form
-          the columns of the weight matrix <em>W</em>.
+          The model maps <katex-element expression="\boldsymbol{x}" /> into an embedding space
+          <katex-element expression="H = \mathbb{R}^m" />, typically with fewer dimensions
+          (<katex-element expression="m < n" />). Inside this space, each feature
+          <katex-element expression="f_i" /> is represented by a learned feature direction vector
+          <katex-element expression="w_i \in \mathbb{R}^m" />. These
+          <katex-element expression="n" /> vectors form the columns of the weight matrix
+          <katex-element expression="\boldsymbol{W}" />.
         </p>
       </div>
 
       <!-- Block 1: encoding — plain content, not a scroll-activatable block -->
       <p>
-        Embedding with <em>W</em> computes a linear combination of the
+        Embedding with <katex-element expression="\boldsymbol{W}" /> computes a linear combination of the
         feature direction vectors, weighted by the feature activations:
-        <em>y = Wx</em>. Each activation <em>xᵢ</em> controls how much its
-        direction <em>wᵢ</em> contributes to the embedded representation.
+        <katex-element expression="\boldsymbol{h} = \boldsymbol{W}\boldsymbol{x}" />.
+        Each activation <katex-element expression="x_i" /> controls how much its
+        direction <katex-element expression="w_i" /> contributes to the embedded representation.
       </p>
 
       <!-- Block 1 (activatable): decoding -->
@@ -60,10 +65,11 @@ watch(activeBlockIndex, (idx) => {
         :class="{ 'active-block': activeBlockIndex === 1 }"
       >
         <p>
-          Recovery with <em>Wᵀ</em> reverses this process. To recover feature
-          activations from <em>y</em>, we measure how aligned <em>y</em> is
+          Recovery with <katex-element expression="\boldsymbol{W}^\top" /> reverses this process.
+          To recover feature activations from <katex-element expression="\boldsymbol{h}" />,
+          we measure how aligned <katex-element expression="\boldsymbol{h}" /> is
           with each feature direction by computing the dot product. The
-          transpose <em>Wᵀ</em> computes all projections at once.
+          transpose <katex-element expression="\boldsymbol{W}^\top" /> computes all projections at once.
         </p>
       </div>
 
@@ -76,8 +82,9 @@ watch(activeBlockIndex, (idx) => {
         <p>
           Whether this actually recovers the true feature activations depends
           on the geometry of the feature direction vectors. The matrix
-          <em>WᵀW</em> is the Gram matrix whose entries quantify the pairwise
-          dot products — and thus the interference — between features.
+          <katex-element expression="\boldsymbol{W}^\top\boldsymbol{W}" /> is the Gram matrix
+          whose entries quantify the pairwise dot products — and thus the
+          interference — between features.
         </p>
       </div>
     </div>

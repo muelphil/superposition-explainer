@@ -206,9 +206,22 @@ Please again assess the current implementation and reason about how this should 
 Review this approach and improve it where you see fit, so that it allows for clean and easy definition of task lists displayed in paragraphs.
 Then implement it and put one task list in a fitting paragraph in the Autoencoder section. Underneath the task lists, there should be an "Insights" box, that only shows info text once the task list is fully resolved.
 
-
-
-
 ---
 
-"Stop Training" should not clear statistics -- only put a vertical line in there.
+Great! It's now time to port the blog entry draft to the website. Currently, the blog post lives in BlogPost.vue and child components.
+We now need to move the blog entry draft files contents there.
+
+
+
+Please use vue3-katex to display latex inline/display mode:
+In your template (don't forget to escape all backslashes):
+
+```html
+<div v-katex="'\\frac{a_i}{1+x}'"></div>
+```
+
+To render the math in display mode:
+
+```html
+<div v-katex:display="'\\frac{a_i}{1+x}'"></div>
+```

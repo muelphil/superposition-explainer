@@ -2,8 +2,6 @@
 import { inject, computed } from 'vue'
 import type { SelectionServiceType } from '../../services/SelectionService'
 import { featureColorCss } from '../../utils/featureColor'
-import { renderLatexHtml } from '../../utils/latex'
-
 const props = defineProps<{ inputDim: number }>()
 
 const selSvc = inject<SelectionServiceType>('selectionService')!
@@ -32,7 +30,7 @@ function onClick(i: number) { selSvc.setSelected({ kind: 'feature', idx: i }, 'e
       @click="onClick(i)"
     >
       <span class="legend-swatch" :style="{ background: featureColorCss(i, inputDim) }" />
-      <span class="legend-text" v-html="renderLatexHtml(`w_{${i + 1}}`)" />
+      <span class="legend-text" v-katex="`w_{${i + 1}}`" />
     </div>
   </div>
 </template>

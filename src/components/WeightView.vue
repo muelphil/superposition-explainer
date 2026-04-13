@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { inject, computed } from 'vue'
-import katex from 'katex'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
 import type { SelectionServiceType, SelectionTarget } from '../services/SelectionService'
 import { valColorRgb } from '../utils/featureColor'
@@ -11,20 +10,11 @@ const selSvc = inject<SelectionServiceType>('selectionService')!
 const m = computed(() => svc.config.embeddingDim)
 const n = computed(() => svc.config.inputDim)
 
-// ─── KaTeX helper ──────────────────────────────────────────────────────────
-function kx(formula: string): string {
-  return katex.renderToString(formula, { throwOnError: false, output: 'html' })
-}
-
-// Static rendered strings (do not depend on reactive state)
-const eqEncoder = kx('\\boldsymbol{h} = \\boldsymbol{W}\\boldsymbol{x}')
-const eqDecoder = kx('\\hat{\\boldsymbol{x}} = \\operatorname{ReLU}(\\boldsymbol{W}^{\\!\\top}\\boldsymbol{h} + \\boldsymbol{b})')
-const titleW    = kx('\\boldsymbol{W}')
-const titleB    = kx('\\boldsymbol{b}^{\\top}')
-
-// Per-index labels (called in template loop)
-function colLabel(c: number) { return kx(`f_{${c + 1}}`) }
-function rowLabel(r: number) { return kx(`h_{${r + 1}}`) }
+// ─── KaTeX expressions (plain LaTeX strings, rendered via v-katex) ────────────
+const eqEncoder = '\\boldsymbol{h} = \\boldsymbol{W}\\boldsymbol{x}'
+const eqDecoder = '\\hat{\\boldsymbol{x}} = \\operatorname{ReLU}(\\boldsymbol{W}^{\\!\\top}\\boldsymbol{h} + \\boldsymbol{b})'
+const titleW    = '\\boldsymbol{W}'
+const titleB    = '\\boldsymbol{b}^{\\top}'
 
 // ─── Illumination ─────────────────────────────────────────────────────────────
 interface WvIllum {
@@ -158,14 +148,14 @@ function featureVecLength(c: number): number {
 
     <!-- ══ Equations reference bar ══════════════════════════════ -->
     <div class="eq-bar">
-      <span class="eq-item" v-html="eqEncoder" />
+      <span class="eq-item" v-katex="eqEncoder" />
       <span class="eq-sep" />
-      <span class="eq-item" v-html="eqDecoder" />
+      <span class="eq-item" v-katex="eqDecoder" />
     </div>
 
     <!-- ══ Weight matrix W ══════════════════════════════════════ -->
     <div class="matrix-section">
-      <div class="matrix-title" v-html="titleW" />
+      <div class="matrix-title" v-katex="titleW" />
 
       <div class="matrix-layout">
         <!-- Column headers -->
@@ -184,7 +174,7 @@ function featureVecLength(c: number): number {
             @mouseenter="onColEnter(c - 1)"
             @mouseleave="clearHover"
             @click="onColClick(c - 1)"
-            v-html="colLabel(c - 1)"
+            v-katex="`f_{${c}}`"
           />
           <div class="col-header-spacer" />
         </div>
@@ -203,7 +193,7 @@ function featureVecLength(c: number): number {
               @mouseenter="onRowEnter(r - 1)"
               @mouseleave="clearHover"
               @click="onRowClick(r - 1)"
-              v-html="rowLabel(r - 1)"
+              v-katex="`h_{${r}}`"
             />
           </div>
           <div class="bracket bracket-left" />
@@ -233,7 +223,7 @@ function featureVecLength(c: number): number {
 
     <!-- ══ Bias vector b ════════════════════════════════════════ -->
     <div class="matrix-section">
-      <div class="matrix-title" v-html="titleB" />
+      <div class="matrix-title" v-katex="titleB" />
 
       <div class="matrix-layout">
         <div class="matrix-body-row">
