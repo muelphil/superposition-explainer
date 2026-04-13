@@ -4,26 +4,26 @@ The clean encode/decode symmetry of an orthonormal basis — embed with $W$, rec
 
 ### Architecture
 
-The autoencoder is a linear model with tied weights that maps an $n$-dimensional feature vector through an $m$-dimensional embedding and back:
+The autoencoder uses a linear encoder and a nonlinear decoder with tied weights, mapping an $n$-dimensional feature vector through an $m$-dimensional embedding and back:
 
-**Encoder.** The encoder computes the embedding $h$ as a linear combination of feature direction vectors $w_i$, weighted by the feature activations $x_i$:
-$$h = Wx$$
+**Encoder.** The encoder computes the embedding $y$ as a linear combination of feature direction vectors $w_i$, weighted by the feature activations $x_i$:
+$$y = Wx$$
 
 where $W \in \mathbb{R}^{m \times n}$ is the weight matrix whose columns $w_1, \ldots, w_n$ are the learned feature direction vectors in embedding space.
 
-**Decoder.** The decoder projects the embedding $h$ onto each feature direction — measuring how much $h$ aligns with each $w_i$ — and applies a bias and ReLU nonlinearity:
-$$\hat{x} = \text{ReLU}(W^T h + b)$$
+**Decoder.** The decoder projects the embedding $y$ onto each feature direction — measuring how much $y$ aligns with each $w_i$ — and applies a bias and ReLU nonlinearity:
+$$\hat{x} = \text{ReLU}(W^T y + b)$$
 
-where $b \in \mathbb{R}^n$ is a learned bias vector. The transpose $W^T$ computes the dot product of $h$ with every feature direction at once: the $i$-th entry of $W^T h$ is $w_i \cdot h$.
+where $b \in \mathbb{R}^n$ is a learned bias vector. The transpose $W^T$ computes the dot product of $y$ with every feature direction at once: the $i$-th entry of $W^T y$ is $w_i \cdot y$.
 
-**Full forward pass.** Substituting $h = Wx$:
+**Full forward pass.** Substituting $y = Wx$:
 $$\hat{x} = \text{ReLU}(W^T W x + b)$$
 
 The Gram matrix $W^T W$ reappears: its off-diagonal entries determine how much cross-talk (interference) occurs between features during reconstruction. If $W^T W = I$, recovery would be exact (up to the bias and ReLU). The model's task during training is to find feature directions that balance reconstruction accuracy against the unavoidable interference when $m < n$.
 
 **Why tied weights?** Using $W^T$ as the decoder is directly motivated by the geometry of orthonormal bases. In the ideal case where the columns of $W$ are orthonormal, $W^T$ is the exact inverse — encoding and decoding are perfectly symmetric. Even when orthonormality is not achievable (because there are more features than dimensions), the tied-weight structure provides a natural inductive bias toward this geometric ideal.
 
-**Bias and ReLU.** The decoder includes a learned bias $b$ and a ReLU activation. Their significance will become clear in the experiments.
+**Bias and ReLU.** The decoder includes a learned bias $b$ and a ReLU activation. Their significance will become clear in the experiments. In brief, they allow the model to compensate for interference when features must share dimensions.
 
 ### Synthetic training data
 
@@ -48,5 +48,5 @@ $I_i = \alpha^{i-1}$
 
 Feature $f_1$ has importance $I_1 = \alpha^0 = 1$ (highest); each subsequent feature matters less by a factor of $\alpha$. This creates unequal pressure during training: when embedding capacity is limited, the model is incentivized to preserve more important features more faithfully, while tolerating larger reconstruction errors on less important ones.
 
-Training proceeds by sampling batches of synthetic feature vectors, computing the weighted loss, and updating $W$ and $b$ via gradient descent (Adam optimizer).
+Training proceeds by sampling batches of synthetic feature vectors, computing the weighted loss, and updating $W$ and $b$ via gradient-based optimization (Adam).
 

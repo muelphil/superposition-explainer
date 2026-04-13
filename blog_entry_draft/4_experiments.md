@@ -32,7 +32,7 @@ We model sparsity by introducing a parameter $S \in (0, 1]$ that controls the pr
 
 $$x_i = \begin{cases} |\mathcal{N}(0,1)| & \text{with probability } S \\ 0 & \text{otherwise} \end{cases}$$
 
-When $S = 1.0$, every feature is always active (the dense case from above). As $S$ decreases, features become increasingly sparse — each one is active only a fraction of the time. Crucially, any two specific features are simultaneously active with probability $S^2$, which shrinks rapidly.
+When $S = 1.0$, every feature is always active (the dense case from above). As $S$ decreases, features become increasingly sparse — each one is active only a fraction of the time. Crucially, since feature activations are sampled independently, any two specific features are simultaneously active with probability $S^2$, which shrinks rapidly.
 
 - [ ] Resample a few times using the resample button and observe the input vectors
 - [ ] Decrease sparsity to $S = 0.2$ and resample again — notice how most feature activations are now zero
@@ -54,7 +54,7 @@ With sparsity, the same bottleneck — four features in two dimensions — may h
 
 Exploiting opposite directions doubled the capacity from two to four features. Can the model go further — beyond what opposite directions alone provide? We now have five features in two dimensions.
 
-- [ ] Set $\alpha = 1.0$ (equal importance)
+- [ ] Set $\alpha = 1.0$ (equal importance), so that all features compete equally for embedding capacity, removing importance ranking as a confound
 - [ ] Run training and observe the feature directions in the embedding view
 - [ ] Check the minimum angle between feature directions in the training statistics — compare it to $360° / 5 = 72°$
 
