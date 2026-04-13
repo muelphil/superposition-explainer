@@ -800,6 +800,10 @@ function onOutputClick(i: number) {
   padding: 0;
 }
 
+.ae-grid.compact .output-value{
+  line-height: 1em;
+}
+
 /* ── SVG overlay ──────────────────────────────────────────── */
 .connections-svg {
   position: absolute;
@@ -856,6 +860,7 @@ function onOutputClick(i: number) {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   line-height: 1.2;
+  text-align: center;
 }
 
 /* ── Highlight / dim ──────────────────────────────────────── */

@@ -189,6 +189,7 @@ function onSliderChange(event: Event) {
   bottom: 1em;
   z-index: 3;
   line-height: 1.2;
+  gap:4px;
 }
 
 .value-label:hover {

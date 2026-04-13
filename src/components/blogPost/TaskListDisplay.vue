@@ -27,16 +27,27 @@ defineSlots<{
       >
         <span class="task-checkbox" aria-hidden="true">
           <template v-if="task.completed">✓</template>
-          <template v-else-if="task.blocked">🔒</template>
         </span>
-        <span class="task-label">{{ task.label }}</span>
+        <span class="task-body">
+          <span class="task-label">{{ task.label }}</span>
+          <span v-if="task.note" class="task-note">{{ task.note }}</span>
+        </span>
         <span v-if="task.optional" class="task-badge">optional</span>
       </li>
     </ul>
 
-    <div v-if="taskList.stickyResolved.value" class="task-insight">
-      <div class="task-insight-header">💡 Insight</div>
-      <slot name="insight" />
+    <!-- Insight: always rendered, but spoiler-locked until all tasks complete -->
+    <div
+      class="task-insight"
+      :class="{ 'task-insight--locked': !taskList.stickyResolved.value }"
+    >
+      <div class="task-insight-header">Insight</div>
+      <div class="task-insight-content">
+        <slot name="insight" />
+      </div>
+      <div v-if="!taskList.stickyResolved.value" class="task-insight-lock-overlay">
+        <span class="lock-message">Complete all tasks above to unlock this insight</span>
+      </div>
     </div>
   </div>
 </template>
@@ -70,7 +81,7 @@ defineSlots<{
 
 .task-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   font-size: 0.92rem;
   line-height: 1.5;
@@ -84,6 +95,7 @@ defineSlots<{
   width: 1.2rem;
   height: 1.2rem;
   flex-shrink: 0;
+  margin-top: 0.15rem; /* align with first line of text */
   border-radius: 3px;
   border: 1.5px solid var(--color-task-checkbox-border);
   background: var(--color-bg);
@@ -108,6 +120,21 @@ defineSlots<{
   color: var(--color-task-blocked);
 }
 
+/* ── Task body (label + note) ── */
+.task-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.1rem;
+}
+
+.task-note {
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
 .task-badge {
   font-size: 0.65rem;
   font-weight: 600;
@@ -117,10 +144,13 @@ defineSlots<{
   background: var(--color-bg-secondary);
   padding: 0.1em 0.45em;
   border-radius: 3px;
+  margin-top: 0.2rem;
+  flex-shrink: 0;
 }
 
 /* ── Insight box ── */
 .task-insight {
+  position: relative;
   margin-top: 0.75rem;
   padding: 0.65rem 0.85rem;
   border-radius: 6px;
@@ -136,5 +166,38 @@ defineSlots<{
   font-size: 0.8rem;
   margin-bottom: 0.3rem;
   color: var(--color-text-label);
+}
+
+/* Content is blurred while locked */
+.task-insight--locked .task-insight-content {
+  filter: blur(5px);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Lock overlay: hidden by default, fades in on hover */
+.task-insight-lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 246, 255, 0.90); /* matches --color-task-insight-bg */
+  border-radius: 5px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.task-insight--locked:hover .task-insight-lock-overlay {
+  opacity: 1;
+}
+
+.lock-message {
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--color-text-label);
+  text-align: center;
+  padding: 0.5rem 1rem;
 }
 </style>
