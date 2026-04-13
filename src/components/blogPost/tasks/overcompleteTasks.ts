@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import type { TaskSpec, TaskContext } from '../taskSystem'
-import { allColumnNormsInRange, createConvergenceTracker } from './aeTaskHelpers'
+import { allColumnNormsInRange, minPairwiseAngleDeg, createConvergenceTracker } from './aeTaskHelpers'
 
 /**
  * Task specs for the "overcomplete" paragraph range.
@@ -23,9 +23,16 @@ export function createOvercompleteTaskSpecs(): TaskSpec[] {
       setup: (ctx: TaskContext) =>
         createConvergenceTracker(
           ctx.svc,
-          (svc) => allColumnNormsInRange(svc.W.value, 0.7, 1.3) && svc.loss.value < 0.1,
-          10,
-          () => ctx.svc.stopTraining(),
+          // All 4 feature vectors must have reasonable norms and be at least
+          // 86° apart from one another (90° is the theoretical optimum for
+          // 4 features in 2D superposition).
+          (svc) =>
+            allColumnNormsInRange(svc.W.value, 0.7, 1.1) &&
+            minPairwiseAngleDeg(svc.W.value) >= 86,
+          20,
+          () => ctx.svc.pauseTraining(),
+          // Guard: only track convergence when the dependency task is active
+          () => ctx.svc.config.inputDim === 4,
         ),
     },
   ]

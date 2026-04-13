@@ -104,11 +104,9 @@ useParagraphRanges(ranges, activeParagraphIndex)
         </p>
         <TaskListDisplay :task-list="taskList">
           <template #insight>
-            <p>
               With more features than embedding dimensions, the autoencoder must
               compromise — feature vectors can no longer all be orthogonal.
               This is the onset of <strong>superposition</strong>.
-            </p>
           </template>
         </TaskListDisplay>
       </div>

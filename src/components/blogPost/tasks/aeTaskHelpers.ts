@@ -20,16 +20,18 @@ export function allColumnNormsInRange(W: number[][], min: number, max: number): 
 }
 
 /**
- * Compute the minimum pairwise angle (in degrees) between column vectors of W.
- * Skips columns with near-zero norm (< 0.1).
+ * Compute the minimum pairwise angle (in degrees, range [0°, 180°]) between
+ * column vectors of W. Skips columns with near-zero norm (< 0.1).
  * Returns Infinity if fewer than 2 significant columns exist.
+ *
+ * Note: angles are NOT folded to [0°, 90°]; anti-parallel vectors give 180°,
+ * not 0°. This matches the service's own angle metric.
  */
 export function minPairwiseAngleDeg(W: number[][]): number {
   const m = W.length
   if (m === 0) return Infinity
   const n = W[0].length
 
-  // Extract columns and their norms
   const cols: { vec: number[]; norm: number }[] = []
   for (let j = 0; j < n; j++) {
     const vec = W.map(row => row[j])
@@ -45,7 +47,7 @@ export function minPairwiseAngleDeg(W: number[][]): number {
       let dot = 0
       for (let k = 0; k < m; k++) dot += cols[i].vec[k] * cols[j].vec[k]
       const cosTheta = Math.max(-1, Math.min(1, dot / (cols[i].norm * cols[j].norm)))
-      const angle = Math.acos(Math.abs(cosTheta)) * (180 / Math.PI)
+      const angle = Math.acos(cosTheta) * (180 / Math.PI)
       if (angle < minAngle) minAngle = angle
     }
   }
@@ -55,7 +57,13 @@ export function minPairwiseAngleDeg(W: number[][]): number {
 /**
  * Creates a convergence tracker that watches a service's training step
  * and checks a condition repeatedly. Once the condition holds for
- * `stableFor` consecutive checks, `converged` becomes true (sticky).
+ * `stableFor` consecutive checks, `converged` becomes true (sticky) and
+ * `onConverge` is called.
+ *
+ * `guard` is evaluated on every step before anything else. When the guard
+ * returns false the stable-count is reset, `converged` is not latched, and
+ * `onConverge` is not called. This lets callers block the tracker's side
+ * effects when external preconditions (e.g. task dependencies) are unmet.
  *
  * Must be called during `<script setup>` so the watcher auto-cleans.
  *
@@ -63,12 +71,14 @@ export function minPairwiseAngleDeg(W: number[][]): number {
  * @param check     Predicate evaluated on each training step
  * @param stableFor Number of consecutive passing checks required
  * @param onConverge Optional callback when convergence is detected
+ * @param guard     Optional gate — if it returns false the step is skipped
  */
 export function createConvergenceTracker(
   svc: AutoencoderServiceType,
   check: (svc: AutoencoderServiceType) => boolean,
   stableFor: number,
   onConverge?: () => void,
+  guard?: () => boolean,
 ): Ref<boolean> {
   const converged = ref(false)
   let stableCount = 0
@@ -77,6 +87,12 @@ export function createConvergenceTracker(
     () => svc.step.value,
     () => {
       if (converged.value || !svc.isTraining.value) return
+
+      // If the guard fails, reset progress and skip — side effects must not fire
+      if (guard && !guard()) {
+        stableCount = 0
+        return
+      }
 
       if (check(svc)) {
         stableCount++

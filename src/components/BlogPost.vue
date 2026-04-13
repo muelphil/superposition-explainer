@@ -26,10 +26,10 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
 
         <div class="post-authors">
           <div class="author">
-            <div class="author-avatar">JD</div>
+            <div class="author-avatar">PM</div>
             <div class="author-info">
-              <span class="author-name">Jane Doe</span>
-              <span class="author-affiliation">Institute for AI Research</span>
+              <span class="author-name">Philip Müller</span>
+              <span class="author-affiliation">Helmholtz-Zentrum Dresden-Rossendorf</span>
             </div>
           </div>
           <div class="author">

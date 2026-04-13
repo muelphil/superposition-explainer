@@ -1,4 +1,4 @@
-import { ref, watchEffect, type Ref, type ComputedRef, type InjectionKey } from 'vue'
+import { ref, computed, watch, watchEffect, type Ref, type ComputedRef, type InjectionKey } from 'vue'
 import type { AutoencoderServiceType } from '../../services/AutoencoderService'
 
 // ─── Event bus ─────────────────────────────────────────────────────────────────
@@ -87,20 +87,38 @@ export interface TaskState {
  * Manages a list of tasks, their reactive completion state, sticky latching,
  * dependencies, and overall resolution.
  *
+ * **Spec ordering requirement**: specs must be listed in dependency-first
+ * (topological) order — a task must appear after all tasks it depends on.
+ *
  * Usage:
  * ```ts
  * const list = new TaskList(specs)
- * list.startListening({ svc, events: bus })
+ * list.startListening({ svc, events: bus })  // call during <script setup>
  * // template binds to list.tasks, list.stickyResolved
- * // on unmount:
+ * // cleanup on unmount (Vue watchers auto-clean; this handles event bus):
  * list.stopListening()
  * ```
  */
 export class TaskList {
   private specs: TaskSpec[]
-  private completedRefs = new Map<string, Ref<boolean> | ComputedRef<boolean>>()
-  private stickyCompleted = new Set<string>()
-  private stickyTrigger = ref(0)
+  /**
+   * Raw reactive refs returned by each spec's `setup()`.
+   * These represent the live (un-gated) completion signal.
+   */
+  private rawRefs = new Map<string, Ref<boolean> | ComputedRef<boolean>>()
+  /**
+   * Per sticky-task: a `Ref<boolean>` that latches to `true` once the task
+   * is effectively completed and never reverts (survives dep changes).
+   */
+  private stickyLatched = new Map<string, Ref<boolean>>()
+  /**
+   * Per task: a `ComputedRef<boolean>` that correctly chains:
+   *   sticky latch → dep gate → raw ref
+   * Deps are captured as closures at creation time, so no map-access
+   * happens inside the computed (preventing accidental reactive deps on the map).
+   */
+  private effectivelyCompleted = new Map<string, ComputedRef<boolean>>()
+
   private eventCleanups: (() => void)[] = []
 
   readonly tasks = ref<TaskState[]>([])
@@ -116,37 +134,59 @@ export class TaskList {
    * so that Vue watchers are auto-cleaned on component unmount.
    */
   startListening(ctx: TaskContext): void {
+    // ── Phase 1: raw completion refs ─────────────────────────────────────────
     for (const spec of this.specs) {
-      const completedRef = spec.setup(ctx)
-      this.completedRefs.set(spec.id, completedRef)
-
-      if (spec.sticky) {
-        // Re-check whenever the raw ref changes OR another sticky task resolves
-        // (which increments stickyTrigger and could satisfy our dependencies).
-        watchEffect(() => {
-          const rawDone = completedRef.value
-          void this.stickyTrigger.value   // reactive dep: re-run when other stickies fire
-
-          if (!rawDone) return
-          if (this.stickyCompleted.has(spec.id)) return
-
-          // Only latch if all dependencies are also satisfied
-          const depsOk = (spec.dependencies ?? []).every(depId => this.isCompleted(depId))
-          if (depsOk) {
-            this.stickyCompleted.add(spec.id)
-            this.stickyTrigger.value++
-          }
-        })
-      }
+      this.rawRefs.set(spec.id, spec.setup(ctx))
     }
 
-    watchEffect(() => {
-      // Touch stickyTrigger so this re-runs when sticky set changes
-      void this.stickyTrigger.value
+    // ── Phase 2: sticky latches ───────────────────────────────────────────────
+    for (const spec of this.specs) {
+      if (spec.sticky) this.stickyLatched.set(spec.id, ref(false))
+    }
 
+    // ── Phase 3: effectivelyCompleted computeds ───────────────────────────────
+    // Specs MUST be in dependency-first order (validated below).
+    for (const spec of this.specs) {
+      const id = spec.id
+      const latch = this.stickyLatched.get(id)   // undefined for non-sticky
+      const rawRef = this.rawRefs.get(id)!
+
+      // Resolve dep computeds at creation time (not inside the computed fn).
+      // This avoids accidental map-access reactive deps during evaluation.
+      const depComputeds: ComputedRef<boolean>[] = (spec.dependencies ?? []).map(depId => {
+        const c = this.effectivelyCompleted.get(depId)
+        if (!c) throw new Error(
+          `[TaskList] Task "${depId}" is listed as a dependency of "${id}" but has not been ` +
+          `defined yet. Ensure specs are in dependency-first (topological) order.`
+        )
+        return c
+      })
+
+      this.effectivelyCompleted.set(id, computed(() => {
+        if (latch?.value) return true                              // sticky latch overrides all
+        for (const dep of depComputeds) if (!dep.value) return false  // dependency gate
+        return rawRef.value                                        // live condition
+      }))
+    }
+
+    // ── Phase 4: sticky latch watchers ────────────────────────────────────────
+    // One-shot: as soon as effectivelyCompleted flips true, lock the latch.
+    for (const spec of this.specs) {
+      if (!spec.sticky) continue
+      const latch = this.stickyLatched.get(spec.id)!
+      const effective = this.effectivelyCompleted.get(spec.id)!
+      watch(effective, (v) => { if (v) latch.value = true }, { immediate: true })
+    }
+
+    // ── Phase 5: derive UI state ──────────────────────────────────────────────
+    // All deps here are explicit computed reads — no hidden implicit deps.
+    watchEffect(() => {
       this.tasks.value = this.specs.map(spec => {
-        const completed = this.isCompleted(spec.id)
-        const depsUnmet = (spec.dependencies ?? []).some(depId => !this.isCompleted(depId))
+        const effective = this.effectivelyCompleted.get(spec.id)!
+        const completed = effective.value
+        const depsUnmet = (spec.dependencies ?? []).some(
+          depId => !this.effectivelyCompleted.get(depId)!.value
+        )
         return {
           id: spec.id,
           label: spec.label,
@@ -159,23 +199,15 @@ export class TaskList {
 
       const allRequiredDone = this.specs
         .filter(s => !s.optional)
-        .every(s => this.isCompleted(s.id))
+        .every(s => this.effectivelyCompleted.get(s.id)!.value)
       this.resolved.value = allRequiredDone
       if (allRequiredDone) this.stickyResolved.value = true
     })
   }
 
-  /** Clean up event bus subscriptions (Vue watchers are auto-cleaned). */
+  /** Clean up event bus subscriptions (Vue watchers are auto-cleaned on unmount). */
   stopListening(): void {
     this.eventCleanups.forEach(fn => fn())
     this.eventCleanups = []
-  }
-
-  private isCompleted(id: string): boolean {
-    const spec = this.specs.find(s => s.id === id)
-    // All dependencies must be satisfied before this task can be counted as done
-    if (spec?.dependencies?.some(depId => !this.isCompleted(depId))) return false
-    if (this.stickyCompleted.has(id)) return true
-    return this.completedRefs.get(id)?.value ?? false
   }
 }
