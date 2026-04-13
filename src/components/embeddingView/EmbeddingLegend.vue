@@ -32,7 +32,7 @@ function onClick(i: number) { selSvc.setSelected({ kind: 'feature', idx: i }, 'e
       @click="onClick(i)"
     >
       <span class="legend-swatch" :style="{ background: featureColorCss(i, inputDim) }" />
-      <span class="legend-text" v-html="renderLatexHtml(`f_{${i + 1}}`)" />
+      <span class="legend-text" v-html="renderLatexHtml(`w_{${i + 1}}`)" />
     </div>
   </div>
 </template>

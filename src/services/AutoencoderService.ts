@@ -104,6 +104,7 @@ export function createAutoencoderService() {
   const lossHistory            = ref<HistPoint[]>([])
   const featurePresenceHistory = ref<HistPoint[]>([])
   const minAngleHistory        = ref<HistPoint[]>([])
+  const pauseSteps             = ref<number[]>([])
 
   function _pushHistory(hist: typeof lossHistory, s: number, v: number) {
     hist.value.push({ s, v })
@@ -200,6 +201,7 @@ export function createAutoencoderService() {
     lossHistory.value = []
     featurePresenceHistory.value = []
     minAngleHistory.value = []
+    pauseSteps.value = []
   }
 
   // ─── Data generation ─────────────────────────────────────────────────────────
@@ -392,6 +394,14 @@ export function createAutoencoderService() {
     }
   }
 
+  function pauseTraining() {
+    if (!isTraining.value) return
+    if (step.value > 0) {
+      pauseSteps.value = [...pauseSteps.value, step.value]
+    }
+    stopTraining()
+  }
+
   /** Stop training and clear all history/counters (keeps current weights). */
   function resetTraining() {
     stopTraining()
@@ -401,6 +411,7 @@ export function createAutoencoderService() {
     lossHistory.value = []
     featurePresenceHistory.value = []
     minAngleHistory.value = []
+    pauseSteps.value = []
     // Reset Adam moments so new run starts with clean optimizer state
     const { embeddingDim: m, inputDim: n } = config
     mW = zeros(m, n); vW = zeros(m, n)
@@ -417,6 +428,7 @@ export function createAutoencoderService() {
     lossHistory.value = []
     featurePresenceHistory.value = []
     minAngleHistory.value = []
+    pauseSteps.value = []
     _initWeights()
     _forwardPass(currentInput.value)
   }
@@ -468,6 +480,7 @@ export function createAutoencoderService() {
     lossHistory,
     featurePresenceHistory,
     minAngleHistory,
+    pauseSteps,
     // Methods
     setInputDim,
     setEmbeddingDim,
@@ -476,6 +489,7 @@ export function createAutoencoderService() {
     stepTrain,
     startTraining,
     stopTraining,
+    pauseTraining,
     initialize,
     resetWeights,
     trainingStartStep,

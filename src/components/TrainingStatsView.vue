@@ -96,6 +96,14 @@ const latestValue = computed(() => {
   const v = pts[pts.length - 1].v
   return v >= 10 ? v.toFixed(1) : v >= 1 ? v.toFixed(2) : v.toFixed(3)
 })
+
+/** Pause steps that fall within the currently visible x-range */
+const visiblePauseSteps = computed(() => {
+  const pts = history.value
+  if (pts.length < 2) return []
+  const s0 = pts[0].s, s1 = pts[pts.length - 1].s
+  return svc.pauseSteps.value.filter(s => s >= s0 && s <= s1)
+})
 </script>
 
 <template>
@@ -172,6 +180,16 @@ const latestValue = computed(() => {
           <!-- Axes -->
           <line :x1="PL" :y1="PT" :x2="PL" :y2="PT + PH" stroke="var(--color-border)" stroke-width="0.6" />
           <line :x1="PL" :y1="PT + PH" :x2="PL + PW" :y2="PT + PH" stroke="var(--color-border)" stroke-width="0.6" />
+
+          <!-- Pause markers -->
+          <line
+            v-for="ps in visiblePauseSteps" :key="`pause-${ps}`"
+            :x1="xOf(ps).toFixed(1)" :y1="PT"
+            :x2="xOf(ps).toFixed(1)" :y2="(PT + PH).toFixed(1)"
+            stroke="var(--color-text-label)"
+            stroke-width="0.9"
+            stroke-dasharray="2.5,2.5"
+          />
         </svg>
       </template>
 

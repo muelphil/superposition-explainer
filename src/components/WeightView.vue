@@ -17,10 +17,10 @@ function kx(formula: string): string {
 }
 
 // Static rendered strings (do not depend on reactive state)
-const eqEncoder = kx('\\mathbf{h} = \\mathbf{W}\\mathbf{x}')
-const eqDecoder = kx('\\hat{\\mathbf{x}} = \\operatorname{ReLU}(\\mathbf{W}^{\\!\\top}\\mathbf{h} + \\mathbf{b})')
-const titleW    = kx('\\mathbf{W}')
-const titleB    = kx('\\mathbf{b}')
+const eqEncoder = kx('\\boldsymbol{h} = \\boldsymbol{W}\\boldsymbol{x}')
+const eqDecoder = kx('\\hat{\\boldsymbol{x}} = \\operatorname{ReLU}(\\boldsymbol{W}^{\\!\\top}\\boldsymbol{h} + \\boldsymbol{b})')
+const titleW    = kx('\\boldsymbol{W}')
+const titleB    = kx('\\boldsymbol{b}^{\\top}')
 
 // Per-index labels (called in template loop)
 function colLabel(c: number) { return kx(`f_{${c + 1}}`) }

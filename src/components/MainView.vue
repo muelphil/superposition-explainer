@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, provide } from 'vue'
-import { RotateCcw, Play, Square, Settings } from 'lucide-vue-next'
+import { Settings } from 'lucide-vue-next'
 import { createAutoencoderService } from '../services/AutoencoderService'
 import { createSelectionService } from '../services/SelectionService'
 import AutoencoderView from './AutoencoderView.vue'
@@ -8,6 +8,7 @@ import EmbeddingView from './embeddingView/EmbeddingView.vue'
 import WeightView from './WeightView.vue'
 import TrainingConfigView from './TrainingConfigView.vue'
 import TrainingStatsView from './TrainingStatsView.vue'
+import TrainingActionButtons from './TrainingActionButtons.vue'
 import SettingsModal from './SettingsModal.vue'
 import BlogPost from './BlogPost.vue'
 
@@ -23,7 +24,6 @@ const activeTab = ref<PanelTab>('training')
 
 // ── Training footer ────────────────────────────────────────────
 const svc = autoencoderService
-const lossDisplay = computed(() => svc.loss.value.toFixed(4))
 
 const showSettings = ref(false)
 </script>
@@ -92,26 +92,7 @@ const showSettings = ref(false)
 
             <!-- Training footer — below the panel -->
             <div class="training-footer">
-<!--              <div class="footer-meta">-->
-<!--                <span class="footer-step">Step {{ svc.step.value.toLocaleString() }}</span>-->
-<!--                <span v-if="svc.step.value > 0" class="footer-loss">Loss {{ lossDisplay }}</span>-->
-<!--              </div>-->
-              <div class="footer-btns">
-                <button
-                  class="reset-btn"
-                  :disabled="svc.isTraining.value"
-                  @click="svc.resetWeights()"
-                  title="Re-initialise weights (Xavier normal, bias = 0)"
-                ><RotateCcw :size="13" /> Reset</button>
-                <button
-                  class="train-btn"
-                  :class="{ 'train-btn--stop': svc.isTraining.value }"
-                  @click="svc.isTraining.value ? svc.stopTraining() : svc.startTraining()"
-                >
-                  <Square v-if="svc.isTraining.value" :size="13" /> <Play v-else :size="13" />
-                  {{ svc.isTraining.value ? 'Stop Training' : 'Start Training' }}
-                </button>
-              </div>
+              <TrainingActionButtons />
             </div>
 
           </div>
@@ -331,63 +312,6 @@ const showSettings = ref(false)
   gap: 0.6rem;
   margin-top: 0.75rem;
 }
-
-.footer-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
-.footer-step {
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-label);
-}
-
-.footer-loss {
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-secondary);
-}
-
-.footer-btns {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.reset-btn {
-  flex: 0 0 auto;
-  padding: 0.5rem 0.85rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  font-family: inherit;
-  border-radius: 6px;
-  border: 1px solid var(--color-border);
-  cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
-  background: var(--color-bg-subtle);
-  color: var(--color-text-action-hover);
-}
-.reset-btn:hover:not(:disabled) { background: var(--color-bg-hover); }
-.reset-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.train-btn {
-  flex: 1;
-  padding: 0.5rem 1rem;
-  font-size: 0.88rem;
-  font-weight: 600;
-  font-family: inherit;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  transition: background 0.15s;
-  background: var(--color-interactive);
-  color: var(--color-bg);
-  letter-spacing: 0.02em;
-}
-.train-btn:hover { background: var(--color-interactive-hover); }
-.train-btn--stop { background: var(--color-text-action); }
-.train-btn--stop:hover { background: var(--color-text-action-hover); }
 
 /* ── Blog post section ───────────────────────────────────────── */
 .blog-section {

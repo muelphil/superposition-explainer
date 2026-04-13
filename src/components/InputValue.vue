@@ -110,7 +110,7 @@ function onSliderChange(event: Event) {
     <span class="input-label">
       <span
           class="feature-label"
-          v-html="renderLatexHtml(`f_{${props.featureIdx + 1}}`)"
+          v-html="renderLatexHtml(`x_{${props.featureIdx + 1}}`)"
           aria-hidden="true"
           @click.stop="emit('featureClick')"
       />
@@ -162,11 +162,7 @@ function onSliderChange(event: Event) {
   font-size: 0.8rem;
   color: var(--color-text-label);
   white-space: nowrap;
-  cursor: pointer;
   user-select: none;
-}
-.feature-label:hover :deep(.katex) {
-  color: var(--color-interactive);
 }
 .feature-label :deep(.katex) {
   font-size: 0.8rem;

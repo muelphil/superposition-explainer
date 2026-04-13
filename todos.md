@@ -146,10 +146,20 @@ There is one more small bug to fix: sparsity is defined as how sparse the input 
 
 ---
 
-More bugs to fix for the autoencoder view:
-* the InputValue components should not use $f_i$ as labels, but $x_i$ for feature activations
-* the EmbeddingSpace legend should not use $f_i$ as labels, but $w_i$ for feature direction vectors
-* if the amount of input neurons/ embedding space neurons is fixed (i.e. the selectable range is just one possible number), then the .dim-btns should not be shown.
+Here is a list of small bugs to fix:
+* AutoencoderView.vue
+  * the InputValue components should not use $f_i$ as labels, but $x_i$ for feature activations. They also should not change color on hover or use cursor:pointer, as they are no longer selectable.
+* EmbeddingsLegend.vue
+  * should not use $f_i$ as labels, but $w_i$ for feature direction vectors
+* WeightsView.vue
+  * b is incorrect, needs to be labeled b^T
+  * the katex shown in this view is weird please review if it is correct -- it should look italic, but it all looks like its wrapped in \text{}
+* Training Button (MainView/Autoencoder Visualization)
+  * but these in a small wrapping component (maybe TrainingActionButtons)
+  * The Start button needs several labels: "Start Training" (no prior training or reset was pressed), "Pause Training" (pauses training, user can modify stuff while paused, same functionality as Stop Training right now), "Continue Training" (Training was paused and was not reset)
+* StatisticsView.vue (or maybe the service)
+  * The statistics should not reset after the user pauses the training, only after they press reset
+  * for every time the user paused the training, the training plot should show a vertical dashed line at the step the training was paused, when continuing
 
 
 ---
