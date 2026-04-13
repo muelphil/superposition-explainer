@@ -277,9 +277,8 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
   color: var(--color-text-primary);
 }
 
-/* Paragraphs: spacing + scroll-active indicator via border-left */
-.blog-post .text-column p,
-.blog-post .text-column .paragraph {
+/* Text blocks: scroll-active indicator via border-left */
+.blog-post .text-column .text-block {
   margin: 0 0 1.5rem;
   padding: 0.5rem 0.75rem;
   border-left: 3px solid transparent;
@@ -287,8 +286,16 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
   transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
-/* Active paragraph highlight (scroll-driven) */
-.blog-post .active-paragraph {
+/* Paragraphs inside a text-block collapse their own bottom margin */
+.blog-post .text-column .text-block p {
+  margin: 0 0 1em;
+}
+.blog-post .text-column .text-block p:last-child {
+  margin-bottom: 0;
+}
+
+/* Active block highlight (scroll-driven) */
+.blog-post .active-block {
   background-color: var(--color-active-paragraph-bg);
   border-left-color: var(--color-interactive) !important;
 }

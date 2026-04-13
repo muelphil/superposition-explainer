@@ -1,23 +1,26 @@
 import { ref, onMounted, onUnmounted, type Ref } from 'vue'
 
 /**
- * Tracks which paragraph element is closest to the vertical center of the
+ * Tracks which text-block element is closest to the vertical center of the
  * viewport and exposes the index as a reactive ref.
+ *
+ * A "text block" is any element that wraps one or more paragraphs as a single
+ * interactive scroll unit — typically a <div class="text-block">.
  *
  * Uses IntersectionObserver with multiple thresholds for smooth tracking,
  * falling back to a distance-to-center comparison on each intersection event.
  */
-export function useScrollActiveParagraph(
-  paragraphRefs: Ref<(HTMLElement | null)[]>,
-): { activeParagraphIndex: Ref<number> } {
-  const activeParagraphIndex = ref(0)
+export function useScrollActiveBlock(
+  blockRefs: Ref<(HTMLElement | null)[]>,
+): { activeBlockIndex: Ref<number> } {
+  const activeBlockIndex = ref(0)
   let observer: IntersectionObserver | null = null
 
   function updateActive() {
-    const els = paragraphRefs.value
+    const els = blockRefs.value
     if (!els || els.length === 0) return
 
-    // Activate the paragraph closest to the 40%-from-top focal line
+    // Activate the block closest to the 40%-from-top focal line
     const viewportCenter = window.innerHeight * 0.4
     let bestIdx = 0
     let bestDist = Infinity
@@ -34,7 +37,7 @@ export function useScrollActiveParagraph(
       }
     }
 
-    activeParagraphIndex.value = bestIdx
+    activeBlockIndex.value = bestIdx
   }
 
   onMounted(() => {
@@ -43,9 +46,9 @@ export function useScrollActiveParagraph(
       threshold: Array.from({ length: 11 }, (_, i) => i / 10),
     })
 
-    // Observe all paragraph elements
+    // Observe all block elements
     const observe = () => {
-      paragraphRefs.value.forEach(el => {
+      blockRefs.value.forEach(el => {
         if (el) observer!.observe(el)
       })
     }
@@ -60,5 +63,5 @@ export function useScrollActiveParagraph(
     window.removeEventListener('scroll', updateActive)
   })
 
-  return { activeParagraphIndex }
+  return { activeBlockIndex }
 }

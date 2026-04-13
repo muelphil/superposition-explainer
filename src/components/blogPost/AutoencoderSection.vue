@@ -2,7 +2,7 @@
 import { ref, provide, onUnmounted } from 'vue'
 import { createAutoencoderService, INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX } from '../../services/AutoencoderService'
 import { createSelectionService } from '../../services/SelectionService'
-import { useScrollActiveParagraph } from './useScrollActiveParagraph'
+import { useScrollActiveBlock } from './useScrollActiveParagraph'
 import { useParagraphRanges, type ParagraphRange } from './useParagraphRanges'
 import { type AeConstraintSpec, AE_VIEW_CONSTRAINTS_KEY, deriveConstraints } from './aeStepTypes'
 import { TaskList, TaskEventBus, TASK_EVENT_BUS_KEY } from './taskSystem'
@@ -60,8 +60,8 @@ const ranges: ParagraphRange[] = [
 ]
 
 const paragraphRefs = ref<(HTMLElement | null)[]>([])
-const { activeParagraphIndex } = useScrollActiveParagraph(paragraphRefs)
-useParagraphRanges(ranges, activeParagraphIndex)
+const { activeBlockIndex } = useScrollActiveBlock(paragraphRefs)
+useParagraphRanges(ranges, activeBlockIndex)
 </script>
 <template>
   <!-- Single-root section: owns its own CSS grid, centered at wider width -->
@@ -70,31 +70,37 @@ useParagraphRanges(ranges, activeParagraphIndex)
     <div class="text-column">
       <h2 class="section-heading">Autoencoder</h2>
 
-      <p
+      <div
           :ref="(el) => paragraphRefs[0] = el as HTMLElement"
-          :class="{ 'active-paragraph': activeParagraphIndex === 0 }"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === 0 }"
       >
-        The clean encode/decode symmetry of an orthonormal basis — embed with
-        <em>W</em>, recover with <em>Wᵀ</em> — is the geometric intuition behind
-        the architecture of our toy autoencoder. In this section, we define the
-        model formally.
-      </p>
+        <p>
+          The clean encode/decode symmetry of an orthonormal basis — embed with
+          <em>W</em>, recover with <em>Wᵀ</em> — is the geometric intuition behind
+          the architecture of our toy autoencoder. In this section, we define the
+          model formally.
+        </p>
+      </div>
 
-      <p
+      <div
           :ref="(el) => paragraphRefs[1] = el as HTMLElement"
-          :class="{ 'active-paragraph': activeParagraphIndex === 1 }"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === 1 }"
       >
-        The encoder computes the embedding <em>h</em> as a linear combination of
-        feature direction vectors <em>wᵢ</em>, weighted by the feature activations
-        <em>xᵢ</em>: <em>h = Wx</em>. The decoder projects the embedding onto each
-        feature direction and applies a bias and ReLU nonlinearity:
-        <em>x̂ = ReLU(Wᵀh + b)</em>.
-      </p>
+        <p>
+          The encoder computes the embedding <em>h</em> as a linear combination of
+          feature direction vectors <em>wᵢ</em>, weighted by the feature activations
+          <em>xᵢ</em>: <em>h = Wx</em>. The decoder projects the embedding onto each
+          feature direction and applies a bias and ReLU nonlinearity:
+          <em>x̂ = ReLU(Wᵀh + b)</em>.
+        </p>
+      </div>
 
       <div
           :ref="(el) => paragraphRefs[2] = el as HTMLElement"
-          class="paragraph"
-          :class="{ 'active-paragraph': activeParagraphIndex === 2 }"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === 2 }"
       >
         <p>
           Using <em>Wᵀ</em> as the decoder is directly motivated by the geometry of
@@ -111,26 +117,32 @@ useParagraphRanges(ranges, activeParagraphIndex)
         </TaskListDisplay>
       </div>
 
-      <p
+      <div
           :ref="(el) => paragraphRefs[3] = el as HTMLElement"
-          :class="{ 'active-paragraph': activeParagraphIndex === 3 }"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === 3 }"
       >
-        We generate synthetic feature vectors directly in feature space rather
-        than training on real text. Each coordinate cleanly represents one
-        disentangled feature, isolating the geometric compression problem from
-        all other aspects of learning.
-      </p>
+        <p>
+          We generate synthetic feature vectors directly in feature space rather
+          than training on real text. Each coordinate cleanly represents one
+          disentangled feature, isolating the geometric compression problem from
+          all other aspects of learning.
+        </p>
+      </div>
 
-      <p
+      <div
           :ref="(el) => paragraphRefs[4] = el as HTMLElement"
-          :class="{ 'active-paragraph': activeParagraphIndex === 4 }"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === 4 }"
       >
-        The loss function weights each feature by an importance factor
-        <em>Iᵢ = αⁱ</em>, where <em>α ∈ (0, 1)</em> controls the decay.
-        This creates a natural hierarchy: the model must prioritise the
-        first features and can afford to sacrifice later ones when dimensions
-        are limited.
-      </p>
+        <p>
+          The loss function weights each feature by an importance factor
+          <em>Iᵢ = αⁱ</em>, where <em>α ∈ (0, 1)</em> controls the decay.
+          This creates a natural hierarchy: the model must prioritise the
+          first features and can afford to sacrifice later ones when dimensions
+          are limited.
+        </p>
+      </div>
     </div>
 
     <!-- Visualization column (sticky) -->
