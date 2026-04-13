@@ -116,8 +116,6 @@ For a VISxAI submission, the interactive component (autoencoder visualizations, 
 
 4. **Experiment 4 sets $\alpha = 1.0$ without explaining why.** The instruction "Set $\alpha = 1.0$ (equal importance)" is given but not motivated. Add a brief justification: "so that all features compete equally for embedding capacity, removing importance ranking as a confound."
 
-6. **Missing: what if the reader doesn't see the expected result?** Experiments can fail to converge, find local optima, or take longer than expected. A brief note about rerunning training or checking training steps would make the interactive experience more robust. This is especially important for Experiment 4, where the 5-way symmetric solution may not always emerge cleanly.
-
 **Scientific correctness:**
 - The orthonormal basis claim in Experiment 1 is correct for the global optimum but the model may find rotated variants — consider saying "an orthonormal basis (up to rotation/reflection)"
 - The half-normal mean as optimal constant predictor is correct

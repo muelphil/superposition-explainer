@@ -25,7 +25,6 @@
 ## Section 4
 3. state that features are sampled independently (for sparsity definition)
 4. Add a brief justification: "so that all features compete equally for embedding capacity, removing importance ranking as a confound."
-6. Good Point! Please add this as a brief info block at the top of the experiements section (we will run experiments, convergent behaviour may take long to show up, consider reseting the experiment if it takes long and rerunning it)
 
 ## Section 5
 1. make the explanation of how bias cancels expected interference slightly more explicit. Keep the TODO figure, I will plug it in later.

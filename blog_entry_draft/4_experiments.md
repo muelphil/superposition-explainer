@@ -18,7 +18,7 @@ We begin with the simplest case: two features embedded in two dimensions. Since 
 We now have four features to embed in only two dimensions — more features than the embedding space can accommodate orthogonally. But recall that our feature activations are strictly non-negative: a feature is either absent or present with positive strength. This means the negative direction along each embedding axis is never reached by any single feature. Could the model place additional features along these unused opposite directions, effectively doubling its capacity?
 
 - [ ] Set importance $\alpha = 0.8$
-- [ ] Run training
+- [ ] Run training and wait for convergence; Note: The experiment will automatically pause when convergence is reached. Convergent behavior may take some time to show up, consider resting the experiment if it takes long and rerunning it.
 - [ ] Hover over each input neuron (ordered by descending importance) to observe which features are represented in embedding space
 - [ ] For the features not represented, check their learned bias — compare it to the mean of the [half-normal distribution](https://en.wikipedia.org/wiki/Half-normal_distribution): $\mu = \sqrt{2/\pi} \approx 0.798$
 
