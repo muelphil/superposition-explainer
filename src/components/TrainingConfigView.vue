@@ -48,7 +48,7 @@ function fmtLR(lr: number) {
 
       <template v-if="!hiddenControls.has('importance')">
         <label class="cfg-label" title="I_i = α^i — 1.0 = uniform, lower = first features more important">Importance α</label>
-        <input type="range" class="cfg-slider" min="0.5" max="1.0" step="0.01"
+        <input type="range" class="cfg-slider" min="0.5" max="1.0" step="0.05"
           :value="svc.config.featureDecay" :disabled="isTraining"
           @input="svc.updateConfig({ featureDecay: numVal($event) })" />
         <span class="cfg-val">{{ svc.config.featureDecay.toFixed(2) }}</span>

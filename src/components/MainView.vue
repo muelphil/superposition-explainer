@@ -294,7 +294,7 @@ const showSettings = ref(false)
 }
 
 .tab-pane {
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1rem;
 }
 
 .tab-pane--flush {
@@ -303,6 +303,8 @@ const showSettings = ref(false)
 
 .tab-pane--weights {
   overflow-x: auto;
+  overflow-y: auto;
+  padding: 0.5rem 0.75rem;
 }
 
 /* ── Training footer ─────────────────────────────────────────── */

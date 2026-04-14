@@ -88,8 +88,7 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
         <p>
           The internal vectors of a neural network have a <strong>fixed dimensionality</strong> — a hard
           architectural constraint. In transformer models, this is called the <strong>embedding
-          dimension</strong> or <strong>model dimension</strong>
-          <katex-element expression="d_{\text{model}}" />, and it determines how many coordinates are
+          dimension</strong> or <strong>model dimension</strong> <katex-element expression="d_{\text{model}}" />, and it determines how many coordinates are
           available at each layer to store and process information. Increasing the embedding dimension is
           expensive: in dense transformer architectures, a large fraction of the parameters reside in
           matrices whose size scales roughly with the <strong>square</strong> of the embedding dimension.
@@ -103,8 +102,7 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
           <figcaption>
             Total parameter count of a GPT-style dense decoder transformer as a function of its embedding /
             model dimension <katex-element expression="d_{\text{model}}" />, for five prominent architecture
-            families. Because parameter count grows quadratically with
-            <katex-element expression="d_{\text{model}}" />, even modest increases in embedding dimension
+            families. Because parameter count grows quadratically with <katex-element expression="d_{\text{model}}" />, even modest increases in embedding dimension
             incur a steep cost in parameters.
           </figcaption>
         </figure>
@@ -350,7 +348,7 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
           (<a href="https://youtu.be/9-Jl0dxWQs8?si=1JIOc0Yfg0T_H5iJ&t=1025" target="_blank" rel="noopener"><em>How might LLMs store facts</em>, Chapter 7</a>):
           it is possible to place <strong>10,000 vectors in just 100 dimensions</strong> while all
           pairwise angles remain between <katex-element expression="89^\circ" /> and
-          <katex-element expression="90^\circ" /> — virtually orthogonal, despite outnumbering the
+          <katex-element expression="91^\circ" /> — virtually orthogonal, despite outnumbering the
           dimensions by a factor of 100.
         </p>
 

@@ -15,6 +15,9 @@ const eqEncoder = '\\boldsymbol{h} = \\boldsymbol{W}\\boldsymbol{x}'
 const eqDecoder = '\\hat{\\boldsymbol{x}} = \\operatorname{ReLU}(\\boldsymbol{W}^{\\!\\top}\\boldsymbol{h} + \\boldsymbol{b})'
 const titleW    = '\\boldsymbol{W}'
 const titleB    = '\\boldsymbol{b}^{\\top}'
+const titleNorm = '\\|\\boldsymbol{w}_i\\|'
+
+function fmtNorm(v: number): string { return v.toFixed(2) }
 
 // ─── Illumination ─────────────────────────────────────────────────────────────
 interface WvIllum {
@@ -149,7 +152,6 @@ function featureVecLength(c: number): number {
     <!-- ══ Equations reference bar ══════════════════════════════ -->
     <div class="eq-bar">
       <span class="eq-item" v-katex="eqEncoder" />
-      <span class="eq-sep" />
       <span class="eq-item" v-katex="eqDecoder" />
     </div>
 
@@ -170,11 +172,11 @@ function featureVecLength(c: number): number {
               dimmed:      isActive() && !colHeaderHighlighted(c - 1),
               selected:    isColSelected(c - 1),
             }"
-            :title="`f_${c}  ‖v‖ = ${featureVecLength(c - 1).toFixed(3)}`"
+            :title="`w_${c}  ‖w‖ = ${featureVecLength(c - 1).toFixed(3)}`"
             @mouseenter="onColEnter(c - 1)"
             @mouseleave="clearHover"
             @click="onColClick(c - 1)"
-            v-katex="`f_{${c}}`"
+            v-katex="`w_{${c}}`"
           />
           <div class="col-header-spacer" />
         </div>
@@ -218,6 +220,23 @@ function featureVecLength(c: number): number {
           </div>
           <div class="bracket bracket-right" />
         </div>
+
+        <!-- ‖w_i‖ norm row -->
+        <div class="norm-row">
+          <div class="norm-row-label" v-katex="titleNorm" />
+          <div class="bracket-spacer" />
+          <div class="cell-grid norm-grid" :style="{ gridTemplateColumns: `repeat(${n}, 1fr)` }">
+            <div
+              v-for="c in n" :key="c"
+              class="norm-cell"
+              :class="{
+                highlighted: colHeaderHighlighted(c - 1),
+                dimmed:      isActive() && !colHeaderHighlighted(c - 1),
+              }"
+            >{{ fmtNorm(featureVecLength(c - 1)) }}</div>
+          </div>
+          <div class="bracket-spacer" />
+        </div>
       </div>
     </div>
 
@@ -260,17 +279,19 @@ function featureVecLength(c: number): number {
 .wv-root {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
-  align-items: flex-start;
-  padding: 0.15rem 0.25rem;
+  gap: 0.75rem;
+  align-items: stretch;
+  width: 100%;
+  padding: 0.1rem 0.15rem;
+  box-sizing: border-box;
 }
 
 /* ══ Equation reference bar ══════════════════════════════════════ */
 .eq-bar {
   display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  padding: 0.45rem 0.6rem;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.3rem 0.5rem;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: 6px;
@@ -279,32 +300,24 @@ function featureVecLength(c: number): number {
 }
 
 .eq-item :deep(.katex) {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--color-text-primary);
-}
-
-.eq-sep {
-  display: block;
-  width: 1px;
-  align-self: stretch;
-  background: var(--color-border);
-  flex-shrink: 0;
 }
 
 /* ══ Matrix section ══════════════════════════════════════════════ */
 .matrix-section {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.15rem;
 }
 
 .matrix-title {
-  padding-left: 2.4rem; /* aligns above the cells, past corner + bracket */
+  padding-left: 2.1rem; /* aligns above the cells, past corner + bracket */
   line-height: 1;
 }
 
 .matrix-title :deep(.katex) {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--color-text-primary);
 }
 
@@ -317,22 +330,22 @@ function featureVecLength(c: number): number {
 .col-headers-row {
   display: flex;
   align-items: flex-end;
-  padding-bottom: 0.15rem;
+  padding-bottom: 0.1rem;
 }
 
 .corner {
-  width: 1.9rem;
+  width: 1.75rem;
   flex-shrink: 0;
 }
 
 .col-header-spacer {
-  width: 7px;
+  width: 6px;
   flex-shrink: 0;
 }
 
 /* ══ Column headers ══════════════════════════════════════════════ */
 .col-header {
-  min-width: 3rem;
+  min-width: 2.75rem;
   text-align: center;
   cursor: pointer;
   border-radius: 3px 3px 0 0;
@@ -344,7 +357,7 @@ function featureVecLength(c: number): number {
 }
 
 .col-header :deep(.katex) {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--color-text-label);
   transition: color 0.15s;
 }
@@ -373,7 +386,7 @@ function featureVecLength(c: number): number {
 .row-labels {
   display: flex;
   flex-direction: column;
-  width: 1.9rem;
+  width: 1.75rem;
   flex-shrink: 0;
 }
 
@@ -381,16 +394,16 @@ function featureVecLength(c: number): number {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 0.3rem;
+  padding-right: 0.25rem;
   cursor: pointer;
   border-radius: 3px 0 0 3px;
   transition: opacity 0.15s;
   user-select: none;
-  min-height: 1.9rem;
+  min-height: 1.75rem;
 }
 
 .row-header :deep(.katex) {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--color-text-label);
   transition: color 0.15s;
 }
@@ -411,12 +424,12 @@ function featureVecLength(c: number): number {
 
 .row-header-ghost {
   pointer-events: none;
-  min-height: 1.9rem;
+  min-height: 1.75rem;
 }
 
 /* ══ Brackets ════════════════════════════════════════════════════ */
 .bracket {
-  width: 7px;
+  width: 6px;
   flex-shrink: 0;
   border-top: 1.5px solid var(--color-text-label);
   border-bottom: 1.5px solid var(--color-text-label);
@@ -436,7 +449,7 @@ function featureVecLength(c: number): number {
 .cell-grid {
   display: grid;
   gap: 2px;
-  padding: 3px;
+  padding: 2px;
   background: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
@@ -444,8 +457,8 @@ function featureVecLength(c: number): number {
 
 /* ══ Individual cell ═════════════════════════════════════════════ */
 .matrix-cell {
-  min-width: 3rem;
-  min-height: 1.9rem;
+  min-width: 2.75rem;
+  min-height: 1.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -470,11 +483,67 @@ function featureVecLength(c: number): number {
 }
 
 .cell-val {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-family: var(--font-family-mono);
   font-variant-numeric: tabular-nums;
   color: var(--color-text-primary);
   letter-spacing: -0.02em;
   white-space: nowrap;
+}
+
+/* ══ Norm row ‖w_i‖ ══════════════════════════════════════════════ */
+.norm-row {
+  display: flex;
+  align-items: center;
+  margin-top: 0.15rem;
+}
+
+.norm-row-label {
+  width: 1.75rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.25rem;
+}
+
+.norm-row-label :deep(.katex) {
+  font-size: 0.68rem;
+  color: var(--color-text-secondary);
+}
+
+.bracket-spacer {
+  width: 6px;
+  flex-shrink: 0;
+}
+
+.norm-grid {
+  background: none;
+  border: none;
+  padding: 0;
+  gap: 2px;
+}
+
+.norm-cell {
+  min-width: 2.75rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-family: var(--font-family-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  letter-spacing: -0.02em;
+  border-radius: 2px;
+  transition: opacity 0.15s;
+}
+
+.norm-cell.highlighted {
+  color: var(--color-text-primary);
+}
+
+.norm-cell.dimmed {
+  opacity: 0.3;
 }
 </style>

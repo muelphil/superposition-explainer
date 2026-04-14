@@ -111,6 +111,8 @@ const activeTab = ref<PanelTab>('training')
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .panel-embedding {
@@ -141,9 +143,15 @@ const activeTab = ref<PanelTab>('training')
 .tab-btn:hover { color: var(--color-text-primary); }
 .tab-btn.active { color: var(--color-text-secondary); }
 
-.tab-pane { padding: 1rem 1.25rem; }
+.tab-pane { padding: 0.75rem 1rem; }
 .tab-pane--flush { padding: 0; }
-.tab-pane--weights { overflow-x: auto; }
+.tab-pane--weights {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 0.5rem 0.75rem;
+}
 
 /* ── Training footer ──────────────────────────────────── */
 .training-footer {

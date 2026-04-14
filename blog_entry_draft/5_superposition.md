@@ -38,7 +38,7 @@ Concrete examples from optimal spherical code tables ([spherical-codes.org](http
 
 No closed-form formula exists for the exact packing number in general, but numerical constructions and theoretical bounds consistently show this exponential growth.
 
-A striking demonstration comes from 3Blue1Brown ([*How might LLMs store facts*, Chapter 7](https://youtu.be/9-Jl0dxWQs8?si=1JIOc0Yfg0T_H5iJ&t=1025)): it is possible to place **10,000 vectors in just 100 dimensions** while all pairwise angles remain between $89°$ and $90°$ — virtually orthogonal, despite outnumbering the dimensions by a factor of 100.
+A striking demonstration comes from 3Blue1Brown ([*How might LLMs store facts*, Chapter 7](https://youtu.be/9-Jl0dxWQs8?si=1JIOc0Yfg0T_H5iJ&t=1025)): it is possible to place **10,000 vectors in just 100 dimensions** while all pairwise angles remain between $89°$ and $91°$ — virtually orthogonal, despite outnumbering the dimensions by a factor of 100.
 
 This near-orthogonality in high dimensions is a consequence of the **concentration of measure**, a fundamental property of high-dimensional geometry. A precise version is given by the **Johnson–Lindenstrauss lemma**: any set of $n$ points can be projected into $d = O(\log n \,/\, \varepsilon^2)$ dimensions while preserving all pairwise distances within $(1 \pm \varepsilon)$. Inverting this, the number of vectors that can be placed nearly orthogonally in $d$ dimensions grows exponentially with $d$: even a modest increase in dimensionality permits a dramatically larger number of nearly-orthogonal directions.
 
