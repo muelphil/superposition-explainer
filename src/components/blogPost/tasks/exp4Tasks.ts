@@ -11,16 +11,26 @@ export function createExp4TaskSpecs(): AeTaskSpec[] {
     {
       id: 'set-equal-importance',
       label: `Set ${k('\\alpha = 1.0')} (equal importance)`,
+      resetable: true,
       setup: (ctx: AeTaskContext) => ({
         events: ['importance-changed'],
         check: () => ctx.services.svc.config.featureDecay >= 0.99,
       }),
     },
     {
+      id: 'set-sparsity',
+      label: `Set sparsity to ${k('S = 0.8')} or higher in the training config`,
+      resetable: true,
+      setup: (ctx: AeTaskContext) => ({
+        events: ['sparsity-changed'],
+        check: () => ctx.services.svc.config.sparsity >= 0.78,
+      }),
+    },
+    {
       id: 'converge',
       label: 'Run training and observe the feature directions in the embedding view',
       note: 'The experiment will automatically pause when convergence is reached.',
-      dependencies: ['set-equal-importance'],
+      dependencies: ['set-equal-importance', 'set-sparsity'],
       setup: (ctx: AeTaskContext) =>
         createConvergenceHandler(
           ctx.services.svc,
@@ -29,7 +39,9 @@ export function createExp4TaskSpecs(): AeTaskSpec[] {
             allColumnNormsInRange(svc.W.value, 0.5, 1.1),
           30,
           () => ctx.services.svc.pauseTraining(),
-          () => ctx.services.svc.config.featureDecay >= 0.99,
+          () =>
+            ctx.services.svc.config.featureDecay >= 0.99 &&
+            ctx.services.svc.config.sparsity >= 0.78,
         ),
     },
     {

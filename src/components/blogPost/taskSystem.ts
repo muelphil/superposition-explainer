@@ -77,6 +77,12 @@ export interface TaskSpec<T = Record<string, any>> {
   dependencies?: string[]
   /** Optional tasks are not required for the task list to be "resolved". */
   optional?: boolean
+  /**
+   * When true, the task stays subscribed after completing and can become
+   * incomplete again if `check()` returns false on a subsequent event.
+   * Use for "set slider to X" tasks where the user may undo the action.
+   */
+  resetable?: boolean
   /** Called once to set up the event-driven completion handler. */
   setup: (ctx: TaskContext<T>) => TaskHandler
 }
@@ -174,18 +180,40 @@ export class TaskList {
   /** Subscribe a single task to its declared events. Runs initial check immediately. */
   private _subscribe(spec: TaskSpec<any>): void {
     const handler = this.handlers.get(spec.id)!
+    const isResetable = !!spec.resetable
 
     // Initial check — task may already be satisfied (e.g. slider already at target)
     if (handler.check()) {
-      this._markComplete(spec.id)
-      return
+      this.completedSet.set(spec.id, true)
+      this._subscribeEligible()
+      if (!isResetable) {
+        // Non-resetable: permanently latched, no listener needed
+        this._updateTaskStates()
+        return
+      }
+      // Resetable: mark done but still set up listener so it can be undone
     }
 
     const listener = (eventName: string) => (payload?: any) => {
-      if (this.completedSet.get(spec.id)) return
+      const wasDone = this.completedSet.get(spec.id)!
+      if (wasDone && !isResetable) return  // non-resetable: already done, ignore
+
       handler.onEvent?.(eventName, payload)
-      if (handler.check()) {
-        this._markComplete(spec.id)
+      const nowDone = handler.check()
+
+      if (nowDone && !wasDone) {
+        // Newly completed
+        this.completedSet.set(spec.id, true)
+        if (!isResetable) {
+          // Non-resetable: unsubscribe and clean up
+          const unsub = this.subscriptions.get(spec.id)
+          if (unsub) { unsub(); this.subscriptions.delete(spec.id) }
+          handler.cleanup?.()
+        }
+        this._subscribeEligible()
+      } else if (!nowDone && wasDone) {
+        // Resetable: became incomplete (non-resetable can't reach here due to early return)
+        this.completedSet.set(spec.id, false)
       }
       this._updateTaskStates()
     }
@@ -198,9 +226,10 @@ export class TaskList {
     }
 
     this.subscriptions.set(spec.id, () => unsubs.forEach(fn => fn()))
+    this._updateTaskStates()
   }
 
-  /** Permanently latch a task as complete, clean up, and promote downstream tasks. */
+  /** Permanently latch a non-resetable task as complete, clean up, and promote downstream tasks. */
   private _markComplete(id: string): void {
     this.completedSet.set(id, true)
     const unsub = this.subscriptions.get(id)

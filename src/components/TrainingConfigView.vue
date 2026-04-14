@@ -56,7 +56,7 @@ function fmtLR(lr: number) {
 
       <template v-if="!hiddenControls.has('sparsity')">
         <label class="cfg-label" title="Fraction of features that are zero in a training sample (higher = fewer active features)">Sparsity</label>
-        <input type="range" class="cfg-slider" min="0" max="1" step="0.05"
+        <input type="range" class="cfg-slider" min="0" max="0.95" step="0.05"
           :value="svc.config.sparsity" :disabled="isTraining"
           @input="setSparsity($event)" />
         <span class="cfg-val">{{ svc.config.sparsity.toFixed(2) }}</span>

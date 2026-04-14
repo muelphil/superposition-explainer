@@ -480,6 +480,7 @@ function onWeightClick(row: number, col: number) {
 
 function onFeatureEnter(i: number) {
   selSvc.setHover({kind: 'feature', idx: i}, 'autoencoder')
+  eventBus?.emit('input-neuron-hovered', { index: i })
 }
 
 function onFeatureLeave() {

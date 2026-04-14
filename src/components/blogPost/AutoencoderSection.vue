@@ -109,6 +109,7 @@ const ranges: ParagraphRange[] = [
       } else {
         if (svc.config.inputDim !== 4) svc.setInputDim(4)
         if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
+        svc.updateConfig({ sparsity: 0 })
       }
     },
     leave: () => { rangeStates[2] = svc.saveState() },
@@ -334,26 +335,27 @@ useParagraphRanges(ranges, activeBlockIndex)
       <h2 class="section-heading" style="margin-top: 2.5rem;">Experiments</h2>
 
       <!-- ═══ Block 5: Experiments intro ═══ -->
-      <div
-          :ref="(el) => paragraphRefs[5] = el as HTMLElement"
-          class="text-block"
-          :class="{ 'active-block': activeBlockIndex === 5 }"
-      >
-        <p>
-          With the autoencoder defined, we can now put it to the test. The interactive model
-          in the side panel lets you train the autoencoder and observe its learned representations
-          in real time. The following experiments build progressively from a trivial setting to
-          one that reveals a striking emergent pattern.
-        </p>
-      </div>
+
+      <p>
+        With the autoencoder defined, we can now put it to the test. The interactive model
+        in the side panel lets you train the autoencoder and observe its learned representations
+        in real time. The following experiments build progressively from a trivial setting to
+        one that reveals a striking emergent pattern.
+      </p>
+<!--      <div-->
+<!--          :ref="(el) => paragraphRefs[5] = el as HTMLElement"-->
+<!--          class="text-block"-->
+<!--          :class="{ 'active-block': activeBlockIndex === 5 }"-->
+<!--      >-->
+<!--      </div>-->
 
       <!-- ═══ Block 6: Experiment 1 — Two features in two dimensions ═══ -->
+      <h3>Experiment 1: Two Features in Two Dimensions</h3>
       <div
           :ref="(el) => paragraphRefs[6] = el as HTMLElement"
           class="text-block"
           :class="{ 'active-block': activeBlockIndex === 6 }"
       >
-        <h3>Experiment 1: Two Features in Two Dimensions</h3>
 
         <p>
           We begin with the simplest case: two features embedded in two dimensions. Since the
@@ -372,12 +374,12 @@ useParagraphRanges(ranges, activeBlockIndex)
       </div>
 
       <!-- ═══ Block 7: Experiment 2 — More features than dimensions ═══ -->
+      <h3>Experiment 2: More Features Than Dimensions</h3>
       <div
           :ref="(el) => paragraphRefs[7] = el as HTMLElement"
           class="text-block"
           :class="{ 'active-block': activeBlockIndex === 7 }"
       >
-        <h3>Experiment 2: More Features Than Dimensions</h3>
 
         <p>
           We now have four features to embed in only two dimensions — more features than the
@@ -406,12 +408,12 @@ useParagraphRanges(ranges, activeBlockIndex)
       </div>
 
       <!-- ═══ Block 8: Interlude — Feature sparsity ═══ -->
+      <h3>Interlude: Feature Sparsity</h3>
       <div
           :ref="(el) => paragraphRefs[8] = el as HTMLElement"
           class="text-block"
           :class="{ 'active-block': activeBlockIndex === 8 }"
       >
-        <h3>Interlude: Feature Sparsity</h3>
 
         <p>
           In real neural networks, not all features are active at the same time. Consider the
@@ -423,18 +425,18 @@ useParagraphRanges(ranges, activeBlockIndex)
 
         <p>
           We model sparsity by introducing a parameter
-          <katex-element expression="S \in (0, 1]" /> that controls the probability that each
-          feature is active in a given training sample:
+          <katex-element expression="S \in [0, 1)" /> that controls the probability that each
+          feature is <strong>zero</strong> (inactive) in a given training sample:
         </p>
 
-        <katex-element :display-mode="true" expression="x_i = \begin{cases} |\mathcal{N}(0,1)| &amp; \text{with probability } S \\ 0 &amp; \text{otherwise} \end{cases}" />
+        <katex-element :display-mode="true" expression="x_i = \begin{cases} 0 &amp; \text{with probability } S \\ |\mathcal{N}(0,1)| &amp; \text{otherwise} \end{cases}" />
 
         <p>
-          When <katex-element expression="S = 1.0" />, every feature is always active (the dense
-          case from above). As <katex-element expression="S" /> decreases, features become
+          When <katex-element expression="S = 0" />, every feature is always active (the dense
+          case from above). As <katex-element expression="S" /> increases, features become
           increasingly sparse — each one is active only a fraction of the time. Crucially, since
           feature activations are sampled independently, any two specific features are
-          simultaneously active with probability <katex-element expression="S^2" />, which
+          simultaneously active with probability <katex-element expression="(1-S)^2" />, which
           shrinks rapidly.
         </p>
 
@@ -442,12 +444,12 @@ useParagraphRanges(ranges, activeBlockIndex)
       </div>
 
       <!-- ═══ Block 9: Experiment 3 — Sparsity changes the game ═══ -->
+      <h3>Experiment 3: Sparsity Changes the Game</h3>
       <div
           :ref="(el) => paragraphRefs[9] = el as HTMLElement"
           class="text-block"
           :class="{ 'active-block': activeBlockIndex === 9 }"
       >
-        <h3>Experiment 3: Sparsity Changes the Game</h3>
 
         <p>
           With sparsity, the same bottleneck — four features in two dimensions — may have a
@@ -477,12 +479,12 @@ useParagraphRanges(ranges, activeBlockIndex)
       </div>
 
       <!-- ═══ Block 10: Experiment 4 — Beyond doubling ═══ -->
+      <h3>Experiment 4: Beyond Doubling</h3>
       <div
           :ref="(el) => paragraphRefs[10] = el as HTMLElement"
           class="text-block"
           :class="{ 'active-block': activeBlockIndex === 10 }"
       >
-        <h3>Experiment 4: Beyond Doubling</h3>
 
         <p>
           Exploiting opposite directions doubled the capacity from two to four features. Can
@@ -501,14 +503,14 @@ useParagraphRanges(ranges, activeBlockIndex)
             interference, and sparsity keeps the expected cost low.
           </template>
         </TaskListDisplay>
-
-        <p>
-          This is qualitatively different from the previous experiment. The model is no longer
-          just exploiting unused directions — it is actively trading reconstruction accuracy for
-          representational capacity, accepting controlled interference between every pair of
-          features. This behavior has deep geometric roots, and the next section gives it a name.
-        </p>
       </div>
+
+      <p>
+        This is qualitatively different from the previous experiment. The model is no longer
+        just exploiting unused directions — it is actively trading reconstruction accuracy for
+        representational capacity, accepting controlled interference between every pair of
+        features. This behavior has deep geometric roots, and the next section gives it a name.
+      </p>
     </div>
 
     <!-- Visualization column (sticky) -->

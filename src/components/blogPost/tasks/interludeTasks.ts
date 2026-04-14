@@ -8,8 +8,18 @@ import { k } from './aeTaskHelpers'
 export function createInterludeTaskSpecs(): AeTaskSpec[] {
   return [
     {
+      id: 'confirm-sparsity-zero',
+      label: `Confirm no sparsity is set: ${k('S = 0')} (dense features)`,
+      resetable: true,
+      setup: (ctx: AeTaskContext) => ({
+        events: ['sparsity-changed'],
+        check: () => ctx.services.svc.config.sparsity === 0,
+      }),
+    },
+    {
       id: 'resample-1',
       label: 'Resample a few times using the resample button and observe the input vectors',
+      dependencies: ['confirm-sparsity-zero'],
       setup: () => {
         let count = 0
         return {
@@ -22,11 +32,12 @@ export function createInterludeTaskSpecs(): AeTaskSpec[] {
     },
     {
       id: 'decrease-sparsity',
-      label: `Set sparsity to ${k('S = 0.8')} in the training config`,
+      label: `Set sparsity to ${k('S = 0.8')} or higher in the training config`,
       dependencies: ['resample-1'],
+      resetable: true,
       setup: (ctx: AeTaskContext) => ({
         events: ['sparsity-changed'],
-        check: () => ctx.services.svc.config.sparsity >= 0.75,
+        check: () => ctx.services.svc.config.sparsity >= 0.78,
       }),
     },
     {

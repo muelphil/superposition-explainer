@@ -11,6 +11,7 @@ export function createExp3TaskSpecs(): AeTaskSpec[] {
     {
       id: 'set-sparsity',
       label: `Set sparsity to ${k('S = 0.9')} and run training`,
+      resetable: true,
       setup: (ctx: AeTaskContext) => ({
         events: ['sparsity-changed'],
         check: () => ctx.services.svc.config.sparsity >= 0.85,
