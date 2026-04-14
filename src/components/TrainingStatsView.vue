@@ -1,12 +1,25 @@
 <script setup lang="ts">
-import { inject, ref, computed } from 'vue'
+import { inject, ref, computed, watch } from 'vue'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
+import { VIZ_SERVICE_KEY } from '../services/VizService'
+import { TASK_EVENT_BUS_KEY } from './blogPost/taskSystem'
 
 const svc = inject<AutoencoderServiceType>('autoencoderService')!
 
+// Optional VizService (provided in blog, not in MainView)
+const vizSvc = inject(VIZ_SERVICE_KEY, undefined)
+const eventBus = inject(TASK_EVENT_BUS_KEY, undefined)
+
 // ─── Tab selection ────────────────────────────────────────────────────────────
 type MetricKey = 'loss' | 'presence' | 'angle'
-const selected = ref<MetricKey>('loss')
+
+// Use VizService's reactive ref if available, otherwise local ref
+const selected = vizSvc ? vizSvc.statsChart : ref<MetricKey>('loss')
+
+// Emit event when chart selection changes
+watch(selected, (val) => {
+  eventBus?.emit('stats-chart-changed', { chart: val })
+})
 
 const tabs: { key: MetricKey; label: string; color: string; yLabel: string }[] = [
   { key: 'loss',     label: 'Loss',            color: 'var(--color-interactive)', yLabel: 'loss' },

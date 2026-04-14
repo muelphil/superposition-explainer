@@ -1,34 +1,33 @@
-import { computed } from 'vue'
-import type { TaskSpec, TaskContext } from '../taskSystem'
-import { countSignificantColumns, createConvergenceTracker } from './aeTaskHelpers'
+import type { AeTaskSpec, AeTaskContext } from './aeTaskHelpers'
+import { k, countSignificantColumns, columnAngleDeg, createConvergenceHandler } from './aeTaskHelpers'
 
 /**
  * Task specs for Experiment 3: four features in two dimensions (sparse).
- * With high sparsity (S = 0.1), the model should represent all four features
+ * With high sparsity (S = 0.9), the model should represent all four features
  * using opposite-direction pairs.
  */
-export function createExp3TaskSpecs(): TaskSpec[] {
+export function createExp3TaskSpecs(): AeTaskSpec[] {
   return [
     {
       id: 'set-sparsity',
-      label: 'Set sparsity to S = 0.1 and run training',
-      // Draft S = 0.1 (10% active) → service sparsity = 0.9 (90% zero)
-      setup: (ctx: TaskContext) =>
-        computed(() => ctx.svc.config.sparsity >= 0.85),
+      label: `Set sparsity to ${k('S = 0.9')} and run training`,
+      setup: (ctx: AeTaskContext) => ({
+        events: ['sparsity-changed'],
+        check: () => ctx.services.svc.config.sparsity >= 0.85,
+      }),
     },
     {
       id: 'converge',
-      label: 'Observe the feature directions in the embedding view',
+      label: 'Rerun the training — observe the feature directions in the embedding view',
       note: 'The experiment will automatically pause when convergence is reached.',
-      sticky: true,
       dependencies: ['set-sparsity'],
-      setup: (ctx: TaskContext) =>
-        createConvergenceTracker(
-          ctx.svc,
-          (svc) => countSignificantColumns(svc.W.value, 0.3) >= 3,
+      setup: (ctx: AeTaskContext) =>
+        createConvergenceHandler(
+          ctx.services.svc,
+          (svc) => countSignificantColumns(svc.W.value, 0.5) >= 4,
           30,
-          () => ctx.svc.pauseTraining(),
-          () => ctx.svc.config.sparsity >= 0.85,
+          () => ctx.services.svc.pauseTraining(),
+          () => ctx.services.svc.config.sparsity >= 0.85,
         ),
     },
     {
@@ -36,14 +35,46 @@ export function createExp3TaskSpecs(): TaskSpec[] {
       label: 'Activate individual features one at a time using the input sliders and observe the reconstruction',
       dependencies: ['converge'],
       optional: true,
-      setup: () => computed(() => true),
+      setup: () => {
+        const activated = new Set<number>()
+        return {
+          events: ['input-value-changed'],
+          onEvent: (_: string, payload?: any) => {
+            if (payload?.value > 0.5) activated.add(payload.index)
+          },
+          check: () => activated.size >= 2,
+        }
+      },
     },
     {
       id: 'activate-opposite',
       label: 'Set all inputs to zero, then increase two features with opposite directions to 1.0 — observe the embedding and error',
       dependencies: ['converge'],
       optional: true,
-      setup: () => computed(() => true),
+      setup: (ctx: AeTaskContext) => ({
+        events: ['input-value-changed'],
+        check: () => {
+          const input = ctx.services.svc.currentInput.value
+          const W = ctx.services.svc.W.value
+          if (!W.length || !W[0]) return false
+
+          // Find inputs ≈ 1.0 and inputs ≈ 0
+          const activeIndices: number[] = []
+          let allOthersZero = true
+          for (let i = 0; i < input.length; i++) {
+            if (input[i] > 0.8) {
+              activeIndices.push(i)
+            } else if (input[i] > 0.15) {
+              allOthersZero = false
+            }
+          }
+          if (activeIndices.length !== 2 || !allOthersZero) return false
+
+          // Check that the two active features have opposite-facing weight vectors
+          const angle = columnAngleDeg(W, activeIndices[0], activeIndices[1])
+          return angle > 160
+        },
+      }),
     },
   ]
 }

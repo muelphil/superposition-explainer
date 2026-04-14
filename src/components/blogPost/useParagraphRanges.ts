@@ -21,6 +21,11 @@ export interface ParagraphRange {
    * the same index (e.g. on mount).
    */
   apply: (activeIndex: number) => void
+  /**
+   * Called when the active range changes away from this range.
+   * Use for teardown / state saving.
+   */
+  leave?: () => void
 }
 
 export function useParagraphRanges<T extends ParagraphRange>(
@@ -31,10 +36,16 @@ export function useParagraphRanges<T extends ParagraphRange>(
     ranges.find(r => activeIndex.value >= r.from && activeIndex.value <= r.to),
   )
 
+  let prevRange: T | undefined = undefined
+
   watch(
     activeIndex,
     (idx) => {
       const range = ranges.find(r => idx >= r.from && idx <= r.to)
+      if (range !== prevRange) {
+        prevRange?.leave?.()
+        prevRange = range
+      }
       if (range) range.apply(idx)
     },
     { immediate: true },

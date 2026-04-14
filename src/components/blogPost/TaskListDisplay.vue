@@ -29,9 +29,10 @@ defineSlots<{
           <template v-if="task.completed">✓</template>
         </span>
         <span class="task-body">
-          <span class="task-label">{{ task.label }}</span>
-          <span v-if="task.note" class="task-note">{{ task.note }}</span>
+          <span class="task-label" v-html="task.label"></span>
+          <span v-if="task.note" class="task-note" v-html="task.note"></span>
         </span>
+        <span v-if="task.progress" class="task-badge task-progress">{{ task.progress.current }}/{{ task.progress.total }}</span>
         <span v-if="task.optional" class="task-badge">optional</span>
       </li>
     </ul>
@@ -147,6 +148,16 @@ defineSlots<{
   border-radius: 3px;
   margin-top: 0.2rem;
   flex-shrink: 0;
+}
+
+.task-progress {
+  font-variant-numeric: tabular-nums;
+  text-transform: none;
+}
+
+/* KaTeX inline math should match surrounding text size */
+.task-label :deep(.katex) {
+  font-size: 0.95em;
 }
 
 /* ── Insight box ── */

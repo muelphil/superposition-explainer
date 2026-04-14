@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref, inject } from 'vue'
+import { inject } from 'vue'
 import type { AutoencoderServiceType } from '../../services/AutoencoderService'
+import { VIZ_SERVICE_KEY, type VizServiceType, type VizTab } from '../../services/VizService'
+import { TASK_EVENT_BUS_KEY, type TaskEventBus } from './taskSystem'
 import AutoencoderView from '../AutoencoderView.vue'
 import EmbeddingView from '../embeddingView/EmbeddingView.vue'
 import WeightView from '../WeightView.vue'
@@ -11,9 +13,14 @@ import TrainingActionButtons from '../TrainingActionButtons.vue'
 // Service instances are created and provided by AutoencoderSection
 const svc = inject<AutoencoderServiceType>('autoencoderService')!
 
-// Tabbed panel state
-type PanelTab = 'training' | 'statistics' | 'weights'
-const activeTab = ref<PanelTab>('training')
+// VizService: centralized tab/chart state (optional — undefined in MainView)
+const vizSvc = inject(VIZ_SERVICE_KEY, undefined)
+const eventBus = inject(TASK_EVENT_BUS_KEY, undefined)
+
+function setTab(tab: VizTab) {
+  if (vizSvc) vizSvc.activeTab.value = tab
+  eventBus?.emit('tab-changed', { tab })
+}
 </script>
 
 <template>
@@ -35,24 +42,24 @@ const activeTab = ref<PanelTab>('training')
       <div class="ae-bottom-section combined-panel">
         <div class="tab-bar">
           <button
-            v-for="tab in (['training', 'statistics', 'weights'] as PanelTab[])"
+            v-for="tab in (['training', 'statistics', 'weights'] as VizTab[])"
             :key="tab"
             class="tab-btn"
-            :class="{ active: activeTab === tab }"
-            @click="activeTab = tab"
+            :class="{ active: vizSvc?.activeTab.value === tab }"
+            @click="setTab(tab)"
           >
             {{ tab === 'training' ? 'Training' : tab === 'statistics' ? 'Statistics' : 'Weights' }}
           </button>
         </div>
 
         <div class="ae-viz-panel">
-          <div class="tab-pane" v-show="activeTab === 'training'">
+          <div class="tab-pane" v-show="vizSvc?.activeTab.value === 'training'">
             <TrainingConfigView />
           </div>
-          <div class="tab-pane tab-pane--flush" v-show="activeTab === 'statistics'">
+          <div class="tab-pane tab-pane--flush" v-show="vizSvc?.activeTab.value === 'statistics'">
             <TrainingStatsView />
           </div>
-          <div class="tab-pane tab-pane--weights" v-show="activeTab === 'weights'">
+          <div class="tab-pane tab-pane--weights" v-show="vizSvc?.activeTab.value === 'weights'">
             <WeightView />
           </div>
         </div>

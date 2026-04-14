@@ -3,12 +3,16 @@ import { inject, computed, ref } from 'vue'
 import { ChevronDown } from 'lucide-vue-next'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
 import { AE_VIEW_CONSTRAINTS_KEY } from './blogPost/aeStepTypes'
+import { TASK_EVENT_BUS_KEY } from './blogPost/taskSystem'
 
 const svc = inject<AutoencoderServiceType>('autoencoderService')!
 
 // Optional constraints from blog paragraph steps (undefined in MainView)
 const constraints = inject(AE_VIEW_CONSTRAINTS_KEY, undefined)
 const hiddenControls = computed(() => constraints?.value.hiddenControls ?? new Set<string>())
+
+// Optional event bus for task system (undefined in MainView)
+const eventBus = inject(TASK_EVENT_BUS_KEY, undefined)
 
 const isTraining = computed(() => svc.isTraining.value)
 const showAdvanced = ref(false)
@@ -18,6 +22,18 @@ function numVal(e: Event) {
 }
 function intVal(e: Event) {
   return parseInt((e.target as HTMLSelectElement).value)
+}
+
+function setSparsity(e: Event) {
+  const v = numVal(e)
+  svc.updateConfig({ sparsity: v })
+  eventBus?.emit('sparsity-changed', { value: v })
+}
+
+function setImportance(e: Event) {
+  const v = numVal(e)
+  svc.updateConfig({ featureDecay: v })
+  eventBus?.emit('importance-changed', { value: v })
 }
 
 // Learning rate: slider on log10 scale [-4, -1]
@@ -42,7 +58,7 @@ function fmtLR(lr: number) {
         <label class="cfg-label" title="Fraction of features that are zero in a training sample (higher = fewer active features)">Sparsity</label>
         <input type="range" class="cfg-slider" min="0" max="1" step="0.05"
           :value="svc.config.sparsity" :disabled="isTraining"
-          @input="svc.updateConfig({ sparsity: numVal($event) })" />
+          @input="setSparsity($event)" />
         <span class="cfg-val">{{ svc.config.sparsity.toFixed(2) }}</span>
       </template>
 
@@ -50,7 +66,7 @@ function fmtLR(lr: number) {
         <label class="cfg-label" title="I_i = α^i — 1.0 = uniform, lower = first features more important">Importance α</label>
         <input type="range" class="cfg-slider" min="0.5" max="1.0" step="0.05"
           :value="svc.config.featureDecay" :disabled="isTraining"
-          @input="svc.updateConfig({ featureDecay: numVal($event) })" />
+          @input="setImportance($event)" />
         <span class="cfg-val">{{ svc.config.featureDecay.toFixed(2) }}</span>
       </template>
 

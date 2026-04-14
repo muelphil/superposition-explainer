@@ -1,24 +1,47 @@
-import { computed } from 'vue'
-import type { TaskSpec, TaskContext } from '../taskSystem'
+import type { AeTaskSpec, AeTaskContext } from './aeTaskHelpers'
+import { k } from './aeTaskHelpers'
 
 /**
  * Task specs for the sparsity interlude between experiments 2 and 3.
  * Guides the user to explore feature sparsity — no insight box.
  */
-export function createInterludeTaskSpecs(): TaskSpec[] {
+export function createInterludeTaskSpecs(): AeTaskSpec[] {
   return [
     {
-      id: 'resample',
+      id: 'resample-1',
       label: 'Resample a few times using the resample button and observe the input vectors',
-      optional: true,
-      setup: () => computed(() => true),
+      setup: () => {
+        let count = 0
+        return {
+          events: ['resample-clicked'],
+          onEvent: () => { count++ },
+          check: () => count >= 3,
+          progress: () => ({ current: Math.min(count, 3), total: 3 }),
+        }
+      },
     },
     {
       id: 'decrease-sparsity',
-      label: 'Decrease sparsity to S = 0.2 and resample — notice how most feature activations are now zero',
-      // Draft S = 0.2 (20% active) → service sparsity = 0.8 (80% zero)
-      setup: (ctx: TaskContext) =>
-        computed(() => ctx.svc.config.sparsity >= 0.75),
+      label: `Set sparsity to ${k('S = 0.8')} in the training config`,
+      dependencies: ['resample-1'],
+      setup: (ctx: AeTaskContext) => ({
+        events: ['sparsity-changed'],
+        check: () => ctx.services.svc.config.sparsity >= 0.75,
+      }),
+    },
+    {
+      id: 'resample-2',
+      label: 'Resample — notice how most feature activations are now zero',
+      dependencies: ['decrease-sparsity'],
+      setup: () => {
+        let count = 0
+        return {
+          events: ['resample-clicked'],
+          onEvent: () => { count++ },
+          check: () => count >= 3,
+          progress: () => ({ current: Math.min(count, 3), total: 3 }),
+        }
+      },
     },
   ]
 }

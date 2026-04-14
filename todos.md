@@ -223,3 +223,82 @@ Plan the move, be precise and thorough, ask if anything is still unclear, then e
 
 
 
+# Post Blog Entry Draft Port to the App
+
+Great! Let's start fixing issues and bugs that came up during porting, starting with the AutoencoderSection.
+
+## General issue with the current task list implementation
+* The current task list implementation was not fully written with the variety of tasks in mind
+* it currently uses vues reactivity system to assess task completion -- this works for some, but not for all
+* I would highly encourage replacing the implementation that is dependent on the reactivity system in vue
+  * instead, put a central event emitter in the AutoencoderVisualization component and inject it into the AutoencoderService too
+  * it should fire on all relevant events (i.e. after a training step was completed, when a user navigated somewhere, etc, based on the current set of tasks)
+  * the task lists task that are eligible to solve for the user (not waiting for other dependencies) should then subscribe to the eventemitter
+  * if an event fires (i.e. training set complete) it also needs access to the AutoencoderService to check whether convergence conditions are met
+  * this also requires a new AutoencoderVisualizationService, that holds which views are active, so that the task can check if a certain view is already active
+  * this requires a careful, clean and precise rewrite
+  * possible events are `sparsity-changed`, `importance-changed`, `user-navigation` (use the AutoencoderVisualizationService to check for where navigation is), `input-neuron-hovered` (needs to be emitted from AutoencoderView.vue, if an emitter is injected into it) 
+* Weights/Training should reset when going to the next experiment
+* Keep in mind that the implementation of the task list must be generic enough to also work for other sections if needed. Instantiation of task lists requires providing it the emitter (active items subscribe to them) and other objects (such as the services to check for fulfillment of tasks once in the beginning and then whenever certain events occur)
+
+In the following, I will provide concrete problems per Experiment, that also highlight shortcomings with the current TaskList implementation. Use it as reference to plan a rewrite and update to the implementation, then implement the changes. Be strategic, plan this via todo list items. Ask if you have any questions.
+
+## Experiment 1
+* All 3 tasks after convergence are automatically solved, although the user did not do anything for it.
+* The convergence condition is not correct -- it needs to be exactly 90deg between the vectors and both vectors being exactly 1 long
+* "Check out the loss in the training statistics"
+  * This should require the user to open up the "Statistics" View and specifically the "Loss" -- it requires implementing an even that is fired when the user opens that and checking in the beginning if it is already opened
+* "Check the angle between the two feature direction vectors in the training statistics"
+  * Similarly it requires the user to open the min angle statistic in the statistic view
+* Check the vector lengths in the weight view
+  * requires the user to navigate to the weights view
+* only when all tasks after convergence are complete, is the full task complete
+
+## Experiment 2
+* "Set importance α = 0.8"
+  * rename this to "lower importance alpha to maximally 0.8"
+  * make sure it only is checked if the user is at max 0.8, not above
+  * make the step 
+* "Run training and wait for convergence"
+  * the convergence condition is not correct, should be:
+  * w_1 and w_2 having length > 0.97 and < 1.03 and having angle >89deg <91deg
+  * w_3 and w_4 having length < 0.05
+* "Hover over each input neuron to observe which features are represented in embedding space"
+  * should only trigger when the user hovers the first input neuron -- this requires an extra event
+* "For unrepresented features, check their learned bias — compare to μ = √(2/π) ≈ 0.798"
+  * include "in the Weights View"
+  * should only trigger when the user has navigated to the weights view
+  * this is missing the reference to this being the mean of the half normal distribution. Please make this only a reference to the [mean of the half normal distribution](https://en.wikipedia.org/wiki/Half-normal_distribution) and include the link to wikipedia
+
+## Interlude: Feature Sparsity
+* "Resample a few times using the resample button and observe the input vectors" should only trigger when the user has clicked the resample button 3 times -- the task should track and display how many times the user has pressed it (i.e. 1/3)
+* split "Decrease sparsity to S = 0.2 **in the training config**" and "resample — notice how most feature activations are now zero" into 2 tasks, the second resample task again requiring to sample 3 times
+
+## Experiment 3
+* "Set sparsity to S = 0.1 and run training" is incorrect, needs to be "S=0.9"
+* "Observe the feature directions in the embedding view" is missing "Rerun the training -- Observe the ..."
+* "Activate individual features one at a time using the input sliders and observe the reconstruction" needs events on inputvalue change via slider or via click on the number (see InputValue.vue)
+* "Set all inputs to zero, then increase two features with opposite directions to 1.0 — observe the embedding and error" should only trigger when the inputs of opposite facing vectors are roughly 1.0 while the other feature activations are set to 0
+
+## Experiment 4
+* Check the minimum angle between feature directions **in the statistics view** — compare to 360°/5 (ditch 360/5)
+  * should only fire when the user accesses the statistics view with specifically the min angle open
+
+## Other
+* Tasks should use katex for math rendering -- replace plain text tasks with html that has to be inserted via v-html
+
+
+
+
+Issues:
+* Convergence is broken for experiment 2
+* "For unrepresented features, check their learned bias — compare to μ = √(2/π) ≈ 0.798" -- this is missing the reference to this being the mean of the half normal distribution
+  * Tasks need to specify where to look, i.e. in the Weights View
+* "Resample a few times using the resample button and observe the input vectors" is checked from the beginning (not good)
+* "Decrease sparsity to S = 0.2 and resample — notice how most feature activations are now zero" is incorrect (increase to 0.8 would be correct) -- needs to wait for resampling
+* "Set sparsity to S = 0.1 and run training" again, wrong!
+* Experiments should reset inbetween
+* Convergence missing for Experiment 4
+* "This is qualitatively different from the previous experiment." needs to go underneath
+* "A striking demonstration comes from 3Blue1Brown (How might LLMs store facts, Chapter 7): it is possible to place 10,000 vectors in just 100 dimensions while all pairwise angles remain between $89^\circ$ and $91^\circ$ — virtually orthogonal, despite outnumbering the dimensions by a factor of 100." is not well written....
+  * while clinging onto the orthogonality constraint, in 100 dimensions you would only be able to represent 100 vectors, slightly softening the constraint to the vectors having 89 to 91 degrees to one another (nearly orthogonal, very low interference), he shows via experimentation that it is possible to fit 10.000 vectors in the same space. If this grows exponetnially, think about how much can be fit in 12.288 dimensional vectors.

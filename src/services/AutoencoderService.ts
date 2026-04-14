@@ -17,6 +17,25 @@ export interface AutoencoderConfig {
   batchSize: number
 }
 
+/** Snapshot of the full autoencoder state for save/restore across experiment transitions. */
+export interface AeSnapshot {
+  W: number[][]
+  b: number[]
+  inputDim: number
+  embeddingDim: number
+  sparsity: number
+  featureDecay: number
+  learningRate: number
+  batchSize: number
+  step: number
+  loss: number
+  lossHistory: { s: number; v: number }[]
+  featurePresenceHistory: { s: number; v: number }[]
+  minAngleHistory: { s: number; v: number }[]
+  pauseSteps: number[]
+  currentInput: number[]
+}
+
 export interface AutoencoderState {
   config: AutoencoderConfig
   W: number[][]           // m × n weight matrix
@@ -95,6 +114,12 @@ export function createAutoencoderService() {
   const step = ref(0)
   const isTraining = ref(false)
   const trainingStartStep = ref(0)
+
+  // Optional event bus for task system integration (attached from blog section)
+  let _eventBus: { emit: (event: string, payload?: any) => void } | null = null
+  function attachEventBus(bus: { emit: (event: string, payload?: any) => void } | null) {
+    _eventBus = bus
+  }
 
   // ─── Metric history (recorded every HISTORY_INTERVAL steps) ──────────────────
   const HISTORY_INTERVAL = 20
@@ -358,6 +383,9 @@ export function createAutoencoderService() {
     loss.value = batchLoss / batch.length
 
     if (step.value % HISTORY_INTERVAL === 0) _recordMetrics()
+
+    // Emit training-step event if an event bus is attached
+    _eventBus?.emit('training-step', { step: step.value })
   }
 
   function updateConfig(partial: Partial<Pick<AutoencoderConfig,
@@ -431,6 +459,7 @@ export function createAutoencoderService() {
     pauseSteps.value = []
     _initWeights()
     _forwardPass(currentInput.value)
+    _eventBus?.emit('training-reset')
   }
 
   // ─── Input shelving (for output neuron visualization) ──────────────────────
@@ -454,6 +483,56 @@ export function createAutoencoderService() {
       shelvedInput = null
       _forwardPass(saved)
     }
+  }
+
+  // ─── State save/restore (for experiment transitions) ─────────────────────────
+
+  /** Snapshot the full service state for later restoration. */
+  function saveState(): AeSnapshot {
+    return {
+      W: W.value.map(row => [...row]),
+      b: [...b.value],
+      inputDim: config.inputDim,
+      embeddingDim: config.embeddingDim,
+      sparsity: config.sparsity,
+      featureDecay: config.featureDecay,
+      learningRate: config.learningRate,
+      batchSize: config.batchSize,
+      step: step.value,
+      loss: loss.value,
+      lossHistory: lossHistory.value.map(p => ({ ...p })),
+      featurePresenceHistory: featurePresenceHistory.value.map(p => ({ ...p })),
+      minAngleHistory: minAngleHistory.value.map(p => ({ ...p })),
+      pauseSteps: [...pauseSteps.value],
+      currentInput: [...currentInput.value],
+    }
+  }
+
+  /** Restore service state from a previously saved snapshot. */
+  function restoreState(snap: AeSnapshot): void {
+    stopTraining()
+    config.inputDim = snap.inputDim
+    config.embeddingDim = snap.embeddingDim
+    config.sparsity = snap.sparsity
+    config.featureDecay = snap.featureDecay
+    config.learningRate = snap.learningRate
+    config.batchSize = snap.batchSize
+    _computeImportance()
+    W.value = snap.W.map(row => [...row])
+    b.value = [...snap.b]
+    step.value = snap.step
+    loss.value = snap.loss
+    lossHistory.value = snap.lossHistory.map(p => ({ ...p }))
+    featurePresenceHistory.value = snap.featurePresenceHistory.map(p => ({ ...p }))
+    minAngleHistory.value = snap.minAngleHistory.map(p => ({ ...p }))
+    pauseSteps.value = [...snap.pauseSteps]
+    trainingStartStep.value = 0
+    // Reset Adam moments for clean optimizer state on next training run
+    const { embeddingDim: m, inputDim: n } = config
+    mW = zeros(m, n); vW = zeros(m, n)
+    mb = Array(n).fill(0); vb = Array(n).fill(0)
+    adamT = 0
+    _forwardPass(snap.currentInput)
   }
 
   // ─── Initialization on creation ──────────────────────────────────────────────
@@ -496,6 +575,9 @@ export function createAutoencoderService() {
     generateSample: _generateSample,
     shelveInput,
     restoreInput,
+    saveState,
+    restoreState,
+    attachEventBus,
   }
 }
 

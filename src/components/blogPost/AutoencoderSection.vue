@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, provide, onUnmounted } from 'vue'
 import { createAutoencoderService, INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX } from '../../services/AutoencoderService'
+import type { AeSnapshot } from '../../services/AutoencoderService'
 import { createSelectionService } from '../../services/SelectionService'
+import { createVizService, VIZ_SERVICE_KEY } from '../../services/VizService'
 import { useScrollActiveBlock } from './useScrollActiveParagraph'
 import { useParagraphRanges, type ParagraphRange } from './useParagraphRanges'
 import { type AeConstraintSpec, AE_VIEW_CONSTRAINTS_KEY, deriveConstraints } from './aeStepTypes'
@@ -22,8 +24,13 @@ provide('autoencoderService', svc)
 const selSvc = createSelectionService()
 provide('selectionService', selSvc)
 
+const vizSvc = createVizService()
+provide(VIZ_SERVICE_KEY, vizSvc)
+
 const eventBus = new TaskEventBus()
 provide(TASK_EVENT_BUS_KEY, eventBus)
+
+svc.attachEventBus(eventBus)
 
 onUnmounted(() => {
   svc.stopTraining()
@@ -43,7 +50,7 @@ provide(AE_VIEW_CONSTRAINTS_KEY, constraints)
 
 // ─── Task lists ───────────────────────────────────────────────────────────────
 
-const taskCtx = { svc, events: eventBus }
+const taskCtx = { services: { svc, viz: vizSvc }, events: eventBus }
 
 const exp1TaskList = new TaskList(createExp1TaskSpecs())
 exp1TaskList.startListening(taskCtx)
@@ -60,42 +67,64 @@ exp3TaskList.startListening(taskCtx)
 const exp4TaskList = new TaskList(createExp4TaskSpecs())
 exp4TaskList.startListening(taskCtx)
 
-// ─── Paragraph ranges ─────────────────────────────────────────────────────────
+// ─── Paragraph ranges with save/restore ───────────────────────────────────────
+
+const rangeStates: (AeSnapshot | null)[] = [null, null, null, null]
 
 const ranges: ParagraphRange[] = [
   {
     from: 0, to: 6,
     apply: () => {
       constraintSpec.value = { inputDim: 2, embeddingDim: 2, hiddenControls: ['sparsity'] }
-      if (svc.config.inputDim !== 2) svc.setInputDim(2)
-      if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
-      if (svc.config.sparsity !== 0) svc.updateConfig({ sparsity: 0 })
+      if (rangeStates[0]) {
+        svc.restoreState(rangeStates[0])
+      } else {
+        if (svc.config.inputDim !== 2) svc.setInputDim(2)
+        if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
+        if (svc.config.sparsity !== 0) svc.updateConfig({ sparsity: 0 })
+      }
     },
+    leave: () => { rangeStates[0] = svc.saveState() },
   },
   {
     from: 7, to: 7,
     apply: () => {
       constraintSpec.value = { inputDim: 4, embeddingDim: 2, hiddenControls: ['sparsity'] }
-      if (svc.config.inputDim !== 4) svc.setInputDim(4)
-      if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
-      if (svc.config.sparsity !== 0) svc.updateConfig({ sparsity: 0 })
+      if (rangeStates[1]) {
+        svc.restoreState(rangeStates[1])
+      } else {
+        if (svc.config.inputDim !== 4) svc.setInputDim(4)
+        if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
+        if (svc.config.sparsity !== 0) svc.updateConfig({ sparsity: 0 })
+      }
     },
+    leave: () => { rangeStates[1] = svc.saveState() },
   },
   {
     from: 8, to: 9,
     apply: () => {
       constraintSpec.value = { inputDim: 4, embeddingDim: 2 }
-      if (svc.config.inputDim !== 4) svc.setInputDim(4)
-      if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
+      if (rangeStates[2]) {
+        svc.restoreState(rangeStates[2])
+      } else {
+        if (svc.config.inputDim !== 4) svc.setInputDim(4)
+        if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
+      }
     },
+    leave: () => { rangeStates[2] = svc.saveState() },
   },
   {
     from: 10, to: 10,
     apply: () => {
       constraintSpec.value = { inputDim: 5, embeddingDim: 2 }
-      if (svc.config.inputDim !== 5) svc.setInputDim(5)
-      if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
+      if (rangeStates[3]) {
+        svc.restoreState(rangeStates[3])
+      } else {
+        if (svc.config.inputDim !== 5) svc.setInputDim(5)
+        if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
+      }
     },
+    leave: () => { rangeStates[3] = svc.saveState() },
   },
 ]
 

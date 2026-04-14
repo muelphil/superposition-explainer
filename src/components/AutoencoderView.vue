@@ -5,6 +5,7 @@ import type {AutoencoderServiceType} from '../services/AutoencoderService'
 import {INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX} from '../services/AutoencoderService'
 import type {SelectionServiceType} from '../services/SelectionService'
 import {AE_VIEW_CONSTRAINTS_KEY} from './blogPost/aeStepTypes'
+import {TASK_EVENT_BUS_KEY} from './blogPost/taskSystem'
 import {neuronColorRgb} from '../utils/featureColor'
 import InputValue from './InputValue.vue'
 import ActivationIcons from './ActivationIcons.vue'
@@ -16,6 +17,9 @@ const selSvc = inject<SelectionServiceType>('selectionService')!
 
 // Optional constraints from blog paragraph steps (undefined in MainView)
 const constraints = inject(AE_VIEW_CONSTRAINTS_KEY, undefined)
+
+// Optional event bus for task system (undefined in MainView)
+const eventBus = inject(TASK_EVENT_BUS_KEY, undefined)
 
 // Unique SVG mask ID per instance — prevents collision when multiple
 // AutoencoderViews (e.g. main + blog compact) coexist on the page.
@@ -62,6 +66,7 @@ watch(() => svc.currentInput.value, (inp) => {
 function onInputChange(i: number, val: number) {
   userInputs.value[i] = val
   svc.runForward([...userInputs.value])
+  eventBus?.emit('input-value-changed', { index: i, value: val })
 }
 
 // ─── Add / remove ─────────────────────────────────────────────────────────────
@@ -256,6 +261,7 @@ function resampleAll() {
   const vals = svc.generateSample()
   userInputs.value = [...vals]
   svc.runForward([...vals])
+  eventBus?.emit('resample-clicked')
 }
 
 // ─── Hover / selection highlight logic ───────────────────────────────────────
@@ -486,6 +492,7 @@ function onFeatureClick(i: number) {
 
 function onInputEnter(i: number) {
   selSvc.setHover({kind: 'input', idx: i}, 'autoencoder')
+  eventBus?.emit('input-neuron-hovered', { index: i })
 }
 
 function onInputLeave() {

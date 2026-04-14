@@ -1,5 +1,4 @@
-import { ref, computed, watch, watchEffect, type Ref, type ComputedRef, type InjectionKey } from 'vue'
-import type { AutoencoderServiceType } from '../../services/AutoencoderService'
+import { ref, type InjectionKey } from 'vue'
 
 // ─── Event bus ─────────────────────────────────────────────────────────────────
 
@@ -37,37 +36,49 @@ export const TASK_EVENT_BUS_KEY: InjectionKey<TaskEventBus> = Symbol('taskEventB
 
 /**
  * Context provided to each task's `setup()` function.
- * Gives access to the autoencoder service (for reactive watches) and
- * the event bus (for action-based tracking).
+ * Generic over `T` so each section provides its own service bag.
  */
-export interface TaskContext {
-  svc: AutoencoderServiceType
+export interface TaskContext<T = Record<string, any>> {
   events: TaskEventBus
+  services: T
+}
+
+/**
+ * Returned by `TaskSpec.setup()`. Defines which events the task subscribes to,
+ * a synchronous `check()` for completion, and optional side-effect / progress hooks.
+ *
+ * - `events`: names of TaskEventBus events to subscribe to once deps are met.
+ * - `check()`: called once on subscription (initial check) and on each matching event.
+ *    Return `true` to mark the task complete (permanently latched).
+ * - `onEvent()`: optional — called before `check()` to accumulate state (e.g. count clicks).
+ * - `progress()`: optional — returns current/total for multi-step tasks (e.g. "2/3").
+ * - `cleanup()`: optional — called when the task list is torn down.
+ */
+export interface TaskHandler {
+  events: string[]
+  check: () => boolean
+  onEvent?: (eventName: string, payload?: any) => void
+  progress?: () => { current: number; total: number } | null
+  cleanup?: () => void
 }
 
 /**
  * Blueprint for a single task.
- * `setup()` is called once during `startListening()` and must return a
- * `Ref<boolean>` that reactively represents whether the task is completed.
- *
- * - For state-based tasks, return a `computed()`.
- * - For event-based tasks, create a `ref(false)` and mutate it inside
- *   event handlers subscribed via `ctx.events`.
- * - For convergence-style tasks, use a `ref(false)` with a `watch()`.
+ * `setup()` is called once during `startListening()` and must return a `TaskHandler`.
+ * Labels may contain HTML (e.g. KaTeX-rendered math).
  */
-export interface TaskSpec {
+export interface TaskSpec<T = Record<string, any>> {
   id: string
+  /** HTML string — may include inline KaTeX. Rendered via v-html in TaskListDisplay. */
   label: string
-  /** Short note displayed in smaller italic text beneath the task label. */
+  /** Short note displayed beneath the label (HTML string). */
   note?: string
-  /** Once completed, the checkbox stays checked even if the ref later becomes false. */
-  sticky?: boolean
   /** IDs of tasks that must be completed before this one is actionable. */
   dependencies?: string[]
   /** Optional tasks are not required for the task list to be "resolved". */
   optional?: boolean
-  /** Called once to set up the reactive completion condition. */
-  setup: (ctx: TaskContext) => Ref<boolean> | ComputedRef<boolean>
+  /** Called once to set up the event-driven completion handler. */
+  setup: (ctx: TaskContext<T>) => TaskHandler
 }
 
 /** Derived UI state for a single task. */
@@ -79,135 +90,147 @@ export interface TaskState {
   /** True when dependencies are unmet AND task is not yet completed. */
   blocked: boolean
   optional: boolean
+  /** Progress indicator for multi-step tasks (e.g. { current: 1, total: 3 }). */
+  progress: { current: number; total: number } | null
 }
 
 // ─── TaskList class ────────────────────────────────────────────────────────────
 
 /**
- * Manages a list of tasks, their reactive completion state, sticky latching,
- * dependencies, and overall resolution.
+ * Manages a list of tasks via event-driven completion detection.
  *
- * **Spec ordering requirement**: specs must be listed in dependency-first
- * (topological) order — a task must appear after all tasks it depends on.
+ * Tasks subscribe to TaskEventBus events only when their dependencies are met.
+ * Once `handler.check()` returns true, the task is permanently latched as complete
+ * and downstream tasks become eligible for subscription.
+ *
+ * No Vue reactivity (`computed`/`watch`) is used for task logic — only a plain
+ * `ref<TaskState[]>` is updated imperatively after each event.
+ *
+ * **Spec ordering**: specs must be in dependency-first (topological) order.
  *
  * Usage:
  * ```ts
  * const list = new TaskList(specs)
- * list.startListening({ svc, events: bus })  // call during <script setup>
+ * list.startListening(ctx)
  * // template binds to list.tasks, list.stickyResolved
- * // cleanup on unmount (Vue watchers auto-clean; this handles event bus):
- * list.stopListening()
+ * list.stopListening() // on unmount
  * ```
  */
 export class TaskList {
-  private specs: TaskSpec[]
-  /**
-   * Raw reactive refs returned by each spec's `setup()`.
-   * These represent the live (un-gated) completion signal.
-   */
-  private rawRefs = new Map<string, Ref<boolean> | ComputedRef<boolean>>()
-  /**
-   * Per sticky-task: a `Ref<boolean>` that latches to `true` once the task
-   * is effectively completed and never reverts (survives dep changes).
-   */
-  private stickyLatched = new Map<string, Ref<boolean>>()
-  /**
-   * Per task: a `ComputedRef<boolean>` that correctly chains:
-   *   sticky latch → dep gate → raw ref
-   * Deps are captured as closures at creation time, so no map-access
-   * happens inside the computed (preventing accidental reactive deps on the map).
-   */
-  private effectivelyCompleted = new Map<string, ComputedRef<boolean>>()
-
-  private eventCleanups: (() => void)[] = []
+  private specs: TaskSpec<any>[]
+  private handlers = new Map<string, TaskHandler>()
+  private completedSet = new Map<string, boolean>()
+  /** Per-task unsubscribe functions for event bus listeners. */
+  private subscriptions = new Map<string, () => void>()
+  private ctx: TaskContext<any> | null = null
 
   readonly tasks = ref<TaskState[]>([])
   readonly resolved = ref(false)
   readonly stickyResolved = ref(false)
 
-  constructor(specs: TaskSpec[]) {
+  constructor(specs: TaskSpec<any>[]) {
     this.specs = specs
+    for (const spec of specs) this.completedSet.set(spec.id, false)
+    this._updateTaskStates()
   }
 
   /**
-   * Initialize all tasks. Must be called synchronously during `<script setup>`
-   * so that Vue watchers are auto-cleaned on component unmount.
+   * Initialize all task handlers and subscribe eligible tasks.
+   * Call during `<script setup>`.
    */
-  startListening(ctx: TaskContext): void {
-    // ── Phase 1: raw completion refs ─────────────────────────────────────────
+  startListening(ctx: TaskContext<any>): void {
+    this.ctx = ctx
     for (const spec of this.specs) {
-      this.rawRefs.set(spec.id, spec.setup(ctx))
+      this.handlers.set(spec.id, spec.setup(ctx))
     }
-
-    // ── Phase 2: sticky latches ───────────────────────────────────────────────
-    for (const spec of this.specs) {
-      if (spec.sticky) this.stickyLatched.set(spec.id, ref(false))
-    }
-
-    // ── Phase 3: effectivelyCompleted computeds ───────────────────────────────
-    // Specs MUST be in dependency-first order (validated below).
-    for (const spec of this.specs) {
-      const id = spec.id
-      const latch = this.stickyLatched.get(id)   // undefined for non-sticky
-      const rawRef = this.rawRefs.get(id)!
-
-      // Resolve dep computeds at creation time (not inside the computed fn).
-      // This avoids accidental map-access reactive deps during evaluation.
-      const depComputeds: ComputedRef<boolean>[] = (spec.dependencies ?? []).map(depId => {
-        const c = this.effectivelyCompleted.get(depId)
-        if (!c) throw new Error(
-          `[TaskList] Task "${depId}" is listed as a dependency of "${id}" but has not been ` +
-          `defined yet. Ensure specs are in dependency-first (topological) order.`
-        )
-        return c
-      })
-
-      this.effectivelyCompleted.set(id, computed(() => {
-        if (latch?.value) return true                              // sticky latch overrides all
-        for (const dep of depComputeds) if (!dep.value) return false  // dependency gate
-        return rawRef.value                                        // live condition
-      }))
-    }
-
-    // ── Phase 4: sticky latch watchers ────────────────────────────────────────
-    // One-shot: as soon as effectivelyCompleted flips true, lock the latch.
-    for (const spec of this.specs) {
-      if (!spec.sticky) continue
-      const latch = this.stickyLatched.get(spec.id)!
-      const effective = this.effectivelyCompleted.get(spec.id)!
-      watch(effective, (v) => { if (v) latch.value = true }, { immediate: true })
-    }
-
-    // ── Phase 5: derive UI state ──────────────────────────────────────────────
-    // All deps here are explicit computed reads — no hidden implicit deps.
-    watchEffect(() => {
-      this.tasks.value = this.specs.map(spec => {
-        const effective = this.effectivelyCompleted.get(spec.id)!
-        const completed = effective.value
-        const depsUnmet = (spec.dependencies ?? []).some(
-          depId => !this.effectivelyCompleted.get(depId)!.value
-        )
-        return {
-          id: spec.id,
-          label: spec.label,
-          note: spec.note,
-          completed,
-          blocked: !completed && depsUnmet,
-          optional: spec.optional ?? false,
-        }
-      })
-
-      const allRequiredDone = this.specs
-        .filter(s => !s.optional)
-        .every(s => this.effectivelyCompleted.get(s.id)!.value)
-      this.resolved.value = allRequiredDone
-      if (allRequiredDone) this.stickyResolved.value = true
-    })
+    this._subscribeEligible()
+    this._updateTaskStates()
   }
 
-  /** Clean up event bus subscriptions (Vue watchers are auto-cleaned on unmount). */
+  /** Clean up all event bus subscriptions and handler resources. */
   stopListening(): void {
-    this.eventCleanups.forEach(fn => fn())
-    this.eventCleanups = []
+    for (const unsub of this.subscriptions.values()) unsub()
+    this.subscriptions.clear()
+    for (const handler of this.handlers.values()) handler.cleanup?.()
+    this.handlers.clear()
+  }
+
+  // ─── Internal ───────────────────────────────────────────────────────────────
+
+  private _areDepsComplete(spec: TaskSpec<any>): boolean {
+    return (spec.dependencies ?? []).every(depId => this.completedSet.get(depId))
+  }
+
+  /** Subscribe any tasks whose deps are now met and that aren't already done/subscribed. */
+  private _subscribeEligible(): void {
+    for (const spec of this.specs) {
+      if (this.completedSet.get(spec.id)) continue
+      if (this.subscriptions.has(spec.id)) continue
+      if (!this._areDepsComplete(spec)) continue
+      this._subscribe(spec)
+    }
+  }
+
+  /** Subscribe a single task to its declared events. Runs initial check immediately. */
+  private _subscribe(spec: TaskSpec<any>): void {
+    const handler = this.handlers.get(spec.id)!
+
+    // Initial check — task may already be satisfied (e.g. slider already at target)
+    if (handler.check()) {
+      this._markComplete(spec.id)
+      return
+    }
+
+    const listener = (eventName: string) => (payload?: any) => {
+      if (this.completedSet.get(spec.id)) return
+      handler.onEvent?.(eventName, payload)
+      if (handler.check()) {
+        this._markComplete(spec.id)
+      }
+      this._updateTaskStates()
+    }
+
+    const unsubs: (() => void)[] = []
+    for (const event of handler.events) {
+      const fn = listener(event)
+      this.ctx!.events.on(event, fn)
+      unsubs.push(() => this.ctx!.events.off(event, fn))
+    }
+
+    this.subscriptions.set(spec.id, () => unsubs.forEach(fn => fn()))
+  }
+
+  /** Permanently latch a task as complete, clean up, and promote downstream tasks. */
+  private _markComplete(id: string): void {
+    this.completedSet.set(id, true)
+    const unsub = this.subscriptions.get(id)
+    if (unsub) { unsub(); this.subscriptions.delete(id) }
+    this.handlers.get(id)?.cleanup?.()
+    this._subscribeEligible()
+    this._updateTaskStates()
+  }
+
+  /** Rebuild the public `tasks` ref from current internal state. */
+  private _updateTaskStates(): void {
+    this.tasks.value = this.specs.map(spec => {
+      const isDone = this.completedSet.get(spec.id)!
+      const depsUnmet = !this._areDepsComplete(spec)
+      const handler = this.handlers.get(spec.id)
+      return {
+        id: spec.id,
+        label: spec.label,
+        note: spec.note,
+        completed: isDone,
+        blocked: !isDone && depsUnmet,
+        optional: spec.optional ?? false,
+        progress: (!isDone && !depsUnmet && handler?.progress?.()) ?? null,
+      }
+    })
+
+    const allRequiredDone = this.specs
+      .filter(s => !s.optional)
+      .every(s => this.completedSet.get(s.id))
+    this.resolved.value = allRequiredDone
+    if (allRequiredDone) this.stickyResolved.value = true
   }
 }
