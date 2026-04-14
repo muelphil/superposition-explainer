@@ -287,18 +287,60 @@ In the following, I will provide concrete problems per Experiment, that also hig
 ## Other
 * Tasks should use katex for math rendering -- replace plain text tasks with html that has to be inserted via v-html
 
+---
 
+That looks great!
+I would now like to refine the Toy Autoencoder and Experiments section, focussing on the Toy Autoencoder section.
+In this section, the architecture of the autoencoder gets introduced. I want this introduction to be visually supported by the autoencoder visualization on the side.
+The visualization should be developed, i.e. be gradually be build, by having many things hidden in the beginning and unhiding them as the user progresses.
+Introducing elements should unhide them and play an animation (i.e. bouncy animation) to indicate they arrived.
 
+This may be governed and controlled via the VizService. In the beginning, it should only show the AutoencoderView.vue in AutoencoderVisualization.
+Additionally, in the Autoencoder view, there need to be css classes that hide different columns for that purpose.
 
-Issues:
-* Convergence is broken for experiment 2
-* "For unrepresented features, check their learned bias — compare to μ = √(2/π) ≈ 0.798" -- this is missing the reference to this being the mean of the half normal distribution
-  * Tasks need to specify where to look, i.e. in the Weights View
-* "Resample a few times using the resample button and observe the input vectors" is checked from the beginning (not good)
-* "Decrease sparsity to S = 0.2 and resample — notice how most feature activations are now zero" is incorrect (increase to 0.8 would be correct) -- needs to wait for resampling
-* "Set sparsity to S = 0.1 and run training" again, wrong!
-* Experiments should reset inbetween
-* Convergence missing for Experiment 4
-* "This is qualitatively different from the previous experiment." needs to go underneath
-* "A striking demonstration comes from 3Blue1Brown (How might LLMs store facts, Chapter 7): it is possible to place 10,000 vectors in just 100 dimensions while all pairwise angles remain between $89^\circ$ and $91^\circ$ — virtually orthogonal, despite outnumbering the dimensions by a factor of 100." is not well written....
+These changes will require slight rewriting of the introduction of the Toy Autoencoder Section so that each uncover is linked to one subsection/ text-block.
+This may require new text blocks or splitting of textblocks as well as slight rewriting, but be surgical in rewriting it.
+
+The Toy Autoencoder sections should initially use input dim 3 and embedding dim 2, signifying the later use case of m>n (compression in embedding space).
+
+It should be uncovered the visualization on the right in the following order:
+* Input-Neurons + InputValue fields, but hiding the resample button and the half normal background distribution + Output-Neurons, but hiding bias and RELU
+* Embedding-Neurons/ Embedding Layer
+* Weights between Input Neurons and Embedding Neurons (Encoder) + The Embedding Space view
+* Weights between Embedding Neurons and Output Neurons + Bias and ReLU (Decoder)
+* A short paragraph before "Why tied weights?" stating nothing other than that the weights and bias values (trainable parameters) can be found in the weights view, uncovering the weights view
+* Bias and ReLU pulsating for the "Bias and ReLU." subsection again.
+* half normal distribution backdrop + resample for the "Synthetic Training Data" subsection 
+* Training View for the "Training Objective" subsection (+ Statistics)
+
+Please first assess the implementation and check which architectural/implementation changes are necessary to enable implementation of the above visualization in the Toy Autoencoder section with AutoencoderSection.vue.
+Use todo items. Make it modular and clean. Use what is there. Ask questions if you require additional information on anything.
+
+---
+
+That's great! But it needs some refinements:
+* the first text-block does not semantically coincide with what is displayed: the input and output neurons. Revise:
+  * In the beginning, it should be fully blank, also no input or output to be seen
+  * Put the intro ("The clean encode/decode symmetry...") paragraph above the text-block
+  * The architecture text block should not state "The autoencoder uses a linear encoder and a nonlinear decoder with tied weights, mapping an $n$-dimensional feature vector through an $m$-dimensional embedding and back.".
+  * Instead, let it read "The visualization on the right shows the input and output neurons of the model." and directly after that restate the goal of the model: We have an input dimension of $n$ and the autoencoder tries to simply rebuild/recover the input, so there are as many ouput neurons as there are input neurons/ matching dimensions. For this block, show the input/output neurons.
+* Under, insert a new minimal paragraph, introducing only the embedding neurons (not the weights) and write something short about the embedding/ latent space in the middle, which is often smaller in autoencoders.
+* Only for the encoder text-block show the weights connecting input to embeddings
+* for the Training Objective block, also navigate automatically to the training configuration; Also, the weighted loss should only be uncovered at this step, not as part of the decoder!
+* Again "Bias and ReLU." should be its own text-block separate from "Why tied weights?".
+  * this should let Bias and ReLU blink continuously, not only 3 times.
+* I think it would also be wise to allow for naming of text blocks via ids, so its not index based. Otherwise, any change to the blocks (inserting a block, deleting one), will require massive index updates. Its better to do it via naming and map it back e.g. on site load.
+  * please review how the architecture would need to be updated, then implement
+* bug: the X neurons above the input/embedding neuron columns should be uncovered with the neurons.
+* Remember, not everything has to be a text-block. e.g "Full forward pass" can go in a paragraph without wrapping text-block under Decoder subsection.
+
+--- 
+
+# TODOs:
+* Not well written: "A striking demonstration comes from 3Blue1Brown (How might LLMs store facts, Chapter 7): it is possible to place 10,000 vectors in just 100 dimensions while all pairwise angles remain between $89^\circ$ and $91^\circ$ — virtually orthogonal, despite outnumbering the dimensions by a factor of 100."
   * while clinging onto the orthogonality constraint, in 100 dimensions you would only be able to represent 100 vectors, slightly softening the constraint to the vectors having 89 to 91 degrees to one another (nearly orthogonal, very low interference), he shows via experimentation that it is possible to fit 10.000 vectors in the same space. If this grows exponetnially, think about how much can be fit in 12.288 dimensional vectors.
+  * maybe make this an experiment too using WebGPU?
+* use lucide icons or any other icons for task list checkboxes
+
+
+* .blog-post .viz-sticky

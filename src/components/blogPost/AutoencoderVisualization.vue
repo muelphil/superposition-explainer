@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject } from 'vue'
+import { inject, computed } from 'vue'
 import type { AutoencoderServiceType } from '../../services/AutoencoderService'
 import { VIZ_SERVICE_KEY, type VizServiceType, type VizTab } from '../../services/VizService'
 import { TASK_EVENT_BUS_KEY, type TaskEventBus } from './taskSystem'
@@ -21,6 +21,22 @@ function setTab(tab: VizTab) {
   if (vizSvc) vizSvc.activeTab.value = tab
   eventBus?.emit('tab-changed', { tab })
 }
+
+// Reveal helpers — default to true when no VizService (MainView shows everything)
+const showBottomRow = computed(() => vizSvc?.stageAtLeast('encoder') ?? true)
+const showWeightsTab = computed(() => vizSvc?.stageAtLeast('weights-view') ?? true)
+const showTrainingTab = computed(() => vizSvc?.stageAtLeast('training') ?? true)
+const showStatsTab = computed(() => vizSvc?.stageAtLeast('training') ?? true)
+const showTrainingFooter = computed(() => vizSvc?.stageAtLeast('training') ?? true)
+
+/** Only show tab buttons that are currently revealed */
+const visibleTabs = computed(() => {
+  const tabs: VizTab[] = []
+  if (showTrainingTab.value) tabs.push('training')
+  if (showStatsTab.value) tabs.push('statistics')
+  if (showWeightsTab.value) tabs.push('weights')
+  return tabs
+})
 </script>
 
 <template>
@@ -29,7 +45,7 @@ function setTab(tab: VizTab) {
     <AutoencoderView :compact="true" />
 
     <!-- Bottom row: Embedding Space + Combined panel side by side -->
-    <div class="ae-bottom-row">
+    <div class="ae-bottom-row" v-show="showBottomRow">
       <!-- Embedding Space -->
       <div class="ae-bottom-section embedding-panel">
         <div class="ae-viz-title">Embedding Space</div>
@@ -42,7 +58,7 @@ function setTab(tab: VizTab) {
       <div class="ae-bottom-section combined-panel">
         <div class="tab-bar">
           <button
-            v-for="tab in (['training', 'statistics', 'weights'] as VizTab[])"
+            v-for="tab in visibleTabs"
             :key="tab"
             class="tab-btn"
             :class="{ active: vizSvc?.activeTab.value === tab }"
@@ -65,7 +81,7 @@ function setTab(tab: VizTab) {
         </div>
 
         <!-- Training controls -->
-        <div class="training-footer">
+        <div class="training-footer" v-show="showTrainingFooter">
           <TrainingActionButtons />
         </div>
       </div>

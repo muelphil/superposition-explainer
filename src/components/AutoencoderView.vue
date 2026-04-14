@@ -4,6 +4,7 @@ import {RefreshCw, Plus, Minus} from 'lucide-vue-next'
 import type {AutoencoderServiceType} from '../services/AutoencoderService'
 import {INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX} from '../services/AutoencoderService'
 import type {SelectionServiceType} from '../services/SelectionService'
+import {VIZ_SERVICE_KEY} from '../services/VizService'
 import {AE_VIEW_CONSTRAINTS_KEY} from './blogPost/aeStepTypes'
 import {TASK_EVENT_BUS_KEY} from './blogPost/taskSystem'
 import {neuronColorRgb} from '../utils/featureColor'
@@ -20,6 +21,9 @@ const constraints = inject(AE_VIEW_CONSTRAINTS_KEY, undefined)
 
 // Optional event bus for task system (undefined in MainView)
 const eventBus = inject(TASK_EVENT_BUS_KEY, undefined)
+
+// Optional viz service for reveal stage (undefined in MainView)
+const vizSvc = inject(VIZ_SERVICE_KEY, undefined)
 
 // Unique SVG mask ID per instance — prevents collision when multiple
 // AutoencoderViews (e.g. main + blog compact) coexist on the page.
@@ -108,6 +112,7 @@ interface SvgPath {
   opacity: number
   row: number
   col: number
+  side: 'encoder' | 'decoder'
 }
 
 interface NeuronClip {
@@ -182,7 +187,7 @@ function drawConnections() {
       // Fan: k-th connection fans at input; j-th connection fans at embedding
       const sy = inInfo.cy + spreadOffset(k, m.value, inInfo.r * 2)
       const ty = embInfo.cy + spreadOffset(j, n.value, embInfo.r * 2)
-      paths.push({d: bezierPath(inInfo.cx, sy, embInfo.cx, ty), color, width, opacity, row: k, col: j})
+      paths.push({d: bezierPath(inInfo.cx, sy, embInfo.cx, ty), color, width, opacity, row: k, col: j, side: 'encoder'})
     }
   }
 
@@ -197,7 +202,7 @@ function drawConnections() {
       const {color, width, opacity} = weightStyle(w)
       const sy = embInfo.cy + spreadOffset(j, n.value, embInfo.r * 2)
       const ty = outInfo.cy + spreadOffset(k, m.value, outInfo.r * 2)
-      paths.push({d: bezierPath(embInfo.cx, sy, outInfo.cx, ty), color, width, opacity, row: k, col: j})
+      paths.push({d: bezierPath(embInfo.cx, sy, outInfo.cx, ty), color, width, opacity, row: k, col: j, side: 'decoder'})
     }
   }
 
@@ -532,7 +537,7 @@ function onOutputClick(i: number) {
 <template>
   <div
       class="ae-grid"
-      :class="{ compact: props.compact }"
+      :class="[{ compact: props.compact }, ...(vizSvc?.revealClasses.value ?? [])]"
       ref="containerRef"
       :style="{ gridTemplateRows }"
   >
@@ -562,6 +567,7 @@ function onOutputClick(i: number) {
             v-for="(p, pi) in svgPathsData"
             :key="pi"
             class="vis-path"
+            :data-side="p.side"
             :d="p.d"
             fill="none"
             :stroke="p.color"
@@ -575,6 +581,7 @@ function onOutputClick(i: number) {
       <path
           v-for="(p, pi) in svgPathsData"
           :key="`hit-${pi}`"
+          :data-side="p.side"
           :d="p.d"
           fill="none"
           stroke="transparent"
@@ -587,20 +594,20 @@ function onOutputClick(i: number) {
     </svg>
 
     <!-- ── Row 1: Column headings ──────────────────────────── -->
-    <div class="col-heading" style="grid-column: 1; grid-row: 1">
+    <div class="col-heading reveal-tgt-input-output" style="grid-column: 1; grid-row: 1">
 <!--      Features-->
     </div>
-    <div class="col-heading" style="grid-column: 3; grid-row: 1">Input</div>
-    <div class="col-heading" style="grid-column: 4/6; grid-row: 1">Encoder</div>
-    <div class="col-heading" style="grid-column: 6; grid-row: 1">Embedding</div>
-    <div class="col-heading" style="grid-column: 7 / 9; grid-row: 1">Decoder</div>
-    <div class="col-heading" style="grid-column: 10 ; grid-row: 1">Output</div>
+    <div class="col-heading reveal-tgt-input-output" style="grid-column: 3; grid-row: 1">Input</div>
+    <div class="col-heading reveal-tgt-encoder" style="grid-column: 4/6; grid-row: 1">Encoder</div>
+    <div class="col-heading reveal-tgt-embedding" style="grid-column: 6; grid-row: 1">Embedding</div>
+    <div class="col-heading reveal-tgt-decoder" style="grid-column: 7 / 9; grid-row: 1">Decoder</div>
+    <div class="col-heading reveal-tgt-input-output" style="grid-column: 10 ; grid-row: 1">Output</div>
     <!--    <div class="col-heading" style="grid-column: 12; grid-row: 1">Reconstruction</div>-->
 
     <!-- ── Row 2: Sub-header info / controls ────────────────── -->
     <!-- Input col: resample-all button -->
     <button
-        class="dim-btn resample-all-btn"
+        class="dim-btn resample-all-btn reveal-tgt-data"
         style="grid-column: 1; grid-row: 2"
         @click="resampleAll"
         :disabled="svc.isTraining.value"
@@ -610,7 +617,7 @@ function onOutputClick(i: number) {
     </button>
 
     <!-- Encoder col: +/- dim controls + neuron count -->
-    <div class="sub-header-ctrl" style="grid-column: 3; grid-row: 2">
+    <div class="sub-header-ctrl reveal-tgt-full" style="grid-column: 3; grid-row: 2">
       <span class="neuron-count">{{ n }} neurons</span>
       <div v-if="!inputFixed" class="dim-btns">
         <button class="dim-btn" @click="removeInputNeuron" :disabled="!canRemoveInput" title="Remove input feature">
@@ -623,7 +630,7 @@ function onOutputClick(i: number) {
     </div>
 
     <!-- Embedding col: +/- dim controls + neuron count -->
-    <div class="sub-header-ctrl" style="grid-column: 6; grid-row: 2">
+    <div class="sub-header-ctrl reveal-tgt-full" style="grid-column: 6; grid-row: 2">
       <span class="neuron-count">{{ m }} neurons</span>
       <div v-if="!embFixed" class="dim-btns">
         <button class="dim-btn" @click="removeEmbeddingNeuron" :disabled="!canRemoveEmb" title="Remove embedding dim">
@@ -638,7 +645,7 @@ function onOutputClick(i: number) {
     <!-- Decoder col: activation info — removed; replaced by per-row ActivationIcons -->
 
     <!-- Output col: weighted loss label + value -->
-    <div class="sub-header-loss" style="grid-column: 12; grid-row: 2">
+    <div class="sub-header-loss reveal-tgt-decoder" style="grid-column: 12; grid-row: 2">
       <span class="col-loss-label">weighted loss</span>
       <span class="col-loss-val" :class="{ zero: !isNonZero(currentLoss) }">
         {{ currentLoss.toFixed(3) }}
@@ -692,6 +699,7 @@ function onOutputClick(i: number) {
 
       <!-- Activation icons (bias + ReLU): col 8 -->
       <ActivationIcons
+          class="reveal-tgt-decoder"
           :biasVal="svc.b.value[i] ?? 0"
           :preActivation="svc.currentPreActivation.value[i] ?? 0"
           :featureIdx="i"
@@ -720,7 +728,7 @@ function onOutputClick(i: number) {
 
       <!-- Output value: col 11 -->
       <div
-          class="output-value"
+          class="output-value reveal-tgt-decoder"
           :class="outputDimClass(i)"
           :style="{ gridColumn: '12', gridRow: String(i + dataRowStart) }"
       >
@@ -733,7 +741,7 @@ function onOutputClick(i: number) {
 
     <!-- ── Embedding column: col 5, spans all data rows ──── -->
     <div
-        class="emb-column"
+        class="emb-column reveal-tgt-embedding"
         :style="{
         gridColumn: '6',
         gridRow: `${dataRowStart} / ${dataRowEnd}`,
@@ -1123,5 +1131,93 @@ function onOutputClick(i: number) {
 .dim-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+/* ── Reveal stage gating ─────────────────────────────────── */
+/* Hidden state: invisible but preserving layout space */
+.ae-grid .reveal-tgt-input-output,
+.ae-grid .reveal-tgt-embedding,
+.ae-grid .reveal-tgt-encoder,
+.ae-grid .reveal-tgt-decoder,
+.ae-grid .reveal-tgt-data,
+.ae-grid .reveal-tgt-full {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+/* SVG paths hidden by side */
+.ae-grid .vis-path[data-side="encoder"],
+.ae-grid path[data-side="encoder"] {
+  opacity: 0 !important;
+  visibility: hidden;
+  pointer-events: none !important;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+.ae-grid .vis-path[data-side="decoder"],
+.ae-grid path[data-side="decoder"] {
+  opacity: 0 !important;
+  visibility: hidden;
+  pointer-events: none !important;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+/* Half-normal backdrop hidden until data stage */
+.ae-grid :deep(.dist-svg) {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+/* ── Stage reveals (cumulative) ──────────────────────────── */
+.ae-grid.reveal-input-output .reveal-tgt-input-output {
+  opacity: 1; visibility: visible; pointer-events: auto;
+}
+.ae-grid.reveal-embedding .reveal-tgt-embedding {
+  opacity: 1; visibility: visible; pointer-events: auto;
+}
+.ae-grid.reveal-encoder .reveal-tgt-encoder {
+  opacity: 1; visibility: visible; pointer-events: auto;
+}
+.ae-grid.reveal-encoder .vis-path[data-side="encoder"],
+.ae-grid.reveal-encoder path[data-side="encoder"] {
+  opacity: revert !important;
+  visibility: visible;
+  pointer-events: revert !important;
+}
+.ae-grid.reveal-decoder .reveal-tgt-decoder {
+  opacity: 1; visibility: visible; pointer-events: auto;
+}
+.ae-grid.reveal-decoder .vis-path[data-side="decoder"],
+.ae-grid.reveal-decoder path[data-side="decoder"] {
+  opacity: revert !important;
+  visibility: visible;
+  pointer-events: revert !important;
+}
+.ae-grid.reveal-data .reveal-tgt-data {
+  opacity: 1; visibility: visible; pointer-events: auto;
+}
+.ae-grid.reveal-data :deep(.dist-svg) {
+  opacity: 1; visibility: visible;
+}
+.ae-grid.reveal-full .reveal-tgt-full {
+  opacity: 1; visibility: visible; pointer-events: auto;
+}
+
+/* ── Pop-in entrance animation ───────────────────────────── */
+@keyframes pop-in {
+  0%   { opacity: 0; transform: scale(0.85); }
+  70%  { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ── Bias/ReLU pulsating highlight ───────────────────────── */
+@keyframes pulse-glow {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 0px transparent); }
+  50%      { filter: brightness(1.2) drop-shadow(0 0 6px var(--color-positive)); }
+}
+.ae-grid.reveal-bias-relu-highlight :deep(.act-icons) {
+  animation: pulse-glow 1.5s ease-in-out 3;
 }
 </style>
