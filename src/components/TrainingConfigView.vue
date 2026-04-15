@@ -55,7 +55,7 @@ function fmtLR(lr: number) {
     <div class="cfg-grid" v-if="!hiddenControls.has('sparsity') || !hiddenControls.has('importance')">
 
       <template v-if="!hiddenControls.has('sparsity')">
-        <label class="cfg-label" title="Fraction of features that are zero in a training sample (higher = fewer active features)">Sparsity</label>
+        <label class="cfg-label" title="Fraction of features that are zero in a training sample (higher = fewer active features)">Sparsity <katex-element expression="S" /></label>
         <input type="range" class="cfg-slider" min="0" max="0.95" step="0.05"
           :value="svc.config.sparsity" :disabled="isTraining"
           @input="setSparsity($event)" />
@@ -63,7 +63,7 @@ function fmtLR(lr: number) {
       </template>
 
       <template v-if="!hiddenControls.has('importance')">
-        <label class="cfg-label" title="I_i = α^i — 1.0 = uniform, lower = first features more important">Importance α</label>
+        <label class="cfg-label" title="I_i = α^i — 1.0 = uniform, lower = first features more important">Importance <katex-element expression="\alpha" /></label>
         <input type="range" class="cfg-slider" min="0.5" max="1.0" step="0.05"
           :value="svc.config.featureDecay" :disabled="isTraining"
           @input="setImportance($event)" />
@@ -88,7 +88,7 @@ function fmtLR(lr: number) {
       <span class="cfg-val">{{ fmtLR(svc.config.learningRate) }}</span>
 
       <label class="cfg-label">Batch size</label>
-      <select class="cfg-select" :value="svc.config.batchSize" :disabled="isTraining"
+      <select class="cfg-select cfg-select-number" :value="svc.config.batchSize" :disabled="isTraining"
         @change="svc.updateConfig({ batchSize: intVal($event) })">
         <option v-for="bs in [32, 64, 128, 256, 512]" :key="bs" :value="bs">{{ bs }}</option>
       </select>
@@ -120,6 +120,7 @@ function fmtLR(lr: number) {
   white-space: nowrap;
   cursor: default;
   user-select: none;
+  text-align:right;
 }
 
 .cfg-slider {
@@ -163,6 +164,7 @@ function fmtLR(lr: number) {
   color: var(--color-text-primary);
   text-align: right;
   white-space: nowrap;
+  font-family: var(--font-family-number);
 }
 
 .cfg-select {
@@ -178,6 +180,11 @@ function fmtLR(lr: number) {
   outline: none;
   height: 1.6rem;
 }
+
+.cfg-select.cfg-select-number{
+  font-family: var(--font-family-number);
+}
+
 .cfg-select:disabled { opacity: 0.4; cursor: not-allowed; }
 .cfg-select:focus { border-color: var(--color-interactive); }
 

@@ -27,6 +27,9 @@ provide('selectionService', selSvc)
 const vizSvc = createVizService()
 provide(VIZ_SERVICE_KEY, vizSvc)
 
+// Start blank — reveal stages are driven by scroll position
+vizSvc.revealStage.value = 'blank'
+
 const eventBus = new TaskEventBus()
 provide(TASK_EVENT_BUS_KEY, eventBus)
 
@@ -67,28 +70,56 @@ exp3TaskList.startListening(taskCtx)
 const exp4TaskList = new TaskList(createExp4TaskSpecs())
 exp4TaskList.startListening(taskCtx)
 
+// ─── Named text blocks ────────────────────────────────────────────────────────
+
+const BLOCK_IDS = [
+  'intro',
+  'architecture', 'embedding', 'encoder', 'decoder',
+  'weights-view', 'tied-weights', 'bias-relu',
+  'data', 'training',
+  'exp1', 'exp2', 'interlude', 'exp3', 'exp4',
+] as const
+
+type BlockId = typeof BLOCK_IDS[number]
+
+function blockIdx(id: BlockId): number { return BLOCK_IDS.indexOf(id) }
+
 // ─── Paragraph ranges with save/restore ───────────────────────────────────────
 
 const rangeStates: (AeSnapshot | null)[] = [null, null, null, null, null]
 
-// Reveal stage per block index (blocks 0–6 = toy model section)
-const blockRevealStage: Record<number, RevealStage> = {
-  0: 'input-output',
-  1: 'encoder',
-  2: 'decoder',
-  3: 'weights-view',
-  4: 'bias-relu-highlight',
-  5: 'data',
-  6: 'training',
+const blockRevealStage: Partial<Record<BlockId, RevealStage>> = {
+  'intro':         'blank',
+  'architecture':  'input-output',
+  'embedding':     'embedding',
+  'encoder':       'encoder',
+  'decoder':       'decoder',
+  'weights-view':  'weights-view',
+  'tied-weights':  'weights-view',
+  'bias-relu':     'bias-relu-highlight',
+  'data':          'data',
+  'training':      'training',
 }
 
 const ranges: ParagraphRange[] = [
   {
-    // Toy Model section: blocks 0–6, n=3 m=2
-    from: 0, to: 6,
+    // Toy Model section: intro → training, n=3 m=2
+    from: blockIdx('intro'), to: blockIdx('training'),
     apply: (activeIndex: number) => {
       constraintSpec.value = { inputDim: 3, embeddingDim: 2, hiddenControls: ['sparsity'] }
-      vizSvc.revealStage.value = blockRevealStage[activeIndex] ?? 'training'
+      const id = BLOCK_IDS[activeIndex] as BlockId | undefined
+      vizSvc.revealStage.value = (id && blockRevealStage[id]) ?? 'training'
+      // Tab selection per block
+      if (id === 'encoder') vizSvc.activeTab.value = 'weights'
+      if (id === 'weights-view' || id === 'tied-weights') vizSvc.activeTab.value = 'weights'
+      if (id === 'training') {
+        vizSvc.activeTab.value = 'training'
+        vizSvc.continueTrainingEnabled.value = false
+      } else {
+        vizSvc.continueTrainingEnabled.value = true
+      }
+      // Bias/ReLU pulse only active for the bias-relu block
+      vizSvc.biasReluPulse.value = id === 'bias-relu'
       if (rangeStates[0]) {
         svc.restoreState(rangeStates[0])
       } else {
@@ -97,11 +128,15 @@ const ranges: ParagraphRange[] = [
         if (svc.config.sparsity !== 0) svc.updateConfig({ sparsity: 0 })
       }
     },
-    leave: () => { rangeStates[0] = svc.saveState() },
+    leave: () => {
+      rangeStates[0] = svc.saveState()
+      vizSvc.biasReluPulse.value = false
+      vizSvc.continueTrainingEnabled.value = true
+    },
   },
   {
     // Experiment 1: n=2 m=2
-    from: 8, to: 8,
+    from: blockIdx('exp1'), to: blockIdx('exp1'),
     apply: () => {
       constraintSpec.value = { inputDim: 2, embeddingDim: 2, hiddenControls: ['sparsity'] }
       vizSvc.revealStage.value = 'full'
@@ -117,7 +152,7 @@ const ranges: ParagraphRange[] = [
   },
   {
     // Experiment 2: n=4 m=2
-    from: 9, to: 9,
+    from: blockIdx('exp2'), to: blockIdx('exp2'),
     apply: () => {
       constraintSpec.value = { inputDim: 4, embeddingDim: 2, hiddenControls: ['sparsity'] }
       vizSvc.revealStage.value = 'full'
@@ -133,7 +168,7 @@ const ranges: ParagraphRange[] = [
   },
   {
     // Interlude + Experiment 3: n=4 m=2
-    from: 10, to: 11,
+    from: blockIdx('interlude'), to: blockIdx('exp3'),
     apply: () => {
       constraintSpec.value = { inputDim: 4, embeddingDim: 2 }
       vizSvc.revealStage.value = 'full'
@@ -149,7 +184,7 @@ const ranges: ParagraphRange[] = [
   },
   {
     // Experiment 4: n=5 m=2
-    from: 12, to: 12,
+    from: blockIdx('exp4'), to: blockIdx('exp4'),
     apply: () => {
       constraintSpec.value = { inputDim: 5, embeddingDim: 2 }
       vizSvc.revealStage.value = 'full'
@@ -172,14 +207,14 @@ useParagraphRanges(ranges, activeBlockIndex)
   <!-- Single-root section: owns its own CSS grid, centered at wider width -->
   <div class="ae-section post-section">
     <!-- Text column -->
+    <h2 class="section-heading" style="grid-column: 1 / -1;">The Toy Autoencoder</h2>
     <div class="text-column">
-      <h2 class="section-heading">The Toy Autoencoder</h2>
 
-      <!-- ═══ Block 0: Architecture intro — reveals input+output neurons ═══ -->
+      <!-- ═══ Block 'intro' — blank state, nothing revealed ═══ -->
       <div
-          :ref="(el) => paragraphRefs[0] = el as HTMLElement"
+          :ref="(el) => paragraphRefs[blockIdx('intro')] = el as HTMLElement"
           class="text-block"
-          :class="{ 'active-block': activeBlockIndex === 0 }"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('intro') }"
       >
         <p>
           The clean encode/decode symmetry of an orthonormal basis — embed with
@@ -187,22 +222,44 @@ useParagraphRanges(ranges, activeBlockIndex)
           — is the geometric intuition behind the architecture of our toy autoencoder.
           In this section, we define the model formally.
         </p>
+      </div>
 
-        <h3>Architecture</h3>
+      <h3>Architecture</h3>
 
+      <!-- ═══ Block 'architecture' — reveals input+output neurons ═══ -->
+      <div
+          :ref="(el) => paragraphRefs[blockIdx('architecture')] = el as HTMLElement"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('architecture') }"
+      >
         <p>
-          The autoencoder uses a linear encoder and a nonlinear decoder with tied weights,
-          mapping an <katex-element expression="n" />-dimensional feature vector through an
-          <katex-element expression="m" />-dimensional embedding and back.
           The visualization on the right shows the input and output neurons of the model.
+          The input vector <katex-element expression="x \in \mathbb{R}^n" /> enters from
+          the left; the autoencoder's goal is to reconstruct it as faithfully as possible
+          at the output <katex-element expression="\hat{x} \in \mathbb{R}^n" />, so the
+          output layer has the same dimensionality as the input.
         </p>
       </div>
 
-      <!-- ═══ Block 1: Encoder — reveals embedding neurons + encoder connections + embedding space ═══ -->
+      <!-- ═══ Block 'embedding' — reveals embedding neurons ═══ -->
       <div
-          :ref="(el) => paragraphRefs[1] = el as HTMLElement"
+          :ref="(el) => paragraphRefs[blockIdx('embedding')] = el as HTMLElement"
           class="text-block"
-          :class="{ 'active-block': activeBlockIndex === 1 }"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('embedding') }"
+      >
+        <p>
+          Between input and output lies the embedding layer with
+          <katex-element expression="m" /> neurons. In many autoencoders,
+          <katex-element expression="m < n" />, forcing the model to compress the input
+          into a lower-dimensional latent representation before reconstructing it.
+        </p>
+      </div>
+
+      <!-- ═══ Block 'encoder' — reveals encoder connections + embedding space panel ═══ -->
+      <div
+          :ref="(el) => paragraphRefs[blockIdx('encoder')] = el as HTMLElement"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('encoder') }"
       >
         <p>
           <strong>Encoder.</strong> The encoder computes the embedding
@@ -220,11 +277,11 @@ useParagraphRanges(ranges, activeBlockIndex)
         </p>
       </div>
 
-      <!-- ═══ Block 2: Decoder + Forward pass + Gram matrix — reveals decoder connections + bias/ReLU + output values ═══ -->
+      <!-- ═══ Block 'decoder' — reveals decoder connections + bias/ReLU + output values ═══ -->
       <div
-          :ref="(el) => paragraphRefs[2] = el as HTMLElement"
+          :ref="(el) => paragraphRefs[blockIdx('decoder')] = el as HTMLElement"
           class="text-block"
-          :class="{ 'active-block': activeBlockIndex === 2 }"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('decoder') }"
       >
         <p>
           <strong>Decoder.</strong> The decoder projects the embedding
@@ -242,29 +299,29 @@ useParagraphRanges(ranges, activeBlockIndex)
           <katex-element expression="i" />-th entry of <katex-element expression="W^T y" /> is
           <katex-element expression="w_i \cdot y" />.
         </p>
-
-        <p>
-          <strong>Full forward pass.</strong> Substituting
-          <katex-element expression="y = Wx" />:
-        </p>
-
-        <katex-element :display-mode="true" expression="\hat{x} = \text{ReLU}(W^T W x + b)" />
-
-        <p>
-          The Gram matrix <katex-element expression="W^T W" /> reappears: its off-diagonal
-          entries determine how much cross-talk (interference) occurs between features during
-          reconstruction. If <katex-element expression="W^T W = I" />, recovery would be exact
-          (up to the bias and ReLU). The model's task during training is to find feature
-          directions that balance reconstruction accuracy against the unavoidable interference
-          when <katex-element expression="m < n" />.
-        </p>
       </div>
 
-      <!-- ═══ Block 3: Trainable parameters — reveals weights view ═══ -->
+      <p>
+        <strong>Full forward pass.</strong> Substituting
+        <katex-element expression="y = Wx" />:
+      </p>
+
+      <katex-element :display-mode="true" expression="\hat{x} = \text{ReLU}(W^T W x + b)" />
+
+      <p>
+        The Gram matrix <katex-element expression="W^T W" /> reappears: its off-diagonal
+        entries determine how much cross-talk (interference) occurs between features during
+        reconstruction. If <katex-element expression="W^T W = I" />, recovery would be exact
+        (up to the bias and ReLU). The model's task during training is to find feature
+        directions that balance reconstruction accuracy against the unavoidable interference
+        when <katex-element expression="m < n" />.
+      </p>
+
+      <!-- ═══ Block 'weights-view' — reveals weights tab ═══ -->
       <div
-          :ref="(el) => paragraphRefs[3] = el as HTMLElement"
+          :ref="(el) => paragraphRefs[blockIdx('weights-view')] = el as HTMLElement"
           class="text-block"
-          :class="{ 'active-block': activeBlockIndex === 3 }"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('weights-view') }"
       >
         <p>
           The current values of the trainable parameters — the weight matrix
@@ -273,11 +330,11 @@ useParagraphRanges(ranges, activeBlockIndex)
         </p>
       </div>
 
-      <!-- ═══ Block 4: Why tied weights + Bias and ReLU — triggers bias/ReLU highlight ═══ -->
+      <!-- ═══ Block 'tied-weights' — no new reveal, just text ═══ -->
       <div
-          :ref="(el) => paragraphRefs[4] = el as HTMLElement"
+          :ref="(el) => paragraphRefs[blockIdx('tied-weights')] = el as HTMLElement"
           class="text-block"
-          :class="{ 'active-block': activeBlockIndex === 4 }"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('tied-weights') }"
       >
         <p>
           <strong>Why tied weights?</strong> Using <katex-element expression="W^T" /> as the
@@ -288,7 +345,14 @@ useParagraphRanges(ranges, activeBlockIndex)
           features than dimensions), the tied-weight structure provides a natural inductive bias
           toward this geometric ideal.
         </p>
+      </div>
 
+      <!-- ═══ Block 'bias-relu' — triggers continuous bias/ReLU pulse ═══ -->
+      <div
+          :ref="(el) => paragraphRefs[blockIdx('bias-relu')] = el as HTMLElement"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('bias-relu') }"
+      >
         <p>
           <strong>Bias and ReLU.</strong> The decoder includes a learned bias
           <katex-element expression="b" /> and a ReLU activation. Their significance will become
@@ -297,14 +361,14 @@ useParagraphRanges(ranges, activeBlockIndex)
         </p>
       </div>
 
-      <!-- ═══ Block 5: Synthetic training data — reveals half-normal backdrop + resample ═══ -->
-      <div
-          :ref="(el) => paragraphRefs[5] = el as HTMLElement"
-          class="text-block"
-          :class="{ 'active-block': activeBlockIndex === 5 }"
-      >
-        <h3>Synthetic Training Data</h3>
+      <h3>Synthetic Training Data</h3>
 
+      <!-- ═══ Block 'data' — reveals half-normal backdrop + resample ═══ -->
+      <div
+          :ref="(el) => paragraphRefs[blockIdx('data')] = el as HTMLElement"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('data') }"
+      >
         <p>
           We generate synthetic feature vectors
           <katex-element expression="x \in \mathbb{R}^n" /> directly in feature space rather
@@ -333,14 +397,14 @@ useParagraphRanges(ranges, activeBlockIndex)
         </p>
       </div>
 
-      <!-- ═══ Block 6: Training objective — reveals training tab + stats + action buttons ═══ -->
-      <div
-          :ref="(el) => paragraphRefs[6] = el as HTMLElement"
-          class="text-block"
-          :class="{ 'active-block': activeBlockIndex === 6 }"
-      >
-        <h3>Training Objective</h3>
+      <h3>Training Objective</h3>
 
+      <!-- ═══ Block 'training' — reveals training tab + stats + weighted loss ═══ -->
+      <div
+          :ref="(el) => paragraphRefs[blockIdx('training')] = el as HTMLElement"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('training') }"
+      >
         <p>
           In a large language model, internal representations must support a very large number
           of potentially useful features learned from vast amounts of training data. These
@@ -390,7 +454,7 @@ useParagraphRanges(ranges, activeBlockIndex)
 
       <h2 class="section-heading" style="margin-top: 2.5rem;">Experiments</h2>
 
-      <!-- ═══ Block 7: Experiments intro ═══ -->
+      <!-- ═══ Experiments intro (no text-block — not activatable) ═══ -->
 
       <p>
         With the autoencoder defined, we can now put it to the test. The interactive model
@@ -399,12 +463,12 @@ useParagraphRanges(ranges, activeBlockIndex)
         one that reveals a striking emergent pattern.
       </p>
 
-      <!-- ═══ Block 8: Experiment 1 — Two features in two dimensions ═══ -->
+      <!-- ═══ Block 'exp1': Experiment 1 — Two features in two dimensions ═══ -->
       <h3>Experiment 1: Two Features in Two Dimensions</h3>
       <div
-          :ref="(el) => paragraphRefs[8] = el as HTMLElement"
+          :ref="(el) => paragraphRefs[blockIdx('exp1')] = el as HTMLElement"
           class="text-block"
-          :class="{ 'active-block': activeBlockIndex === 8 }"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('exp1') }"
       >
 
         <p>
@@ -423,12 +487,12 @@ useParagraphRanges(ranges, activeBlockIndex)
         </TaskListDisplay>
       </div>
 
-      <!-- ═══ Block 9: Experiment 2 — More features than dimensions ═══ -->
+      <!-- ═══ Block 'exp2': Experiment 2 — More features than dimensions ═══ -->
       <h3>Experiment 2: More Features Than Dimensions</h3>
       <div
-          :ref="(el) => paragraphRefs[9] = el as HTMLElement"
+          :ref="(el) => paragraphRefs[blockIdx('exp2')] = el as HTMLElement"
           class="text-block"
-          :class="{ 'active-block': activeBlockIndex === 9 }"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('exp2') }"
       >
 
         <p>
@@ -457,12 +521,12 @@ useParagraphRanges(ranges, activeBlockIndex)
         </TaskListDisplay>
       </div>
 
-      <!-- ═══ Block 10: Interlude — Feature sparsity ═══ -->
+      <!-- ═══ Block 'interlude': Feature sparsity ═══ -->
       <h3>Interlude: Feature Sparsity</h3>
       <div
-          :ref="(el) => paragraphRefs[10] = el as HTMLElement"
+          :ref="(el) => paragraphRefs[blockIdx('interlude')] = el as HTMLElement"
           class="text-block"
-          :class="{ 'active-block': activeBlockIndex === 10 }"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('interlude') }"
       >
 
         <p>
@@ -493,12 +557,12 @@ useParagraphRanges(ranges, activeBlockIndex)
         <TaskListDisplay :task-list="interludeTaskList" />
       </div>
 
-      <!-- ═══ Block 11: Experiment 3 — Sparsity changes the game ═══ -->
+      <!-- ═══ Block 'exp3': Experiment 3 — Sparsity changes the game ═══ -->
       <h3>Experiment 3: Sparsity Changes the Game</h3>
       <div
-          :ref="(el) => paragraphRefs[11] = el as HTMLElement"
+          :ref="(el) => paragraphRefs[blockIdx('exp3')] = el as HTMLElement"
           class="text-block"
-          :class="{ 'active-block': activeBlockIndex === 11 }"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('exp3') }"
       >
 
         <p>
@@ -528,12 +592,12 @@ useParagraphRanges(ranges, activeBlockIndex)
         </TaskListDisplay>
       </div>
 
-      <!-- ═══ Block 12: Experiment 4 — Beyond doubling ═══ -->
+      <!-- ═══ Block 'exp4': Experiment 4 — Beyond doubling ═══ -->
       <h3>Experiment 4: Beyond Doubling</h3>
       <div
-          :ref="(el) => paragraphRefs[12] = el as HTMLElement"
+          :ref="(el) => paragraphRefs[blockIdx('exp4')] = el as HTMLElement"
           class="text-block"
-          :class="{ 'active-block': activeBlockIndex === 12 }"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('exp4') }"
       >
 
         <p>

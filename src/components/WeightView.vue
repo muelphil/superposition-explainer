@@ -11,11 +11,11 @@ const m = computed(() => svc.config.embeddingDim)
 const n = computed(() => svc.config.inputDim)
 
 // ─── KaTeX expressions (plain LaTeX strings, rendered via v-katex) ────────────
-const eqEncoder = '\\boldsymbol{h} = \\boldsymbol{W}\\boldsymbol{x}'
-const eqDecoder = '\\hat{\\boldsymbol{x}} = \\operatorname{ReLU}(\\boldsymbol{W}^{\\!\\top}\\boldsymbol{h} + \\boldsymbol{b})'
-const titleW    = '\\boldsymbol{W}'
-const titleB    = '\\boldsymbol{b}^{\\top}'
-const titleNorm = '\\|\\boldsymbol{w}_i\\|'
+const eqEncoder = 'y = Wx'
+const eqDecoder = '\\hat{x} = \\operatorname{ReLU}(W^{\\!\\top}y + b)'
+const titleW    = 'W'
+const titleB    = 'b^{\\top}'
+const titleNorm = '\\|w_i\\|'
 
 function fmtNorm(v: number): string { return v.toFixed(2) }
 
@@ -172,7 +172,6 @@ function featureVecLength(c: number): number {
               dimmed:      isActive() && !colHeaderHighlighted(c - 1),
               selected:    isColSelected(c - 1),
             }"
-            :title="`w_${c}  ‖w‖ = ${featureVecLength(c - 1).toFixed(3)}`"
             @mouseenter="onColEnter(c - 1)"
             @mouseleave="clearHover"
             @click="onColClick(c - 1)"

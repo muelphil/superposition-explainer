@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, computed } from 'vue'
 import type { BasesServiceType } from '../../services/BasesService'
-import { MAPPING_STAGES, type MappingStage } from '../../services/BasesService'
+import { MAPPING_STAGES } from '../../services/BasesService'
 
 const svc = inject<BasesServiceType>('basesService')!
 
@@ -10,126 +10,118 @@ const stage = computed(() => svc.mappingStage.value)
 /** Cumulative stage classes: all stages up to and including the current one */
 const stageClasses = computed(() => {
   const idx = MAPPING_STAGES.indexOf(stage.value)
-  const classes: Record<string, boolean> = {}
+  const cls: Record<string, boolean> = {}
   for (let i = 0; i <= idx; i++) {
-    classes[`stage-${MAPPING_STAGES[i]}`] = true
+    cls[`stage-${MAPPING_STAGES[i]}`] = true
   }
-  return classes
+  return cls
 })
 
-// ── SVG geometry ──────────────────────────────────────────────────────────────
+// ── SVG coordinate system ────────────────────────────────────────────────────
 
-const viewBox = '0 0 600 380'
+const VB_W = 580
+const VB_H = 360
 
-// Feature space ellipse (left, larger)
-const F = { cx: 160, cy: 195, rx: 130, ry: 145 }
-// Embedding space ellipse (right, smaller)
-const H = { cx: 450, cy: 195, rx: 90, ry: 110 }
+function pos(x: number, y: number) {
+  return { left: `${(x / VB_W) * 100}%`, top: `${(y / VB_H) * 100}%` }
+}
 
-// Points
-const xPt  = { x: 130, y: 155 }   // x in F
-const yPt  = { x: 465, y: 165 }   // y in H
-const xhPt = { x: 170, y: 275 }   // x̂ in F
+// Space circles (true circles — no ellipses)
+const F = { cx: 155, cy: 180, r: 115 }
+const H = { cx: 435, cy: 180, r: 75 }
 
-// Curved arrow paths
-const wPath = `M ${xPt.x + 8} ${xPt.y - 8} C 260 40, 380 40, ${yPt.x - 8} ${yPt.y - 6}`
-const wtPath = `M ${yPt.x - 8} ${yPt.y + 12} C 380 340, 260 340, ${xhPt.x + 8} ${xhPt.y + 4}`
+// Dots
+const DOT_R = 3.5
+const xPt  = { x: 120, y: 140 }
+const yPt  = { x: 450, y: 155 }
+const xhPt = { x: 150, y: 265 }
+
+// Arrow paths (endpoints stop before dot edge, leaving room for arrowheads)
+const wPath  = 'M 124 136 C 245 25, 380 30, 444 144'
+const wtPath = 'M 448 160 C 380 332, 245 328, 161 272'
 </script>
 
 <template>
   <div class="mapping-diagram" :class="stageClasses">
-    <!-- SVG layer: shapes, dots, arrows -->
-    <svg class="mapping-svg" :viewBox="viewBox" preserveAspectRatio="xMidYMid meet">
-      <defs>
-        <marker id="arrow-w" viewBox="0 0 10 8" refX="9" refY="4"
-                markerWidth="8" markerHeight="6" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 4 L 0 8 Z" fill="var(--color-text-primary)" />
-        </marker>
-        <marker id="arrow-wt" viewBox="0 0 10 8" refX="9" refY="4"
-                markerWidth="8" markerHeight="6" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 4 L 0 8 Z" fill="var(--color-text-primary)" />
-        </marker>
-      </defs>
+    <svg class="mapping-svg" :viewBox="`0 0 ${VB_W} ${VB_H}`"
+         preserveAspectRatio="xMidYMid meet">
 
-      <!-- Feature space F ellipse -->
-      <ellipse class="space-ellipse map-tgt-feature-space"
-               :cx="F.cx" :cy="F.cy" :rx="F.rx" :ry="F.ry" />
+      <!-- Feature space circle -->
+      <circle class="space-circle tgt-feature-space"
+              :cx="F.cx" :cy="F.cy" :r="F.r" />
 
-      <!-- Embedding space H ellipse -->
-      <ellipse class="space-ellipse map-tgt-both-spaces"
-               :cx="H.cx" :cy="H.cy" :rx="H.rx" :ry="H.ry" />
+      <!-- Embedding space circle -->
+      <circle class="space-circle tgt-both-spaces"
+              :cx="H.cx" :cy="H.cy" :r="H.r" />
 
-      <!-- W arrow (encoding) -->
-      <path class="arrow-path map-tgt-encoding"
-            :d="wPath" marker-end="url(#arrow-w)" />
+      <!-- Dot: x -->
+      <circle class="dot tgt-feature-space"
+              :cx="xPt.x" :cy="xPt.y" :r="DOT_R" />
 
-      <!-- W^T arrow (decoding) -->
-      <path class="arrow-path map-tgt-decoding"
-            :d="wtPath" marker-end="url(#arrow-wt)" />
+      <!-- Dot: y -->
+      <circle class="dot tgt-encoding"
+              :cx="yPt.x" :cy="yPt.y" :r="DOT_R" />
 
-      <!-- Dot: x in feature space -->
-      <circle class="point-dot map-tgt-feature-space"
-              :cx="xPt.x" :cy="xPt.y" r="5" />
+      <!-- Dot: x̂ -->
+      <circle class="dot tgt-decoding"
+              :cx="xhPt.x" :cy="xhPt.y" :r="DOT_R" />
 
-      <!-- Dot: y in embedding space -->
-      <circle class="point-dot map-tgt-encoding"
-              :cx="yPt.x" :cy="yPt.y" r="5" />
+      <!-- W arrow stroke (draws from start to end) -->
+      <path class="arrow-stroke arrow-w tgt-encoding" :d="wPath" />
 
-      <!-- Dot: x̂ in feature space -->
-      <circle class="point-dot map-tgt-decoding"
-              :cx="xhPt.x" :cy="xhPt.y" r="5" />
+      <!-- W arrowhead (appears after stroke reaches endpoint) -->
+      <polygon class="arrowhead arrowhead-w tgt-encoding"
+               points="0,0 -8,-3.2 -8,3.2"
+               transform="translate(448,152) rotate(60)" />
+
+      <!-- W^T arrow stroke -->
+      <path class="arrow-stroke arrow-wt tgt-decoding" :d="wtPath" />
+
+      <!-- W^T arrowhead -->
+      <polygon class="arrowhead arrowhead-wt tgt-decoding"
+               points="0,0 -8,-3.2 -8,3.2"
+               transform="translate(153,267) rotate(212)" />
     </svg>
 
-    <!-- HTML labels positioned over the SVG -->
-    <div class="label-overlay">
-      <!-- Space title: Feature Space F -->
-      <div class="space-label map-tgt-feature-space" :style="{ left: `${(F.cx / 600) * 100}%`, top: '4%' }">
-        Feature Space
-        <katex-element expression="F" />
+    <!-- HTML labels (positioned over SVG with percentage coordinates) -->
+    <div class="label-layer">
+      <!-- Space titles -->
+      <div class="space-title tgt-feature-space" :style="pos(F.cx, 38)">
+        Feature Space <katex-element expression="F" />
+      </div>
+      <div class="space-title tgt-both-spaces" :style="pos(H.cx, 80)">
+        Embedding Space <katex-element expression="H" />
       </div>
 
-      <!-- Space title: Embedding Space H -->
-      <div class="space-label map-tgt-both-spaces" :style="{ left: `${(H.cx / 600) * 100}%`, top: '4%' }">
-        Embedding Space
-        <katex-element expression="H" />
-      </div>
-
-      <!-- Label: x (with coordinate expansion) -->
-      <div class="point-label map-tgt-feature-space" :style="{ left: `${((xPt.x - 30) / 600) * 100}%`, top: `${((xPt.y - 24) / 380) * 100}%` }">
+      <!-- x label group (to upper-left of x dot) -->
+      <div class="math-label tgt-feature-space x-group" :style="pos(72, 118)">
         <katex-element expression="x" />
+        <div class="coord-expansion">
+          <katex-element expression="= (x_1, \ldots, x_n)^T" />
+        </div>
       </div>
 
-      <!-- Label: x coordinate expansion (only at feature-space stage) -->
-      <div class="point-label coord-label map-tgt-feature-space"
-           :style="{ left: `${((xPt.x + 16) / 600) * 100}%`, top: `${((xPt.y - 24) / 380) * 100}%` }">
-        <katex-element expression="= (x_1, \ldots, x_n)^T" :display-mode="false" />
-      </div>
-
-      <!-- Label: y = Wx -->
-      <div class="point-label map-tgt-encoding" :style="{ left: `${((yPt.x + 14) / 600) * 100}%`, top: `${((yPt.y - 24) / 380) * 100}%` }">
+      <!-- y = Wx (to right of y dot) -->
+      <div class="math-label tgt-encoding" :style="pos(472, 136)">
         <katex-element expression="y = Wx" />
       </div>
 
-      <!-- Label: W on encoder arrow -->
-      <div class="arrow-label map-tgt-encoding" :style="{ left: '50%', top: '6%' }">
+      <!-- W label (above upper arc) -->
+      <div class="math-label arrow-math tgt-encoding" :style="pos(300, 4)">
         <katex-element expression="W" />
       </div>
 
-      <!-- Label: W^T on decoder arrow -->
-      <div class="arrow-label map-tgt-decoding" :style="{ left: '50%', top: '88%' }">
+      <!-- W^T label (below lower arc) -->
+      <div class="math-label arrow-math tgt-decoding" :style="pos(300, 342)">
         <katex-element expression="W^T" />
       </div>
 
-      <!-- Label: x̂ = W^T y (decoding stage) -->
-      <div class="point-label xhat-label map-tgt-decoding"
-           :style="{ left: `${((xhPt.x - 80) / 600) * 100}%`, top: `${((xhPt.y - 12) / 380) * 100}%` }">
+      <!-- x̂ label group (to left of x̂ dot) -->
+      <div class="math-label tgt-decoding xhat-group" :style="pos(38, 248)">
         <katex-element expression="\hat{x} = W^T y" />
-      </div>
-
-      <!-- Label: x̂ = W^T W x (gram-matrix stage, replaces the decoding label) -->
-      <div class="point-label xhat-expanded map-tgt-gram-matrix"
-           :style="{ left: `${((xhPt.x - 80) / 600) * 100}%`, top: `${((xhPt.y + 16) / 380) * 100}%` }">
-        <katex-element expression="= W^T W x" />
+        <div class="gram-line tgt-gram-matrix">
+          <katex-element expression="\phantom{\hat{x}} = W^T W x" />
+        </div>
       </div>
     </div>
   </div>
@@ -139,131 +131,122 @@ const wtPath = `M ${yPt.x - 8} ${yPt.y + 12} C 380 340, 260 340, ${xhPt.x + 8} $
 .mapping-diagram {
   position: relative;
   width: 100%;
-  max-width: 560px;
-  margin: 0 auto;
+  aspect-ratio: 580 / 360;
 }
 
 .mapping-svg {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: auto;
-  display: block;
+  height: 100%;
 }
 
 /* ── SVG element styles ────────────────────────────────────────────────────── */
 
-.space-ellipse {
+.space-circle {
   fill: var(--color-bg-secondary, #f3f4f6);
-  stroke: var(--color-border);
+  stroke: var(--color-border, #d1d5db);
   stroke-width: 1;
 }
 
-.arrow-path {
+.dot {
+  fill: var(--color-text-primary, #1f2937);
+}
+
+.arrow-stroke {
   fill: none;
-  stroke: var(--color-text-primary);
-  stroke-width: 2.2;
+  stroke: var(--color-text-secondary, #4b5563);
+  stroke-width: 2;
+  stroke-linecap: round;
 }
 
-.point-dot {
-  fill: var(--color-text-primary);
+.arrowhead {
+  fill: var(--color-text-secondary, #4b5563);
 }
 
-/* ── Label overlay ─────────────────────────────────────────────────────────── */
+/* ── Label layer ───────────────────────────────────────────────────────────── */
 
-.label-overlay {
+.label-layer {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-.space-label {
+.space-title {
   position: absolute;
   transform: translateX(-50%);
-  font-size: 0.92rem;
+  font-size: 0.86rem;
   font-weight: 500;
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary, #4b5563);
   white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 0.3em;
+  gap: 0.25em;
 }
 
-.point-label {
+.math-label {
   position: absolute;
-  font-size: 1rem;
-  color: var(--color-text-primary);
+  color: var(--color-text-primary, #1f2937);
   white-space: nowrap;
+  font-size: 0.95rem;
 }
 
-.arrow-label {
-  position: absolute;
+.arrow-math {
   transform: translateX(-50%);
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: var(--color-text-primary);
+  font-size: 1rem;
 }
 
-/* ── Default hidden state: all revealable elements start invisible ────────── */
+.x-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+}
 
-.map-tgt-feature-space,
-.map-tgt-both-spaces,
-.map-tgt-encoding,
-.map-tgt-decoding,
-.map-tgt-gram-matrix {
+.xhat-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+}
+
+/* ── Default: all revealable elements hidden ───────────────────────────────── */
+
+.tgt-feature-space,
+.tgt-both-spaces,
+.tgt-encoding,
+.tgt-decoding,
+.tgt-gram-matrix {
   opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.5s ease, visibility 0.5s ease;
+  transition: opacity 0.6s ease;
+}
+
+/* Arrow strokes: dashoffset animation (draws from start to end) */
+.arrow-stroke {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  transition: opacity 0.6s ease, stroke-dashoffset 0.9s ease-out 0.15s;
+}
+
+/* Arrowheads: delayed appearance (timed to when stroke reaches endpoint) */
+.arrowhead {
+  transition: opacity 0.15s ease 0s;
 }
 
 /* ── Stage reveals (cumulative) ────────────────────────────────────────────── */
 
-.stage-feature-space .map-tgt-feature-space {
-  opacity: 1;
-  visibility: visible;
-}
+.stage-feature-space .tgt-feature-space { opacity: 1; }
+.stage-both-spaces .tgt-both-spaces     { opacity: 1; }
+.stage-encoding .tgt-encoding           { opacity: 1; }
+.stage-decoding .tgt-decoding           { opacity: 1; }
+.stage-gram-matrix .tgt-gram-matrix     { opacity: 1; }
 
-.stage-both-spaces .map-tgt-both-spaces {
-  opacity: 1;
-  visibility: visible;
-}
+/* Arrow stroke drawing */
+.stage-encoding .arrow-w  { stroke-dashoffset: 0; }
+.stage-decoding .arrow-wt { stroke-dashoffset: 0; }
 
-/* When both-spaces is active, hide the coordinate expansion label */
-.stage-both-spaces .coord-label {
-  opacity: 0;
-  visibility: hidden;
-}
+/* Arrowhead delayed entrance (appears near end of stroke drawing) */
+.stage-encoding .arrowhead-w  { transition: opacity 0.15s ease 0.75s; }
+.stage-decoding .arrowhead-wt { transition: opacity 0.15s ease 0.75s; }
 
-.stage-encoding .map-tgt-encoding {
-  opacity: 1;
-  visibility: visible;
-}
-
-.stage-decoding .map-tgt-decoding {
-  opacity: 1;
-  visibility: visible;
-}
-
-.stage-gram-matrix .map-tgt-gram-matrix {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* ── Entrance pulse animation for newly revealed elements ──────────────────── */
-
-@keyframes map-reveal-pulse {
-  0% { transform: scale(0.85); opacity: 0; }
-  60% { transform: scale(1.06); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-/* Apply entrance animation to SVG elements transitioning in */
-.stage-both-spaces .map-tgt-both-spaces:not(.map-tgt-feature-space),
-.stage-encoding .map-tgt-encoding,
-.stage-decoding .map-tgt-decoding {
-  animation: map-reveal-pulse 0.5s ease-out;
-}
-
-/* Gram matrix label subtle emphasis */
-.stage-gram-matrix .xhat-expanded {
-  animation: map-reveal-pulse 0.5s ease-out;
-}
+/* Coordinate expansion fades out from both-spaces onward */
+.mapping-diagram.stage-both-spaces .coord-expansion { opacity: 0; }
 </style>

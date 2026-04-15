@@ -2,14 +2,20 @@
 import { computed, inject } from 'vue'
 import { RotateCcw, Play, Pause } from 'lucide-vue-next'
 import type { AutoencoderServiceType } from '../services/AutoencoderService'
+import { VIZ_SERVICE_KEY } from '../services/VizService'
 
 const svc = inject<AutoencoderServiceType>('autoencoderService')!
+const vizSvc = inject(VIZ_SERVICE_KEY, undefined)
 
 const trainLabel = computed(() => {
   if (svc.isTraining.value) return 'Pause Training'
   if (svc.step.value > 0) return 'Continue Training'
   return 'Start Training'
 })
+
+const trainDisabled = computed(() =>
+  vizSvc != null && !vizSvc.continueTrainingEnabled.value
+)
 
 function onTrainClick() {
   if (svc.isTraining.value) {
@@ -33,6 +39,7 @@ function onTrainClick() {
     <button
       class="train-btn"
       :class="{ 'train-btn--pause': svc.isTraining.value }"
+      :disabled="trainDisabled"
       @click="onTrainClick"
     >
       <Pause v-if="svc.isTraining.value" :size="13" />
@@ -79,6 +86,7 @@ function onTrainClick() {
   letter-spacing: 0.02em;
 }
 .train-btn:hover { background: var(--color-interactive-hover); }
+.train-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .train-btn--pause { background: var(--color-text-action); }
 .train-btn--pause:hover { background: var(--color-text-action-hover); }
 </style>

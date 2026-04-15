@@ -145,7 +145,7 @@ function weightStyle(w: number): { color: string; width: number; opacity: number
   const abs = Math.abs(w)
   return {
     color: w >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
-    width: 0.5 + Math.min(abs, 1.5) * 3,
+    width: 0.5 + Math.min(abs, 1.5) * 4,
     opacity: 0.15 + Math.min(abs, 1) * 0.65,
   }
 }
@@ -537,7 +537,7 @@ function onOutputClick(i: number) {
 <template>
   <div
       class="ae-grid"
-      :class="[{ compact: props.compact }, ...(vizSvc?.revealClasses.value ?? [])]"
+      :class="[{ compact: props.compact, 'bias-relu-pulse': vizSvc?.biasReluPulse.value, 'ae-grid--reveal-mode': vizSvc != null }, vizSvc?.currentStageClass.value, ...(vizSvc?.revealClasses.value ?? [])]"
       ref="containerRef"
       :style="{ gridTemplateRows }"
   >
@@ -617,9 +617,9 @@ function onOutputClick(i: number) {
     </button>
 
     <!-- Encoder col: +/- dim controls + neuron count -->
-    <div class="sub-header-ctrl reveal-tgt-full" style="grid-column: 3; grid-row: 2">
-      <span class="neuron-count">{{ n }} neurons</span>
-      <div v-if="!inputFixed" class="dim-btns">
+    <div class="sub-header-ctrl" style="grid-column: 3; grid-row: 2">
+      <span class="neuron-count reveal-tgt-input-output">{{ n }} neurons</span>
+      <div v-if="!inputFixed" class="dim-btns reveal-tgt-full">
         <button class="dim-btn" @click="removeInputNeuron" :disabled="!canRemoveInput" title="Remove input feature">
           <Minus :size="12"/>
         </button>
@@ -630,9 +630,9 @@ function onOutputClick(i: number) {
     </div>
 
     <!-- Embedding col: +/- dim controls + neuron count -->
-    <div class="sub-header-ctrl reveal-tgt-full" style="grid-column: 6; grid-row: 2">
-      <span class="neuron-count">{{ m }} neurons</span>
-      <div v-if="!embFixed" class="dim-btns">
+    <div class="sub-header-ctrl" style="grid-column: 6; grid-row: 2">
+      <span class="neuron-count reveal-tgt-embedding">{{ m }} neurons</span>
+      <div v-if="!embFixed" class="dim-btns reveal-tgt-full">
         <button class="dim-btn" @click="removeEmbeddingNeuron" :disabled="!canRemoveEmb" title="Remove embedding dim">
           <Minus :size="12"/>
         </button>
@@ -645,7 +645,7 @@ function onOutputClick(i: number) {
     <!-- Decoder col: activation info — removed; replaced by per-row ActivationIcons -->
 
     <!-- Output col: weighted loss label + value -->
-    <div class="sub-header-loss reveal-tgt-decoder" style="grid-column: 12; grid-row: 2">
+    <div class="sub-header-loss reveal-tgt-training" style="grid-column: 12; grid-row: 2">
       <span class="col-loss-label">weighted loss</span>
       <span class="col-loss-val" :class="{ zero: !isNonZero(currentLoss) }">
         {{ currentLoss.toFixed(3) }}
@@ -656,7 +656,7 @@ function onOutputClick(i: number) {
     <template v-for="(_, i) in n" :key="i">
       <!-- Input value: col 1 -->
       <div
-          class="cell-hover-zone"
+          class="cell-hover-zone reveal-tgt-input-output"
           :class="inputDimClass(i)"
           :style="{ gridColumn: '1', gridRow: String(i + dataRowStart) }"
           @mouseenter="onInputEnter(i)"
@@ -675,7 +675,7 @@ function onOutputClick(i: number) {
 
       <!-- Input neuron: col 3 -->
       <div
-          class="neuron-wrap"
+          class="neuron-wrap reveal-tgt-input-output"
           :class="inputDimClass(i)"
           :style="{ gridColumn: '3', gridRow: String(i + dataRowStart) }"
           @mouseenter="onFeatureEnter(i)"
@@ -708,7 +708,7 @@ function onOutputClick(i: number) {
 
       <!-- Output neuron: col 10 — also scales with importance -->
       <div
-          class="neuron-wrap"
+          class="neuron-wrap reveal-tgt-input-output"
           :class="outputDimClass(i)"
           :style="{ gridColumn: '10', gridRow: String(i + dataRowStart) }"
           @mouseenter="onOutputEnter(i)"
@@ -847,6 +847,7 @@ function onOutputClick(i: number) {
 
 /* ── Column headings ──────────────────────────────────────── */
 .col-heading {
+  font-family: var(--font-family-label);
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--color-text-title);
@@ -861,6 +862,7 @@ function onOutputClick(i: number) {
   font-variant-numeric: tabular-nums;
   color: var(--color-error);
   line-height: 1;
+  font-family: var(--font-family-number);
 }
 
 .col-loss-val.zero {
@@ -874,6 +876,7 @@ function onOutputClick(i: number) {
   letter-spacing: 0.05em;
   line-height: 1.2;
   text-align: center;
+  white-space: nowrap;
 }
 
 /* ── Highlight / dim ──────────────────────────────────────── */
@@ -968,6 +971,7 @@ function onOutputClick(i: number) {
 }
 
 .neuron {
+  font-family: var(--font-family-number);
   width: var(--neuron-size);
   height: var(--neuron-size);
   border-radius: 50%;
@@ -1017,6 +1021,7 @@ function onOutputClick(i: number) {
 
 /* ── Output values ────────────────────────────────────────── */
 .output-value {
+  font-family: var(--font-family-number);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1134,13 +1139,20 @@ function onOutputClick(i: number) {
 }
 
 /* ── Reveal stage gating ─────────────────────────────────── */
+/*
+ * All hiding rules are scoped to .ae-grid--reveal-mode so they only
+ * apply in blog/reveal context. The main-view AutoencoderView never
+ * receives this class (vizSvc is null there) and is fully unaffected.
+ */
+
 /* Hidden state: invisible but preserving layout space */
-.ae-grid .reveal-tgt-input-output,
-.ae-grid .reveal-tgt-embedding,
-.ae-grid .reveal-tgt-encoder,
-.ae-grid .reveal-tgt-decoder,
-.ae-grid .reveal-tgt-data,
-.ae-grid .reveal-tgt-full {
+.ae-grid--reveal-mode .reveal-tgt-input-output,
+.ae-grid--reveal-mode .reveal-tgt-embedding,
+.ae-grid--reveal-mode .reveal-tgt-encoder,
+.ae-grid--reveal-mode .reveal-tgt-decoder,
+.ae-grid--reveal-mode .reveal-tgt-data,
+.ae-grid--reveal-mode .reveal-tgt-training,
+.ae-grid--reveal-mode .reveal-tgt-full {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -1148,15 +1160,15 @@ function onOutputClick(i: number) {
 }
 
 /* SVG paths hidden by side */
-.ae-grid .vis-path[data-side="encoder"],
-.ae-grid path[data-side="encoder"] {
+.ae-grid--reveal-mode .vis-path[data-side="encoder"],
+.ae-grid--reveal-mode path[data-side="encoder"] {
   opacity: 0 !important;
   visibility: hidden;
   pointer-events: none !important;
   transition: opacity 0.4s ease, visibility 0.4s ease;
 }
-.ae-grid .vis-path[data-side="decoder"],
-.ae-grid path[data-side="decoder"] {
+.ae-grid--reveal-mode .vis-path[data-side="decoder"],
+.ae-grid--reveal-mode path[data-side="decoder"] {
   opacity: 0 !important;
   visibility: hidden;
   pointer-events: none !important;
@@ -1164,44 +1176,47 @@ function onOutputClick(i: number) {
 }
 
 /* Half-normal backdrop hidden until data stage */
-.ae-grid :deep(.dist-svg) {
+.ae-grid--reveal-mode :deep(.dist-svg) {
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 
 /* ── Stage reveals (cumulative) ──────────────────────────── */
-.ae-grid.reveal-input-output .reveal-tgt-input-output {
+.ae-grid--reveal-mode.reveal-input-output .reveal-tgt-input-output {
   opacity: 1; visibility: visible; pointer-events: auto;
 }
-.ae-grid.reveal-embedding .reveal-tgt-embedding {
+.ae-grid--reveal-mode.reveal-embedding .reveal-tgt-embedding {
   opacity: 1; visibility: visible; pointer-events: auto;
 }
-.ae-grid.reveal-encoder .reveal-tgt-encoder {
+.ae-grid--reveal-mode.reveal-encoder .reveal-tgt-encoder {
   opacity: 1; visibility: visible; pointer-events: auto;
 }
-.ae-grid.reveal-encoder .vis-path[data-side="encoder"],
-.ae-grid.reveal-encoder path[data-side="encoder"] {
+.ae-grid--reveal-mode.reveal-encoder .vis-path[data-side="encoder"],
+.ae-grid--reveal-mode.reveal-encoder path[data-side="encoder"] {
   opacity: revert !important;
   visibility: visible;
   pointer-events: revert !important;
 }
-.ae-grid.reveal-decoder .reveal-tgt-decoder {
+.ae-grid--reveal-mode.reveal-decoder .reveal-tgt-decoder {
   opacity: 1; visibility: visible; pointer-events: auto;
 }
-.ae-grid.reveal-decoder .vis-path[data-side="decoder"],
-.ae-grid.reveal-decoder path[data-side="decoder"] {
+.ae-grid--reveal-mode.reveal-decoder .vis-path[data-side="decoder"],
+.ae-grid--reveal-mode.reveal-decoder path[data-side="decoder"] {
   opacity: revert !important;
   visibility: visible;
   pointer-events: revert !important;
 }
-.ae-grid.reveal-data .reveal-tgt-data {
+.ae-grid--reveal-mode.reveal-data .reveal-tgt-data {
   opacity: 1; visibility: visible; pointer-events: auto;
 }
-.ae-grid.reveal-data :deep(.dist-svg) {
+.ae-grid--reveal-mode.reveal-data :deep(.dist-svg) {
   opacity: 1; visibility: visible;
 }
-.ae-grid.reveal-full .reveal-tgt-full {
+.ae-grid--reveal-mode.reveal-training .reveal-tgt-training {
+  opacity: 1; visibility: visible; pointer-events: auto;
+}
+.ae-grid--reveal-mode.reveal-full .reveal-tgt-full {
   opacity: 1; visibility: visible; pointer-events: auto;
 }
 
@@ -1212,12 +1227,39 @@ function onOutputClick(i: number) {
   100% { opacity: 1; transform: scale(1); }
 }
 
+/* ── Reveal pulse: scale bounce on newly revealed elements ── */
+@keyframes reveal-pulse {
+  0%   { transform: scale(0.72); }
+  55%  { transform: scale(1.1); }
+  78%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+/* ── Continuous heading pulse while user is in the matching block ── */
+@keyframes heading-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.07); }
+}
+
+.ae-grid--reveal-mode.current-stage-input-output .col-heading.reveal-tgt-input-output,
+.ae-grid--reveal-mode.current-stage-embedding    .col-heading.reveal-tgt-embedding,
+.ae-grid--reveal-mode.current-stage-embedding    .emb-column.reveal-tgt-embedding,
+.ae-grid--reveal-mode.current-stage-encoder      .col-heading.reveal-tgt-encoder,
+.ae-grid--reveal-mode.current-stage-decoder      .col-heading.reveal-tgt-decoder {
+  animation: heading-pulse 2.4s ease-in-out infinite;
+}
+
 /* ── Bias/ReLU pulsating highlight ───────────────────────── */
 @keyframes pulse-glow {
   0%, 100% { filter: brightness(1) drop-shadow(0 0 0px transparent); }
   50%      { filter: brightness(1.2) drop-shadow(0 0 6px var(--color-positive)); }
 }
-.ae-grid.reveal-bias-relu-highlight :deep(.act-icons) {
-  animation: pulse-glow 1.5s ease-in-out 3;
+.ae-grid.bias-relu-pulse :deep(.act-icons) {
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+.emb-value{
+  position: absolute;
+  bottom: -2px;
+  transform: translateY(100%);
 }
 </style>

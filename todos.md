@@ -334,13 +334,86 @@ That's great! But it needs some refinements:
 * bug: the X neurons above the input/embedding neuron columns should be uncovered with the neurons.
 * Remember, not everything has to be a text-block. e.g "Full forward pass" can go in a paragraph without wrapping text-block under Decoder subsection.
 
---- 
+---
+
+We now want to shift our attention to the visualization of the section "Geometric Foundations: Bases and Feature Representation", that is located in BasesSection.vue.
+The current BasesVisualization.vue holds only a small dummy visualization that we will overwrite.
+
+The BasesSection requires 2 different visualizations:
+1. A mapping diagram that develops as the text introduces different parts
+2. A visualization of bases in a coordinate system
+
+These should be implemented in 2 different child components of BasesVisualization.vue and be shown depending on where in the text the user is (1 starting with section "Geometric Foundations: Bases and Feature Representation" (beginning), 2 taking over from subsection "Arbitrary Basis").
+
+We will first focus on the first (1.) visualization, the mapping diagram.
+
+A rough sketch of the target mapping is given by:
+\begin{tikzpicture}[
+>=Stealth,
+font=\small,
+map/.style={->, very thick},
+point/.style={circle, fill, inner sep=1.5pt}
+]
+
+% --- Background spaces (light gray, no border) ---
+\fill[gray!10] (-2.5,-2) circle (2.4);
+\fill[gray!10] (8.5,-2) circle (1.4);
+
+% Labels for spaces
+\node at (-2.5,1.2) {Feature Space \(F\)};
+\node at (8.5,1.2) {Embedding Space \(H\)};
+
+% --- Points in F ---
+\node[point, label=above left:\(x\)] (x) at (-3.0,-1.2) {};
+
+\node[point] (xhat) at (-1.8,-2.6) {};
+\node[left=10pt of xhat, align=right] {
+\(\hat{x} = W^T y\) \\
+\(\;\;= W^T W x\)
+};
+
+% --- Point in H ---
+\node[point] (y) at (9.0,-1.3) {};
+\node[right=10pt of y] {\(y = Wx\)};
+
+% --- Arrows ---
+\draw[map] (x) to[bend left=20]
+node[midway, above] {\(W\)}
+(y);
+
+\draw[map] (y) to[bend left=20]
+node[midway, below] {\(W^T\)}
+(xhat);
+
+\end{tikzpicture}
+
+This is also given as mathematical_vis_of_notation.png in the entry, an inline figure that we will replace in favor of the animated visualization on the side.
+
+
+You need to do 2 things:
+* Review the blog entry section "Geometric Foundations: Bases and Feature Representation" till "The 2D Example"
+* plan the steps of the animated uncovering/blending in the mapping diagram
+* in the blogpost (BasesSection.vue section "Geometric Foundations: Bases and Feature Representation" till "The 2D Example") rearrange the text into and out of text-blocks that are activated to align with the planned animation
+* plan the implementation of this visualization, considering different approaches and libraries (i.e. FramerMotion, GSAP, plain Vue, ...) and implement it in a BasesVisualization Child component.
+  * use the already present useScrollActiveParagraph implementation for tracking scroll.
+
+It would be highly preferred if the things in the mapping diagram are uncovered/introduced one by one, e.g. first only showing $F$ with a feature vector x as dot, showing $x=(x_1, ..., x_n)$, then blending out $(x_1, ..., x_n)$ to introduce the embedding space etcetc.
+Plan a good nice visualization that uncovers gradually and provides nice input to the user.
+
+For the second part of the vis, put the current dummy visualization in the second child component.
+If you have any questions, ask.
+
+---
+
 
 # TODOs:
 * Not well written: "A striking demonstration comes from 3Blue1Brown (How might LLMs store facts, Chapter 7): it is possible to place 10,000 vectors in just 100 dimensions while all pairwise angles remain between $89^\circ$ and $91^\circ$ — virtually orthogonal, despite outnumbering the dimensions by a factor of 100."
   * while clinging onto the orthogonality constraint, in 100 dimensions you would only be able to represent 100 vectors, slightly softening the constraint to the vectors having 89 to 91 degrees to one another (nearly orthogonal, very low interference), he shows via experimentation that it is possible to fit 10.000 vectors in the same space. If this grows exponetnially, think about how much can be fit in 12.288 dimensional vectors.
   * maybe make this an experiment too using WebGPU?
 * use lucide icons or any other icons for task list checkboxes
-
+* make the intro section of the autoencoder model using pulse animation on anything that is new+
+  * it should also trigger classes programmatically (otherwise it gets too complicated -- its occluding the class with unnecessary booleans in the template)
+* 
 
 * .blog-post .viz-sticky
+

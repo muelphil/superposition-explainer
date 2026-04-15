@@ -169,6 +169,7 @@ function onSliderChange(event: Event) {
 }
 
 .value-label {
+  font-family: var(--font-family-number);
   font-size: 1rem;
   font-weight: 500;
   color: var(--color-text-primary);

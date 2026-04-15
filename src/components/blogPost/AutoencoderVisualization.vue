@@ -24,7 +24,7 @@ function setTab(tab: VizTab) {
 
 // Reveal helpers — default to true when no VizService (MainView shows everything)
 const showBottomRow = computed(() => vizSvc?.stageAtLeast('encoder') ?? true)
-const showWeightsTab = computed(() => vizSvc?.stageAtLeast('weights-view') ?? true)
+const showWeightsTab = computed(() => vizSvc?.stageAtLeast('encoder') ?? true)
 const showTrainingTab = computed(() => vizSvc?.stageAtLeast('training') ?? true)
 const showStatsTab = computed(() => vizSvc?.stageAtLeast('training') ?? true)
 const showTrainingFooter = computed(() => vizSvc?.stageAtLeast('training') ?? true)
@@ -69,13 +69,13 @@ const visibleTabs = computed(() => {
         </div>
 
         <div class="ae-viz-panel">
-          <div class="tab-pane" v-show="vizSvc?.activeTab.value === 'training'">
+          <div class="tab-pane" v-show="visibleTabs.includes('training') && vizSvc?.activeTab.value === 'training'">
             <TrainingConfigView />
           </div>
-          <div class="tab-pane tab-pane--flush" v-show="vizSvc?.activeTab.value === 'statistics'">
+          <div class="tab-pane tab-pane--flush" v-show="visibleTabs.includes('statistics') && vizSvc?.activeTab.value === 'statistics'">
             <TrainingStatsView />
           </div>
-          <div class="tab-pane tab-pane--weights" v-show="vizSvc?.activeTab.value === 'weights'">
+          <div class="tab-pane tab-pane--weights" v-show="visibleTabs.includes('weights') && vizSvc?.activeTab.value === 'weights'">
             <WeightView />
           </div>
         </div>
@@ -120,6 +120,7 @@ const visibleTabs = computed(() => {
 }
 
 .ae-viz-title {
+  font-family: var(--font-family-label);
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--color-text-secondary);

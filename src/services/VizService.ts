@@ -4,6 +4,7 @@ export type VizTab = 'training' | 'statistics' | 'weights'
 export type StatsChart = 'loss' | 'presence' | 'angle'
 
 export const REVEAL_STAGES = [
+  'blank',
   'input-output',
   'embedding',
   'encoder',
@@ -27,8 +28,14 @@ export interface VizServiceType {
   revealStage: Ref<RevealStage>
   /** CSS classes for the current reveal stage (cumulative) */
   revealClasses: ComputedRef<string[]>
+  /** Non-cumulative class for the exact current stage, e.g. "current-stage-decoder" */
+  currentStageClass: ComputedRef<string>
   /** True when current stage >= target */
   stageAtLeast(target: RevealStage): boolean
+  /** When true, the bias/ReLU icons pulse continuously (non-cumulative, block-scoped) */
+  biasReluPulse: Ref<boolean>
+  /** When false, the Start/Continue Training button is disabled */
+  continueTrainingEnabled: Ref<boolean>
 }
 
 export const VIZ_SERVICE_KEY: InjectionKey<VizServiceType> = Symbol('vizService')
@@ -41,13 +48,18 @@ export function createVizService(): VizServiceType {
     return REVEAL_STAGES.slice(0, idx + 1).map(s => `reveal-${s}`)
   })
 
+  const currentStageClass = computed(() => `current-stage-${revealStage.value}`)
+
   return {
     activeTab: ref<VizTab>('training'),
     statsChart: ref<StatsChart>('loss'),
     revealStage,
     revealClasses,
+    currentStageClass,
     stageAtLeast(target: RevealStage): boolean {
       return stageIndex(revealStage.value) >= stageIndex(target)
     },
+    biasReluPulse: ref(false),
+    continueTrainingEnabled: ref(true),
   }
 }

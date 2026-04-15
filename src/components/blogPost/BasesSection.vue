@@ -16,6 +16,7 @@ const BLOCK_IDS = [
   'encoding',
   'decoding',
   'gram-matrix',
+  '2d-intro',
 ] as const
 
 type BlockId = typeof BLOCK_IDS[number]
@@ -33,7 +34,7 @@ watch(activeBlockIndex, (idx) => {
 
 // ─── Block → mapping-stage mapping ───────────────────────────────────────────
 
-const blockMappingStage: Record<BlockId, MappingStage> = {
+const blockMappingStage: Record<string, MappingStage> = {
   'feature-space': 'feature-space',
   'both-spaces':   'both-spaces',
   'encoding':      'encoding',
@@ -48,6 +49,19 @@ const ranges: ParagraphRange[] = [
     apply: (activeIndex: number) => {
       const id = BLOCK_IDS[activeIndex] as BlockId | undefined
       svc.mappingStage.value = (id && blockMappingStage[id]) ?? 'feature-space'
+      svc.activeViz.value = 'mapping'
+    },
+    leave: () => {
+      svc.mappingStage.value = 'none'
+    },
+  },
+  {
+    from: blockIdx('2d-intro'),
+    to: blockIdx('2d-intro'),
+    apply: () => {
+      svc.activeViz.value = 'coordinate'
+    },
+    leave: () => {
       svc.activeViz.value = 'mapping'
     },
   },
@@ -230,15 +244,21 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- ── The 2D Example ───────────────────────────────────── -->
       <h3>The 2D Example</h3>
 
-      <p>
-        To build this intuition concretely, we walk through three progressively structured
-        choices of feature directions in a simple 2D example: two features
-        <katex-element expression="f_1"/>
-        and
-        <katex-element expression="f_2"/>
-        , embedded into
-        a 2-dimensional embedding space.
-      </p>
+      <div
+          :ref="(el) => blockRefs[blockIdx('2d-intro')] = el as HTMLElement"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('2d-intro') }"
+      >
+        <p>
+          To build this intuition concretely, we walk through three progressively structured
+          choices of feature directions in a simple 2D example: two features
+          <katex-element expression="f_1"/>
+          and
+          <katex-element expression="f_2"/>
+          , embedded into
+          a 2-dimensional embedding space.
+        </p>
+      </div>
 
       <p>
         Since the feature space
