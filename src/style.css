@@ -49,7 +49,9 @@
   --color-remove-btn:      #ef4444;  /* red-500 */
 
   /* Monospace font stack */
-  --font-family-mono: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  --font-family-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  --font-family-label: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Courier New', monospace;
+  --font-family-number: initial; /* 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Courier New', monospace; */
 
   /* Selection / focus highlight */
   --color-selection:      #6366f1;  /* indigo-500 */
@@ -83,7 +85,8 @@
   --color-chart-grid:     #f0f0f0;
 
   /* Neuron / input controls */
-  --color-neuron-border:  #bcc5d3;
+  --color-neuron-border:  #b5b5b5;
+  /*--color-neuron-border:  #bcc5d3;*/
   --color-slider-track:   #cbd5e1;  /* slate-300 */
   --color-thumb-default:  #94a3b8;  /* slate-400 */
   --color-thumb-border:   rgba(0, 0, 0, 0.15);
@@ -171,3 +174,18 @@ button:disabled {
   border-color: var(--color-border);
 }
 
+@keyframes pulse-scale {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08); /* adjust intensity here */
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pulse {
+  animation: pulse-scale 1.2s ease-in-out infinite;
+}

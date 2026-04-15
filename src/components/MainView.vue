@@ -31,7 +31,7 @@ const showSettings = ref(false)
 <template>
   <div class="main-view">
     <header class="app-header">
-      <h1 class="app-title">Superposition Explainer</h1>
+      <h1 class="app-title"><span>Super</span><span>Position</span> Explainer</h1>
       <button class="header-icon-btn" @click="showSettings = true" title="Settings">
         <Settings :size="16" />
       </button>
@@ -198,7 +198,7 @@ const showSettings = ref(false)
 .app-content {
   height: 100vh;
   padding: var(--header-height) 2rem calc(3 * var(--header-height));
-  align-content: center;
+  /* align-content: center; */
   width: 100%;
   max-width: 1200px;
   align-self: center;
@@ -212,6 +212,8 @@ const showSettings = ref(false)
   display: grid;
   grid-template-columns: 65fr 35fr;
   gap: 2rem;
+  height: 100%;
+  padding-top: 10%;
   align-items: flex-start;
 }
 
@@ -255,6 +257,7 @@ const showSettings = ref(false)
 }
 
 .section-title {
+  font-family: var(--font-family-label);
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--color-text-secondary);
@@ -269,6 +272,7 @@ const showSettings = ref(false)
 }
 
 .combined-tab-bar {
+  font-family: var(--font-family-label);
   display: flex;
   gap: 1rem;
 }
