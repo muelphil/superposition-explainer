@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 580 360"
+     width="580" height="360"
+     style="background: white; font-family: system-ui, Georgia, serif;">
+
+  <!--
+    MAPPING DIAGRAM — Full composition (all elements visible).
+    Edit positions here; the Vue component reads this file and animates by element ID.
+
+    Coordinate system: 580 × 360 viewBox.
+    Elements are revealed in stages via CSS class on the parent wrapper:
+      stage-feature-space  → #circle-f, #dot-x
+      stage-both-spaces    → #circle-h
+      stage-encoding       → #dot-y, #arrow-w, #arrowhead-w
+      stage-decoding       → #dot-xhat, #arrow-wt, #arrowhead-wt
+      stage-gram-matrix    → (handled via KaTeX HTML overlay; no SVG element)
+
+    Guide text (.guide class) — visible here for composition reference,
+    hidden in the app (replaced by the KaTeX HTML overlay in MappingDiagram.vue).
+    Adjust SVG geometry here, then update pos() calls in MappingDiagram.vue
+    to match changed label positions.
+  -->
+
+  <!-- ── Space circles ──────────────────────────────────────────────── -->
+
+  <circle id="circle-f"
+          cx="155" cy="180" r="115"
+          fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+
+  <circle id="circle-h"
+          cx="435" cy="180" r="75"
+          fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+
+  <!-- ── Points ──────────────────────────────────────────────────────── -->
+
+  <!-- x: input feature vector in F -->
+  <circle id="dot-x"    cx="120" cy="140" r="3.5" fill="#1f2937"/>
+
+  <!-- y = Wx: embedding in H -->
+  <circle id="dot-y"    cx="450" cy="155" r="3.5" fill="#1f2937"/>
+
+  <!-- x̂ = W^T y: reconstruction in F -->
+  <circle id="dot-xhat" cx="150" cy="265" r="3.5" fill="#1f2937"/>
+
+  <!-- ── Encoder arrow: F → H (W) ────────────────────────────────────── -->
+
+  <path id="arrow-w"
+        d="M 124 136 C 245 25, 380 30, 444 144"
+        fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Arrowhead tip at end of arrow-w; rotate to match path tangent -->
+  <polygon id="arrowhead-w"
+           points="0,0 -8,-3.2 -8,3.2"
+           fill="#4b5563"
+           transform="translate(448,152) rotate(60)"/>
+
+  <!-- ── Decoder arrow: H → F (W^T) ─────────────────────────────────── -->
+
+  <path id="arrow-wt"
+        d="M 448 160 C 380 332, 245 328, 161 272"
+        fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Arrowhead tip at end of arrow-wt; rotate to match path tangent -->
+  <polygon id="arrowhead-wt"
+           points="0,0 -8,-3.2 -8,3.2"
+           fill="#4b5563"
+           transform="translate(153,267) rotate(212)"/>
+
+  <!-- ── Guide labels (hidden in app; visible in SVG editor) ─────────── -->
+  <!--
+    These are approximate text labels for composition reference when editing
+    in Inkscape or a browser. They are hidden in the Vue component via CSS.
+    The app uses a KaTeX HTML overlay for math-quality rendering.
+    x/y positions here correspond to pos(x, y) calls in MappingDiagram.vue.
+  -->
+
+  <!-- Space titles (centered on x of each circle) -->
+  <text class="guide" x="155" y="48" text-anchor="middle"
+        font-size="13" fill="#6b7280">Feature Space F</text>
+
+  <text class="guide" x="435" y="90" text-anchor="middle"
+        font-size="13" fill="#6b7280">Embedding Space H</text>
+
+  <!-- x label + coordinate expansion (top-left of dot-x) -->
+  <text class="guide" x="72" y="128"
+        font-size="14" fill="#374151" font-style="italic">x</text>
+  <text class="guide" x="72" y="144"
+        font-size="10" fill="#374151">= (x₁, …, xₙ)ᵀ</text>
+
+  <!-- y = Wx label (right of dot-y) -->
+  <text class="guide" x="467" y="148"
+        font-size="12" fill="#374151">y = Wx</text>
+
+  <!-- W label on encoder arc (top center) -->
+  <text class="guide" x="300" y="16"
+        text-anchor="middle" font-size="14" fill="#374151" font-weight="500">W</text>
+
+  <!-- W^T label on decoder arc (bottom center) -->
+  <text class="guide" x="300" y="352"
+        text-anchor="middle" font-size="14" fill="#374151" font-weight="500">Wᵀ</text>
+
+  <!-- x̂ label + gram-matrix expansion (left of dot-xhat) -->
+  <text class="guide" x="34" y="258"
+        font-size="12" fill="#374151">x̂ = Wᵀy</text>
+  <text class="guide" x="34" y="274"
+        font-size="12" fill="#374151">  = WᵀWx</text>
+
+</svg>
