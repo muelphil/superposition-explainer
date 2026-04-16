@@ -1,12 +1,38 @@
 <script setup lang="ts">
-import { ref, watch, provide } from 'vue'
-import { createBasesService, MAPPING_STAGES, type MappingStage } from '../../services/BasesService'
+import { ref, watch, provide, onUnmounted } from 'vue'
+import { createBasesService, MAPPING_STAGES, type MappingStage, type CoordinateStage } from '../../services/BasesService'
 import { useScrollActiveBlock } from './useScrollActiveParagraph'
 import { useParagraphRanges, type ParagraphRange } from './useParagraphRanges'
+import { TaskList, TaskEventBus, TASK_EVENT_BUS_KEY } from './taskSystem'
 import BasesVisualization from './BasesVisualization.vue'
+import TaskListDisplay from './TaskListDisplay.vue'
+import {k} from "./tasks/aeTaskHelpers.ts";
 
 const svc = createBasesService()
 provide('basesService', svc)
+
+// ─── Task event bus (provided to child viz) ───────────────────────────────────
+
+const eventBus = new TaskEventBus()
+provide(TASK_EVENT_BUS_KEY, eventBus)
+
+// Task: drag the embedding dot along w₁
+let hasDragged = false
+const dragTaskList = new TaskList([{
+  id: 'drag-embedding',
+  label: `Drag the embedding <i>y</i> (the purple dot) along the direction of ${k('w_1')}`,
+  setup: () => ({
+    events: ['drag-embedding'] as string[],
+    onEvent: () => { hasDragged = true },
+    check: () => hasDragged,
+  }),
+}])
+dragTaskList.startListening({ events: eventBus, services: {} })
+
+onUnmounted(() => {
+  dragTaskList.stopListening()
+  eventBus.clear()
+})
 
 // ─── Named text blocks ────────────────────────────────────────────────────────
 
@@ -17,6 +43,10 @@ const BLOCK_IDS = [
   'decoding',
   'gram-matrix',
   '2d-intro',
+  'arbitrary-vectors',
+  'arbitrary-projection',
+  'orthogonal-basis',
+  'orthonormal-basis',
 ] as const
 
 type BlockId = typeof BLOCK_IDS[number]
@@ -42,6 +72,21 @@ const blockMappingStage: Record<string, MappingStage> = {
   'gram-matrix':   'gram-matrix',
 }
 
+const blockCoordinateStage: Record<string, CoordinateStage> = {
+  'arbitrary-vectors':   'arbitrary',
+  'arbitrary-projection': 'arbitrary',
+  'orthogonal-basis': 'orthogonal',
+  'orthonormal-basis': 'orthonormal',
+}
+
+// Sub-stage within each coordinate stage (e.g. arbitrary has 0=vectors, 1=projection)
+const blockCoordinateSubStage: Record<string, number> = {
+  'arbitrary-vectors':    0,
+  'arbitrary-projection': 1,
+  'orthogonal-basis':     0,
+  'orthonormal-basis':    0,
+}
+
 const ranges: ParagraphRange[] = [
   {
     from: blockIdx('feature-space'),
@@ -57,9 +102,14 @@ const ranges: ParagraphRange[] = [
   },
   {
     from: blockIdx('2d-intro'),
-    to: blockIdx('2d-intro'),
-    apply: () => {
+    to: blockIdx('orthonormal-basis'),
+    apply: (activeIndex: number) => {
       svc.activeViz.value = 'coordinate'
+      const id = BLOCK_IDS[activeIndex] as BlockId | undefined
+      if (id && blockCoordinateStage[id]) {
+        svc.coordinateStage.value = blockCoordinateStage[id]
+      }
+      svc.coordinateSubStage.value = (id && blockCoordinateSubStage[id]) ?? 0
     },
     leave: () => {
       svc.activeViz.value = 'mapping'
@@ -285,6 +335,11 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- ── Arbitrary Basis ──────────────────────────────────── -->
       <h3>Arbitrary Basis</h3>
 
+      <div
+          :ref="(el) => blockRefs[blockIdx('arbitrary-vectors')] = el as HTMLElement"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('arbitrary-vectors') }"
+      >
       <p>
         Let us choose two arbitrary embedding vectors:
       </p>
@@ -310,7 +365,13 @@ useParagraphRanges(ranges, activeBlockIndex)
       </p>
       <katex-element :display-mode="true"
                      expression="W = \begin{bmatrix} 1 &amp; 2 \\ 2 &amp; 1 \end{bmatrix}, \qquad x = \begin{bmatrix} x_1 \\ x_2 \end{bmatrix}, \qquad y = Wx"/>
+      </div>
 
+      <div
+          :ref="(el) => blockRefs[blockIdx('arbitrary-projection')] = el as HTMLElement"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('arbitrary-projection') }"
+      >
       <p>
         What is more interesting is the reverse direction: given the embedded vector
         <katex-element expression="y"/>
@@ -371,6 +432,8 @@ useParagraphRanges(ranges, activeBlockIndex)
         would incorrectly suggest that it has.
       </p>
 
+      <TaskListDisplay :taskList="dragTaskList" />
+
       <p>
         The Gram matrix
         <katex-element expression="W^T W"/>
@@ -401,16 +464,22 @@ useParagraphRanges(ranges, activeBlockIndex)
         when the feature directions form a square, invertible matrix — a condition that breaks
         down once we have more features than dimensions.
       </p>
+      </div>
 
       <!-- ── Orthogonal Basis ─────────────────────────────────── -->
       <h3>Orthogonal Basis</h3>
 
+      <div
+          :ref="(el) => blockRefs[blockIdx('orthogonal-basis')] = el as HTMLElement"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('orthogonal-basis') }"
+      >
       <p>
         Let's fix this shortcoming by placing our feature direction vectors orthogonal to one
         another using
         <katex-element expression="w_1 = \begin{pmatrix} 1 \\ 2 \end{pmatrix}"/>
         and
-        <katex-element expression="w_2 = \begin{pmatrix} -1 \\ 0.5 \end{pmatrix}"/>
+        <katex-element expression="w_2 = \begin{pmatrix} 1.5 \\ -0.75 \end{pmatrix}"/>
         .
         These two vectors now form an orthogonal basis of the 2D embedding space.
       </p>
@@ -442,7 +511,7 @@ useParagraphRanges(ranges, activeBlockIndex)
         terms vanish:
       </p>
       <katex-element :display-mode="true"
-                     expression="W^T W = \begin{bmatrix} \|w_1\|^2 &amp; 0 \\ 0 &amp; \|w_2\|^2 \end{bmatrix} = \begin{bmatrix} 5 &amp; 0 \\ 0 &amp; 1.25 \end{bmatrix}"/>
+                     expression="W^T W = \begin{bmatrix} \|w_1\|^2 &amp; 0 \\ 0 &amp; \|w_2\|^2 \end{bmatrix} = \begin{bmatrix} 5 &amp; 0 \\ 0 &amp; 2.8125 \end{bmatrix}"/>
       <p>
         This gives us:
       </p>
@@ -460,10 +529,16 @@ useParagraphRanges(ranges, activeBlockIndex)
         <katex-element expression="\|w_i\|^2"/>
         .
       </p>
+      </div>
 
       <!-- ── Orthonormal Basis ────────────────────────────────── -->
       <h3>Orthonormal Basis</h3>
 
+      <div
+          :ref="(el) => blockRefs[blockIdx('orthonormal-basis')] = el as HTMLElement"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('orthonormal-basis') }"
+      >
       <p>
         We can simplify the situation even further by normalizing the orthogonal vectors so that
         <katex-element expression="\|w_1\| = \|w_2\| = 1"/>
@@ -502,6 +577,7 @@ useParagraphRanges(ranges, activeBlockIndex)
         orthogonal directions available, this symmetry remains — but exact orthonormality
         becomes impossible, and the model is forced into compromise geometries.
       </p>
+      </div>
 
       <!-- ── Bridging to overcomplete regime ──────────────────── -->
       <p>
