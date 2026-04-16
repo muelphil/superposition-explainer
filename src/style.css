@@ -199,7 +199,7 @@ button:disabled {
 
 @keyframes ae-pulse-glow {
   0%, 100% { filter: brightness(1); }
-  50%      { filter: brightness(1.5); }
+  50%      { filter: brightness(1.3); }
 }
 
 @keyframes ae-pulse-shadow {
@@ -211,8 +211,8 @@ button:disabled {
   animation: ae-pulse 2.4s ease-in-out infinite;
 }
 
-/* SVG weight paths: drop-shadow instead of scale */
-.vis-path[data-pulsing] {
+/* SVG weight path groups: drop-shadow instead of scale */
+.vis-path-group[data-pulsing] {
   animation: ae-pulse-glow 2.4s ease-in-out infinite !important;
 }
 

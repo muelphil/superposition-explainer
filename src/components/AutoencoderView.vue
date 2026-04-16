@@ -122,6 +122,8 @@ interface NeuronClip {
 }
 
 const svgPathsData = ref<SvgPath[]>([])
+const encoderPaths = computed(() => svgPathsData.value.filter(p => p.side === 'encoder'))
+const decoderPaths = computed(() => svgPathsData.value.filter(p => p.side === 'decoder'))
 const neuronClips = ref<NeuronClip[]>([])
 
 /** Returns the center position + radius of a neuron element in SVG/container coordinates. */
@@ -561,20 +563,37 @@ function onOutputClick(i: number) {
         </mask>
       </defs>
 
-      <!-- Visible styled paths — masked so they hide inside neurons -->
+      <!-- Visible styled paths — masked so they hide inside neurons.
+           Paths are wrapped in per-side <g> groups so the reveal system can
+           target the group's CSS opacity without conflicting with the per-path
+           opacity controlled by Vue's :opacity binding (hover dimming). -->
       <g :mask="`url(#${maskId})`">
-        <path
-            v-for="(p, pi) in svgPathsData"
-            :key="pi"
-            class="vis-path"
-            :data-side="p.side"
-            :d="p.d"
-            fill="none"
-            :stroke="p.color"
-            :stroke-width="p.width"
-            :opacity="pathOpacity(p.row, p.col, p.opacity)"
-            style="pointer-events: none; stroke-linecap: round;"
-        />
+        <g class="vis-path-group" data-side="encoder">
+          <path
+              v-for="(p, pi) in encoderPaths"
+              :key="pi"
+              class="vis-path"
+              :d="p.d"
+              fill="none"
+              :stroke="p.color"
+              :stroke-width="p.width"
+              :opacity="pathOpacity(p.row, p.col, p.opacity)"
+              style="pointer-events: none; stroke-linecap: round;"
+          />
+        </g>
+        <g class="vis-path-group" data-side="decoder">
+          <path
+              v-for="(p, pi) in decoderPaths"
+              :key="pi"
+              class="vis-path"
+              :d="p.d"
+              fill="none"
+              :stroke="p.color"
+              :stroke-width="p.width"
+              :opacity="pathOpacity(p.row, p.col, p.opacity)"
+              style="pointer-events: none; stroke-linecap: round;"
+          />
+        </g>
       </g>
 
       <!-- Invisible hit paths — wide transparent stroke for easy hover, outside mask -->
