@@ -440,3 +440,28 @@ Parts of the BasesSection.vue must be wrapped in new text-blocks for this to wor
 
 * .blog-post .viz-sticky
 
+---
+
+
+The purpose of this session is to improve/ audit the AutoencoderSection.vue, containing a writedown on Autoencoders alongside experiments.
+We focus on the visualization on the right: AutoencoderVisualization.vue, containing an AutoencoderView.vue.
+Currently, starting with the "The Toy Autoencoder" subsection, the different parts of the autoencoder get introduced one after another.
+There are currently several issue that require fixing:
+
+### Architecture/ Clean code
+The autoencoder starts off with nearly all parts of it hidden, then parts of it are uncovered as the reader progresses in the text-block blocks. In specific blocks, the added items will also use a pulse animation that continuously makes the elements pulse, indicating that they are related to the currently active text-block. This is all implemented using classes that are added and removed, all via vue templating.
+This is however cluttering the AutoencoderView.vue with a lot of templating logic for applying these classes, as vue is mainly data driven. I dont think that is healthy and it clutters the already very big AutoencoderView.vue.
+I want you to change this: remove the templating logic, add ids as necessary to elements, then write helpers. The helper functions should take 3 arguments: the autoencoder view top level element, to use .querySelector (All) on, the high level target (i.e. 'decoder') -- a dict should map these high level targets to a list of specific selectors -- these selectors will then be targeted, and finally a toggle, that toggles these classes on the found elements.
+This should then be used to uncover/unhide the elements as well as apply the continuous pulse on these elements.
+Beware, there are currently 2 pulsating css classes: a pulsating one using scale (correct one) and one for ReLU/Bias text-block (incorrect, replace this with the correct one).
+It should all be clean and precise, good code, the AutoencoderView.vue should as a result improve in readability.
+
+In the "The Toy Autoencoder" subsection, as the text-blocks introduce new elements, each uncovered element should also get the continuous pulse animation until the reader moves to the next block.
+Use 2 dicts mapping abstract targets to query selectors, one for uncovering and one for pulsating. For now, these should be identical but allow me for easy adjustment.
+
+### Minor issues/ goals
+* "Why tied weights?" should make both encoder and decoder weights pulsate
+* "Synthetic Training Data" should make the svg backdrop of the half normal distribution and the resample button pulse, not the rest of the input field (i.e. x_i, the slider, the current feature activation value)
+* "The current values of the trainable parameters..." block should make the weights (.tab-pane--weights) panel pulsate
+
+If you have questions or concerns, ask. Make sure its clean, precise, modular high quality code. Follow the instructions. Use todo items.

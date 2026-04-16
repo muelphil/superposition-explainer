@@ -189,3 +189,34 @@ button:disabled {
 .pulse {
   animation: pulse-scale 1.2s ease-in-out infinite;
 }
+
+/* ── Reveal/pulse animation system (blog) ────────────────── */
+
+@keyframes ae-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.07); }
+}
+
+@keyframes ae-pulse-glow {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.5); }
+}
+
+@keyframes ae-pulse-shadow {
+  0%, 100% { filter: drop-shadow(0px 0px 0px rgba(0, 0, 0, 0)); }
+  50%      { filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.4)); }
+}
+
+[data-pulsing] {
+  animation: ae-pulse 2.4s ease-in-out infinite;
+}
+
+/* SVG weight paths: drop-shadow instead of scale */
+.vis-path[data-pulsing] {
+  animation: ae-pulse-glow 2.4s ease-in-out infinite !important;
+}
+
+/* Weights panel: drop-shadow pulse */
+.tab-pane--weights[data-pulsing] {
+  animation: ae-pulse 2.4s ease-in-out infinite !important;
+}

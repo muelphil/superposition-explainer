@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, provide, onUnmounted } from 'vue'
+import { ref, provide, onUnmounted, nextTick } from 'vue'
 import { createAutoencoderService, INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX } from '../../services/AutoencoderService'
 import type { AeSnapshot } from '../../services/AutoencoderService'
 import { createSelectionService } from '../../services/SelectionService'
 import { createVizService, VIZ_SERVICE_KEY, type RevealStage } from '../../services/VizService'
+import { revealUpTo, applyPulse, clearAllPulse } from '../../utils/revealPulse'
 import { useScrollActiveBlock } from './useScrollActiveParagraph'
 import { useParagraphRanges, type ParagraphRange } from './useParagraphRanges'
 import { type AeConstraintSpec, AE_VIEW_CONSTRAINTS_KEY, deriveConstraints } from './aeStepTypes'
@@ -29,6 +30,9 @@ provide(VIZ_SERVICE_KEY, vizSvc)
 
 // Start blank — reveal stages are driven by scroll position
 vizSvc.revealStage.value = 'blank'
+
+// Template ref for the visualization container (used by reveal/pulse helpers)
+const vizRef = ref<HTMLElement | null>(null)
 
 const eventBus = new TaskEventBus()
 provide(TASK_EVENT_BUS_KEY, eventBus)
@@ -101,6 +105,19 @@ const blockRevealStage: Partial<Record<BlockId, RevealStage>> = {
   'training':      'training',
 }
 
+/** Which pulse target to activate for each block (null = no pulse). */
+const blockPulseTarget: Partial<Record<BlockId, string>> = {
+  'architecture':  'input-output',
+  'embedding':     'embedding',
+  'encoder':       'encoder',
+  'decoder':       'decoder',
+  'weights-view':  'weights-view',
+  'tied-weights':  'tied-weights',
+  'bias-relu':     'bias-relu',
+  'data':          'data',
+  'training':      'training',
+}
+
 const ranges: ParagraphRange[] = [
   {
     // Toy Model section: intro → training, n=3 m=2
@@ -108,7 +125,9 @@ const ranges: ParagraphRange[] = [
     apply: (activeIndex: number) => {
       constraintSpec.value = { inputDim: 3, embeddingDim: 2, hiddenControls: ['sparsity'] }
       const id = BLOCK_IDS[activeIndex] as BlockId | undefined
-      vizSvc.revealStage.value = (id && blockRevealStage[id]) ?? 'training'
+      const stage = (id && blockRevealStage[id]) ?? 'training'
+      vizSvc.revealStage.value = stage
+
       // Tab selection per block
       if (id === 'encoder') vizSvc.activeTab.value = 'weights'
       if (id === 'weights-view' || id === 'tied-weights') vizSvc.activeTab.value = 'weights'
@@ -118,8 +137,17 @@ const ranges: ParagraphRange[] = [
       } else {
         vizSvc.continueTrainingEnabled.value = true
       }
-      // Bias/ReLU pulse only active for the bias-relu block
-      vizSvc.biasReluPulse.value = id === 'bias-relu'
+
+      // Reveal + pulse via imperative helpers
+      nextTick(() => {
+        const el = vizRef.value
+        if (!el) return
+        revealUpTo(el, stage)
+        clearAllPulse(el)
+        const pulse = id ? blockPulseTarget[id] : undefined
+        if (pulse) applyPulse(el, pulse, true)
+      })
+
       if (rangeStates[0]) {
         svc.restoreState(rangeStates[0])
       } else {
@@ -130,8 +158,9 @@ const ranges: ParagraphRange[] = [
     },
     leave: () => {
       rangeStates[0] = svc.saveState()
-      vizSvc.biasReluPulse.value = false
       vizSvc.continueTrainingEnabled.value = true
+      const el = vizRef.value
+      if (el) clearAllPulse(el)
     },
   },
   {
@@ -140,6 +169,7 @@ const ranges: ParagraphRange[] = [
     apply: () => {
       constraintSpec.value = { inputDim: 2, embeddingDim: 2, hiddenControls: ['sparsity'] }
       vizSvc.revealStage.value = 'full'
+      nextTick(() => { const el = vizRef.value; if (el) { revealUpTo(el, 'full'); clearAllPulse(el) } })
       if (rangeStates[1]) {
         svc.restoreState(rangeStates[1])
       } else {
@@ -156,6 +186,7 @@ const ranges: ParagraphRange[] = [
     apply: () => {
       constraintSpec.value = { inputDim: 4, embeddingDim: 2, hiddenControls: ['sparsity'] }
       vizSvc.revealStage.value = 'full'
+      nextTick(() => { const el = vizRef.value; if (el) { revealUpTo(el, 'full'); clearAllPulse(el) } })
       if (rangeStates[2]) {
         svc.restoreState(rangeStates[2])
       } else {
@@ -172,6 +203,7 @@ const ranges: ParagraphRange[] = [
     apply: () => {
       constraintSpec.value = { inputDim: 4, embeddingDim: 2 }
       vizSvc.revealStage.value = 'full'
+      nextTick(() => { const el = vizRef.value; if (el) { revealUpTo(el, 'full'); clearAllPulse(el) } })
       if (rangeStates[3]) {
         svc.restoreState(rangeStates[3])
       } else {
@@ -188,6 +220,7 @@ const ranges: ParagraphRange[] = [
     apply: () => {
       constraintSpec.value = { inputDim: 5, embeddingDim: 2 }
       vizSvc.revealStage.value = 'full'
+      nextTick(() => { const el = vizRef.value; if (el) { revealUpTo(el, 'full'); clearAllPulse(el) } })
       if (rangeStates[4]) {
         svc.restoreState(rangeStates[4])
       } else {
@@ -629,7 +662,7 @@ useParagraphRanges(ranges, activeBlockIndex)
 
     <!-- Visualization column (sticky) -->
     <div class="viz-column">
-      <div class="viz-sticky">
+      <div ref="vizRef" class="viz-sticky">
         <AutoencoderVisualization/>
       </div>
     </div>

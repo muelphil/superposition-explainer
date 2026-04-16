@@ -68,7 +68,7 @@ const visibleTabs = computed(() => {
           </button>
         </div>
 
-        <div class="ae-viz-panel">
+        <div class="ae-viz-panel panel-combined">
           <div class="tab-pane" v-show="visibleTabs.includes('training') && vizSvc?.activeTab.value === 'training'">
             <TrainingConfigView />
           </div>
