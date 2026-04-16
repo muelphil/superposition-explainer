@@ -56,7 +56,7 @@ defineSlots<{
 
 <style scoped>
 .task-list {
-  margin-top: 1rem;
+  margin: 1rem 0;
   border: 1px solid var(--color-task-border);
   border-radius: 8px;
   padding: 0.75rem 1rem;
@@ -74,7 +74,7 @@ defineSlots<{
 
 .task-items {
   list-style: none;
-  margin: 0;
+  margin: 0 !important;
   padding: 0;
   display: flex;
   flex-direction: column;

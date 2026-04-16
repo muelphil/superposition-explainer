@@ -8,8 +8,8 @@ export const REVEAL_STAGES = [
   'input-output',
   'embedding',
   'encoder',
+  'weights-view',      // weights panel introduced before decoder in blog flow
   'decoder',
-  'weights-view',
   'bias-relu-highlight',
   'data',
   'training',
@@ -30,6 +30,8 @@ export interface VizServiceType {
   stageAtLeast(target: RevealStage): boolean
   /** When false, the Start/Continue Training button is disabled */
   continueTrainingEnabled: Ref<boolean>
+  /** Independent gate for the embedding space panel (3D view) */
+  showEmbeddingPanel: Ref<boolean>
 }
 
 export const VIZ_SERVICE_KEY: InjectionKey<VizServiceType> = Symbol('vizService')
@@ -45,5 +47,6 @@ export function createVizService(): VizServiceType {
       return stageIndex(revealStage.value) >= stageIndex(target)
     },
     continueTrainingEnabled: ref(true),
+    showEmbeddingPanel: ref(true),
   }
 }

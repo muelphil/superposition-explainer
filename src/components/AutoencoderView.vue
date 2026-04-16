@@ -25,6 +25,13 @@ const eventBus = inject(TASK_EVENT_BUS_KEY, undefined)
 // Optional viz service for reveal stage (undefined in MainView)
 const vizSvc = inject(VIZ_SERVICE_KEY, undefined)
 
+// In blog reveal mode, output neurons show a neutral color until the decoder is introduced.
+// stageAtLeast accesses revealStage.value reactively, so this computed updates automatically.
+const decoderRevealed = computed(() => vizSvc?.stageAtLeast('decoder') ?? true)
+
+// Importance tooltips (I_i values) only appear once the training objective block is reached.
+const importanceTooltipVisible = computed(() => vizSvc?.stageAtLeast('training') ?? true)
+
 // Unique SVG mask ID per instance — prevents collision when multiple
 // AutoencoderViews (e.g. main + blog compact) coexist on the page.
 const maskId = `neuron-mask-${getCurrentInstance()!.uid}`
@@ -713,7 +720,7 @@ function onOutputClick(i: number) {
             transform: `scale(${neuronScale(i)})`,
           }"
         />
-        <div class="neuron-tooltip">
+        <div class="neuron-tooltip" v-show="importanceTooltipVisible">
           <span v-katex="`I_{${i + 1}}`" />
           <span>&nbsp;= {{ fmt(svc.featureImportance.value[i] ?? 1) }}</span>
         </div>
@@ -743,7 +750,7 @@ function onOutputClick(i: number) {
             class="neuron"
             :class="{ 'neuron-selected': isOutputSelected(i) }"
             :style="{
-            background: neuronColorRgb(svc.currentOutput.value[i] ?? 0),
+            background: decoderRevealed ? neuronColorRgb(svc.currentOutput.value[i] ?? 0) : neuronColorRgb(0),
             transform: `scale(${neuronScale(i)})`,
           }"
         />
@@ -1201,6 +1208,14 @@ function onOutputClick(i: number) {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+}
+
+/* Hover dimming (specificity 0,4,0) must win over the reveal opacity:1 (0,3,0). */
+.ae-grid--reveal-mode [data-reveal][data-revealed].dimmed {
+  opacity: 0.18;
+}
+.ae-grid--reveal-mode [data-reveal][data-revealed].half-dimmed {
+  opacity: 0.5;
 }
 
 .ae-grid--reveal-mode [data-side][data-revealed] {

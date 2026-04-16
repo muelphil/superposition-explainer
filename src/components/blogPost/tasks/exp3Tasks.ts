@@ -10,11 +10,11 @@ export function createExp3TaskSpecs(): AeTaskSpec[] {
   return [
     {
       id: 'set-sparsity',
-      label: `Set sparsity to ${k('S = 0.9')} and run training`,
+      label: `Set sparsity to ${k('S = 0.9')} (highly sparse feature activations)`,
       resetable: true,
       setup: (ctx: AeTaskContext) => ({
         events: ['sparsity-changed'],
-        check: () => ctx.services.svc.config.sparsity >= 0.85,
+        check: () => ctx.services.svc.config.sparsity >= 0.9,
       }),
     },
     {
@@ -25,7 +25,7 @@ export function createExp3TaskSpecs(): AeTaskSpec[] {
       setup: (ctx: AeTaskContext) =>
         createConvergenceHandler(
           ctx.services.svc,
-          (svc) => countSignificantColumns(svc.W.value, 0.5) >= 4,
+          (svc) => countSignificantColumns(svc.W.value, 0.5) >= 4, // TODO this is incorrect
           30,
           () => ctx.services.svc.pauseTraining(),
           () => ctx.services.svc.config.sparsity >= 0.85,

@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+test_ground/*
+dist/*
+blog_entry_draft/*

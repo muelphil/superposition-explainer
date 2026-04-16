@@ -23,8 +23,8 @@ export const REVEAL_ORDER = [
   'input-output',
   'embedding',
   'encoder',
+  'weights-view',        // no own selectors — weights panel handled by VizService; ordering placeholder
   'decoder',
-  'weights-view',        // no own selectors — ordering placeholder
   'bias-relu-highlight', // no own selectors — ordering placeholder
   'data',
   'training',

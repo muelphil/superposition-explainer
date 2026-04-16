@@ -14,6 +14,9 @@ import { createExp2TaskSpecs } from './tasks/exp2Tasks'
 import { createInterludeTaskSpecs } from './tasks/interludeTasks'
 import { createExp3TaskSpecs } from './tasks/exp3Tasks'
 import { createExp4TaskSpecs } from './tasks/exp4Tasks'
+import { createEmbeddingVizTaskSpecs } from './tasks/embeddingVizTasks'
+import { createDataTaskSpecs } from './tasks/dataTasks'
+import { createTrainingObjectiveTaskSpecs } from './tasks/trainingObjectiveTasks'
 import AutoencoderVisualization from './AutoencoderVisualization.vue'
 import TaskListDisplay from './TaskListDisplay.vue'
 
@@ -46,6 +49,9 @@ onUnmounted(() => {
   interludeTaskList.stopListening()
   exp3TaskList.stopListening()
   exp4TaskList.stopListening()
+  embeddingVizTaskList.stopListening()
+  dataTaskList.stopListening()
+  trainingObjectiveTaskList.stopListening()
   eventBus.clear()
 })
 
@@ -54,6 +60,10 @@ onUnmounted(() => {
 const constraintSpec = ref<AeConstraintSpec | undefined>(undefined)
 const constraints = deriveConstraints(constraintSpec, INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX)
 provide(AE_VIEW_CONSTRAINTS_KEY, constraints)
+
+// Guards first-time initialization per section entry so that scrolling between
+// blocks within the same range does not re-initialize weights or regenerate inputs.
+const toyModelInitialized = ref(false)
 
 // ─── Task lists ───────────────────────────────────────────────────────────────
 
@@ -74,12 +84,21 @@ exp3TaskList.startListening(taskCtx)
 const exp4TaskList = new TaskList(createExp4TaskSpecs())
 exp4TaskList.startListening(taskCtx)
 
+const embeddingVizTaskList = new TaskList(createEmbeddingVizTaskSpecs())
+embeddingVizTaskList.startListening(taskCtx)
+
+const dataTaskList = new TaskList(createDataTaskSpecs())
+dataTaskList.startListening(taskCtx)
+
+const trainingObjectiveTaskList = new TaskList(createTrainingObjectiveTaskSpecs())
+trainingObjectiveTaskList.startListening(taskCtx)
+
 // ─── Named text blocks ────────────────────────────────────────────────────────
 
 const BLOCK_IDS = [
   'intro',
-  'architecture', 'embedding', 'encoder', 'decoder',
-  'weights-view', 'tied-weights', 'bias-relu',
+  'architecture', 'embedding', 'encoder', 'embedding-viz', 'weights-view',
+  'decoder', 'tied-weights', 'bias-relu',
   'data', 'training',
   'exp1', 'exp2', 'interlude', 'exp3', 'exp4',
 ] as const
@@ -93,16 +112,17 @@ function blockIdx(id: BlockId): number { return BLOCK_IDS.indexOf(id) }
 const rangeStates: (AeSnapshot | null)[] = [null, null, null, null, null]
 
 const blockRevealStage: Partial<Record<BlockId, RevealStage>> = {
-  'intro':         'blank',
-  'architecture':  'input-output',
-  'embedding':     'embedding',
-  'encoder':       'encoder',
-  'decoder':       'decoder',
-  'weights-view':  'weights-view',
-  'tied-weights':  'weights-view',
-  'bias-relu':     'bias-relu-highlight',
-  'data':          'data',
-  'training':      'training',
+  'intro':           'blank',
+  'architecture':    'input-output',
+  'embedding':       'embedding',
+  'encoder':         'encoder',
+  'embedding-viz':   'encoder',   // same AE reveal, embedding panel controlled separately
+  'weights-view':    'weights-view',
+  'decoder':         'decoder',
+  'tied-weights':    'decoder',
+  'bias-relu':       'bias-relu-highlight',
+  'data':            'data',
+  'training':        'training',
 }
 
 /** Which pulse target to activate for each block (null = no pulse). */
@@ -110,8 +130,9 @@ const blockPulseTarget: Partial<Record<BlockId, string>> = {
   'architecture':  'input-output',
   'embedding':     'embedding',
   'encoder':       'encoder',
+  'embedding-viz': 'embedding',
+  // 'weights-view' intentionally omitted — no pulse on the weights panel
   'decoder':       'decoder',
-  'weights-view':  'weights-view',
   'tied-weights':  'tied-weights',
   'bias-relu':     'bias-relu',
   'data':          'data',
@@ -128,8 +149,15 @@ const ranges: ParagraphRange[] = [
       const stage = (id && blockRevealStage[id]) ?? 'training'
       vizSvc.revealStage.value = stage
 
+      // The embedding panel is gated independently — it appears from 'embedding-viz' onward.
+      // 'encoder' shares the same reveal stage as 'embedding-viz' but hides the panel.
+      const embeddingPanelBlocks: BlockId[] = [
+        'embedding-viz', 'weights-view', 'decoder', 'tied-weights',
+        'bias-relu', 'data', 'training',
+      ]
+      vizSvc.showEmbeddingPanel.value = id ? embeddingPanelBlocks.includes(id) : true
+
       // Tab selection per block
-      if (id === 'encoder') vizSvc.activeTab.value = 'weights'
       if (id === 'weights-view' || id === 'tied-weights') vizSvc.activeTab.value = 'weights'
       if (id === 'training') {
         vizSvc.activeTab.value = 'training'
@@ -148,17 +176,42 @@ const ranges: ParagraphRange[] = [
         if (pulse) applyPulse(el, pulse, true)
       })
 
+      // Activate only the task list for the current block; deactivate the others.
+      embeddingVizTaskList.setActive(id === 'embedding-viz')
+      dataTaskList.setActive(id === 'data')
+      trainingObjectiveTaskList.setActive(id === 'training')
+
       if (rangeStates[0]) {
         svc.restoreState(rangeStates[0])
-      } else {
+        // Consume the snapshot: subsequent applies within this range entry must not
+        // keep re-restoring (which would overwrite the user's in-range adjustments).
+        rangeStates[0] = null
+        toyModelInitialized.value = true
+      } else if (!toyModelInitialized.value) {
+        toyModelInitialized.value = true
         if (svc.config.inputDim !== 3) svc.setInputDim(3)
         if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
         if (svc.config.sparsity !== 0) svc.updateConfig({ sparsity: 0 })
+
+        // Fixed initial weights for the architecture intro: 3 non-zero column vectors in 2D
+        // W[row][col]: row = embedding dim, col = input feature
+        // Columns: w1 = (0.80, 0.30), w2 = (-0.55, 0.65), w3 = (0.25, -0.70)
+        svc.W.value = [
+          [0.80, -0.55, 0.25],
+          [0.30,  0.65, -0.70],
+        ]
+        // Re-run forward pass with the same input so the display reflects the fixed weights.
+        svc.runForward(svc.currentInput.value)
       }
     },
     leave: () => {
       rangeStates[0] = svc.saveState()
+      toyModelInitialized.value = false
       vizSvc.continueTrainingEnabled.value = true
+      vizSvc.showEmbeddingPanel.value = true
+      embeddingVizTaskList.setActive(false)
+      dataTaskList.setActive(false)
+      trainingObjectiveTaskList.setActive(false)
       const el = vizRef.value
       if (el) clearAllPulse(el)
     },
@@ -169,6 +222,8 @@ const ranges: ParagraphRange[] = [
     apply: () => {
       constraintSpec.value = { inputDim: 2, embeddingDim: 2, hiddenControls: ['sparsity'] }
       vizSvc.revealStage.value = 'full'
+      vizSvc.showEmbeddingPanel.value = true
+      exp1TaskList.setActive(true)
       nextTick(() => { const el = vizRef.value; if (el) { revealUpTo(el, 'full'); clearAllPulse(el) } })
       if (rangeStates[1]) {
         svc.restoreState(rangeStates[1])
@@ -178,7 +233,7 @@ const ranges: ParagraphRange[] = [
         if (svc.config.sparsity !== 0) svc.updateConfig({ sparsity: 0 })
       }
     },
-    leave: () => { rangeStates[1] = svc.saveState() },
+    leave: () => { exp1TaskList.setActive(false); rangeStates[1] = svc.saveState() },
   },
   {
     // Experiment 2: n=4 m=2
@@ -186,6 +241,8 @@ const ranges: ParagraphRange[] = [
     apply: () => {
       constraintSpec.value = { inputDim: 4, embeddingDim: 2, hiddenControls: ['sparsity'] }
       vizSvc.revealStage.value = 'full'
+      vizSvc.showEmbeddingPanel.value = true
+      exp2TaskList.setActive(true)
       nextTick(() => { const el = vizRef.value; if (el) { revealUpTo(el, 'full'); clearAllPulse(el) } })
       if (rangeStates[2]) {
         svc.restoreState(rangeStates[2])
@@ -195,14 +252,18 @@ const ranges: ParagraphRange[] = [
         if (svc.config.sparsity !== 0) svc.updateConfig({ sparsity: 0 })
       }
     },
-    leave: () => { rangeStates[2] = svc.saveState() },
+    leave: () => { exp2TaskList.setActive(false); rangeStates[2] = svc.saveState() },
   },
   {
     // Interlude + Experiment 3: n=4 m=2
     from: blockIdx('interlude'), to: blockIdx('exp3'),
-    apply: () => {
+    apply: (activeIndex: number) => {
+      const id = BLOCK_IDS[activeIndex] as BlockId | undefined
       constraintSpec.value = { inputDim: 4, embeddingDim: 2 }
       vizSvc.revealStage.value = 'full'
+      vizSvc.showEmbeddingPanel.value = true
+      interludeTaskList.setActive(id === 'interlude')
+      exp3TaskList.setActive(id === 'exp3')
       nextTick(() => { const el = vizRef.value; if (el) { revealUpTo(el, 'full'); clearAllPulse(el) } })
       if (rangeStates[3]) {
         svc.restoreState(rangeStates[3])
@@ -212,7 +273,7 @@ const ranges: ParagraphRange[] = [
         svc.updateConfig({ sparsity: 0 })
       }
     },
-    leave: () => { rangeStates[3] = svc.saveState() },
+    leave: () => { interludeTaskList.setActive(false); exp3TaskList.setActive(false); rangeStates[3] = svc.saveState() },
   },
   {
     // Experiment 4: n=5 m=2
@@ -220,6 +281,8 @@ const ranges: ParagraphRange[] = [
     apply: () => {
       constraintSpec.value = { inputDim: 5, embeddingDim: 2 }
       vizSvc.revealStage.value = 'full'
+      vizSvc.showEmbeddingPanel.value = true
+      exp4TaskList.setActive(true)
       nextTick(() => { const el = vizRef.value; if (el) { revealUpTo(el, 'full'); clearAllPulse(el) } })
       if (rangeStates[4]) {
         svc.restoreState(rangeStates[4])
@@ -228,7 +291,7 @@ const ranges: ParagraphRange[] = [
         if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
       }
     },
-    leave: () => { rangeStates[4] = svc.saveState() },
+    leave: () => { exp4TaskList.setActive(false); rangeStates[4] = svc.saveState() },
   },
 ]
 
@@ -288,7 +351,7 @@ useParagraphRanges(ranges, activeBlockIndex)
         </p>
       </div>
 
-      <!-- ═══ Block 'encoder' — reveals encoder connections + embedding space panel ═══ -->
+      <!-- ═══ Block 'encoder' — reveals encoder connections (embedding panel not yet shown) ═══ -->
       <div
           :ref="(el) => paragraphRefs[blockIdx('encoder')] = el as HTMLElement"
           class="text-block"
@@ -307,6 +370,37 @@ useParagraphRanges(ranges, activeBlockIndex)
           where <katex-element expression="W \in \mathbb{R}^{m \times n}" /> is the weight matrix
           whose columns <katex-element expression="w_1, \ldots, w_n" /> are the learned feature
           direction vectors in embedding space.
+        </p>
+      </div>
+
+      <!-- ═══ Block 'embedding-viz' — reveals embedding space panel, interaction tasks ═══ -->
+      <div
+          :ref="(el) => paragraphRefs[blockIdx('embedding-viz')] = el as HTMLElement"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('embedding-viz') }"
+      >
+        <p>
+          The three feature direction vectors <katex-element expression="w_1, w_2, w_3" /> can be
+          visualized directly in the 2D embedding space below. The current embedding
+          <katex-element expression="y = Wx" /> — a linear combination of these vectors weighted
+          by the input feature activations — is shown as a purple dot.
+        </p>
+
+        <TaskListDisplay :task-list="embeddingVizTaskList" />
+      </div>
+
+      <!-- ═══ Block 'weights-view' — reveals weights panel ═══ -->
+      <div
+          :ref="(el) => paragraphRefs[blockIdx('weights-view')] = el as HTMLElement"
+          class="text-block"
+          :class="{ 'active-block': activeBlockIndex === blockIdx('weights-view') }"
+      >
+        <p>
+          The current values of the trainable parameters — the weight matrix
+          <katex-element expression="W" /> and bias vector <katex-element expression="b" />
+          — can be inspected in the weights view below the visualization. Hover over any
+          value in the weight matrix to see the corresponding connection highlighted in the
+          architecture.
         </p>
       </div>
 
@@ -349,19 +443,6 @@ useParagraphRanges(ranges, activeBlockIndex)
         directions that balance reconstruction accuracy against the unavoidable interference
         when <katex-element expression="m < n" />.
       </p>
-
-      <!-- ═══ Block 'weights-view' — reveals weights tab ═══ -->
-      <div
-          :ref="(el) => paragraphRefs[blockIdx('weights-view')] = el as HTMLElement"
-          class="text-block"
-          :class="{ 'active-block': activeBlockIndex === blockIdx('weights-view') }"
-      >
-        <p>
-          The current values of the trainable parameters — the weight matrix
-          <katex-element expression="W" /> and bias vector <katex-element expression="b" />
-          — can be inspected in the weights view below the visualization.
-        </p>
-      </div>
 
       <!-- ═══ Block 'tied-weights' — no new reveal, just text ═══ -->
       <div
@@ -428,6 +509,8 @@ useParagraphRanges(ranges, activeBlockIndex)
           <katex-element expression="f_{\text{negative\_sentiment}}" />) rather than as a
           negative activation of a "positive sentiment" feature.
         </p>
+
+        <TaskListDisplay :task-list="dataTaskList" />
       </div>
 
       <h3>Training Objective</h3>
@@ -479,6 +562,8 @@ useParagraphRanges(ranges, activeBlockIndex)
           weighted loss, and updating <katex-element expression="W" /> and
           <katex-element expression="b" /> via gradient-based optimization (Adam).
         </p>
+
+        <TaskListDisplay :task-list="trainingObjectiveTaskList" />
       </div>
 
       <!-- ═══════════════════════════════════════════════════════════════════════ -->

@@ -23,7 +23,7 @@ export function createExp4TaskSpecs(): AeTaskSpec[] {
       resetable: true,
       setup: (ctx: AeTaskContext) => ({
         events: ['sparsity-changed'],
-        check: () => ctx.services.svc.config.sparsity >= 0.78,
+        check: () => ctx.services.svc.config.sparsity >= 0.8,
       }),
     },
     {

@@ -20,7 +20,7 @@ provide(TASK_EVENT_BUS_KEY, eventBus)
 let hasDragged = false
 const dragTaskList = new TaskList([{
   id: 'drag-embedding',
-  label: `Drag the embedding <i>y</i> (the purple dot) along the direction of ${k('w_1')}`,
+  label: `Drag the embedding ${k('y')} (the purple dot) along the direction of ${k('w_1')}. Observe projections on both ${k('w_1')} and ${k('w_2')}`,
   setup: () => ({
     events: ['drag-embedding'] as string[],
     onEvent: () => { hasDragged = true },

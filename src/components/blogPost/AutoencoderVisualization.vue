@@ -23,8 +23,9 @@ function setTab(tab: VizTab) {
 }
 
 // Reveal helpers — default to true when no VizService (MainView shows everything)
-const showBottomRow = computed(() => vizSvc?.stageAtLeast('encoder') ?? true)
-const showWeightsTab = computed(() => vizSvc?.stageAtLeast('encoder') ?? true)
+const showEmbeddingPanel = computed(() => vizSvc?.showEmbeddingPanel.value ?? true)
+const showCombinedPanel = computed(() => vizSvc?.stageAtLeast('weights-view') ?? true)
+const showWeightsTab = computed(() => vizSvc?.stageAtLeast('weights-view') ?? true)
 const showTrainingTab = computed(() => vizSvc?.stageAtLeast('training') ?? true)
 const showStatsTab = computed(() => vizSvc?.stageAtLeast('training') ?? true)
 const showTrainingFooter = computed(() => vizSvc?.stageAtLeast('training') ?? true)
@@ -45,9 +46,9 @@ const visibleTabs = computed(() => {
     <AutoencoderView :compact="true" />
 
     <!-- Bottom row: Embedding Space + Combined panel side by side -->
-    <div class="ae-bottom-row" v-show="showBottomRow">
+    <div class="ae-bottom-row" v-show="showEmbeddingPanel || showCombinedPanel">
       <!-- Embedding Space -->
-      <div class="ae-bottom-section embedding-panel">
+      <div class="ae-bottom-section embedding-panel" v-show="showEmbeddingPanel">
         <div class="ae-viz-title">Embedding Space</div>
         <div class="ae-viz-panel panel-embedding">
           <EmbeddingView />
@@ -55,7 +56,7 @@ const visibleTabs = computed(() => {
       </div>
 
       <!-- Combined tabbed panel -->
-      <div class="ae-bottom-section combined-panel">
+      <div class="ae-bottom-section combined-panel" v-show="showCombinedPanel">
         <div class="tab-bar">
           <button
             v-for="tab in visibleTabs"

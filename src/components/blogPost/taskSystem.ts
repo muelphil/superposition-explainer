@@ -129,6 +129,12 @@ export class TaskList {
   /** Per-task unsubscribe functions for event bus listeners. */
   private subscriptions = new Map<string, () => void>()
   private ctx: TaskContext<any> | null = null
+  /**
+   * When false, event listeners are registered but silently skip processing.
+   * Use setActive(true/false) from apply()/leave() so tasks only complete
+   * while their associated text-block is the currently active one.
+   */
+  private active = false
 
   readonly tasks = ref<TaskState[]>([])
   readonly resolved = ref(false)
@@ -161,6 +167,22 @@ export class TaskList {
     this.handlers.clear()
   }
 
+  /**
+   * Enable or disable event processing for this task list.
+   * Call setActive(true) when entering the associated text-block and
+   * setActive(false) when leaving it. Events emitted while inactive are
+   * silently ignored — task state is preserved so progress is not lost.
+   *
+   * On transition to active, runs deferred initial checks for all subscribed
+   * tasks so that conditions already satisfied before the block was reached
+   * are correctly reflected (e.g. "slider already at target value").
+   */
+  setActive(active: boolean): void {
+    const wasInactive = !this.active
+    this.active = active
+    if (active && wasInactive) this._runDeferredInitialChecks()
+  }
+
   // ─── Internal ───────────────────────────────────────────────────────────────
 
   private _areDepsComplete(spec: TaskSpec<any>): boolean {
@@ -182,8 +204,10 @@ export class TaskList {
     const handler = this.handlers.get(spec.id)!
     const isResetable = !!spec.resetable
 
-    // Initial check — task may already be satisfied (e.g. slider already at target)
-    if (handler.check()) {
+    // Initial check — only when active. If inactive at subscription time (i.e. at
+    // startListening()), this is skipped; setActive(true) later calls
+    // _runDeferredInitialChecks() to catch conditions already satisfied on arrival.
+    if (this.active && handler.check()) {
       this.completedSet.set(spec.id, true)
       this._subscribeEligible()
       if (!isResetable) {
@@ -195,6 +219,7 @@ export class TaskList {
     }
 
     const listener = (eventName: string) => (payload?: any) => {
+      if (!this.active) return  // only process events while associated block is active
       const wasDone = this.completedSet.get(spec.id)!
       if (wasDone && !isResetable) return  // non-resetable: already done, ignore
 
@@ -236,6 +261,35 @@ export class TaskList {
     if (unsub) { unsub(); this.subscriptions.delete(id) }
     this.handlers.get(id)?.cleanup?.()
     this._subscribeEligible()
+    this._updateTaskStates()
+  }
+
+  /**
+   * Run initial checks for all currently subscribed tasks. Called when
+   * setActive(true) transitions from inactive so that conditions already
+   * satisfied before the block was reached are correctly applied.
+   */
+  private _runDeferredInitialChecks(): void {
+    let changed = false
+    for (const spec of this.specs) {
+      if (!this.subscriptions.has(spec.id)) continue
+      const handler = this.handlers.get(spec.id)!
+      const wasDone = this.completedSet.get(spec.id)!
+      const nowDone = handler.check()
+      if (nowDone && !wasDone) {
+        this.completedSet.set(spec.id, true)
+        if (!spec.resetable) {
+          const unsub = this.subscriptions.get(spec.id)
+          if (unsub) { unsub(); this.subscriptions.delete(spec.id) }
+          handler.cleanup?.()
+        }
+        changed = true
+      } else if (!nowDone && wasDone && spec.resetable) {
+        this.completedSet.set(spec.id, false)
+        changed = true
+      }
+    }
+    if (changed) this._subscribeEligible()
     this._updateTaskStates()
   }
 

@@ -220,3 +220,8 @@ button:disabled {
 .tab-pane--weights[data-pulsing] {
   animation: ae-pulse 2.4s ease-in-out infinite !important;
 }
+
+.debug-bar{
+  display:none !important;
+/*  TODO remove the bar fully later, only for dev purposes */
+}
