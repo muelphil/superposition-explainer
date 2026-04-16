@@ -19,6 +19,7 @@
     "@types/katex": "^0.16.8",
     "@types/three": "^0.183.1",
     "@vitejs/plugin-vue": "^6.0.5",
+    "mathjax-full": "^3.2.1",
     "typescript": "^6.0.2",
     "vite": "^8.0.4",
     "vue-tsc": "^3.2.6"

@@ -405,6 +405,29 @@ If you have any questions, ask.
 
 ---
 
+We now need to shift our attention to the CoordinateViz.vue component, which we will use to visualize and illustrate the blog content on the 3 different types of bases: Arbitrary, Orthogonal, Orthonormal.
+These correspond to the sections "Arbitrary Basis", "Orthogonal Basis" and "Orthonormal Basis" in BasesSection.vue.
+CoordinateViz is supposed to show a stacked view, with the top part being a coordinate system with minor interaction planned later, and the bottom part allowing for latex and math to show the concrete values for the chosen examples in the subsections.
+
+It is crucial that it is all parametric (i.e. the bases vectors specified, so that I can update them in one place) and it aligns with the general style of the EmbeddingView -- with important constant values exported in src/components/embeddingView/constants.ts. The Coordinate system should use SVG and imitate the visual style of the coordinate system showed in EmbeedingView using Three.js -- we dont need Three.js here, because this will not be 3D, only 2D.
+
+Importantly, in this visualization, it should subsequently show the 3 bases chosen in the same coordinate system and animate the change in bases when going from one to the next text-block.
+
+You already implemented a nice small example in test_ground/bases_vis/src/components/CoordinateSystemViz.vue, which might be helpful. However, there are some issue with it that I dont like:
+* The bases vectors should span a (skewed) coordinate system. Beyond the standard coordinate system this means that there should be a grid in the colors of the 2 vectors (use featureColor.ts colors for the first 2 of 2 feature vectors), but lighter.
+* The embedding should be (similar to the EmbeddingView) visualized via a purple dot
+* the labels should use katex, consistent with the rest of the application
+* the implementation must allow for easy showcase of different things (i.e. naive projection, highlighting of one vector on hovering, ...), so that within the 3 subsections, there can be multiple textblocks, building the animation
+* it must all be in on coordinate system and changes in bases vectors should be possible and animated, to swap between chosen vectors.
+* For the arbitrary basis vectors, while the naive projection is visible, it must be possible to move the embeeding along one of the vectors and the naive projection must update accordingly, allowing the user to visually see the interference caused by the non-orthogonality.
+
+Parts of the BasesSection.vue must be wrapped in new text-blocks for this to work. For now, make it 3 blocks, one for each of the bases-types in the BasesSection.vue blog entry part.
+
+
+
+
+
+---
 
 # TODOs:
 * Not well written: "A striking demonstration comes from 3Blue1Brown (How might LLMs store facts, Chapter 7): it is possible to place 10,000 vectors in just 100 dimensions while all pairwise angles remain between $89^\circ$ and $91^\circ$ — virtually orthogonal, despite outnumbering the dimensions by a factor of 100."

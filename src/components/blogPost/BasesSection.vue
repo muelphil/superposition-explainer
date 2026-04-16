@@ -78,27 +78,35 @@ useParagraphRanges(ranges, activeBlockIndex)
     <div class="text-column">
 
       <!-- Block 'feature-space': Intro + feature space concept -->
+      <p>
+        We want to understand how features are represented inside an embedding space — in
+        particular, how they are embedded and how they can be recovered. This section develops
+        the mathematical intuition that directly motivates the architecture of the toy
+        autoencoder.
+      </p>
+      <p>
+        Suppose a model needs to represent
+        <katex-element expression="n"/>
+        distinct features
+        inside an embedding space with fewer dimensions. In the original feature space, each
+        feature occupies its own coordinate axis — reading off how strongly a feature is present
+        is as simple as looking at the corresponding coordinate. The challenge arises when these
+        features must be mapped into a lower-dimensional embedding space, where each feature is
+        no longer guaranteed its own axis and must instead be represented as a learned direction.
+      </p>
       <div
           :ref="(el) => blockRefs[blockIdx('feature-space')] = el as HTMLElement"
           class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('feature-space') }"
       >
-        <p>
-          We want to understand how features are represented inside an embedding space — in
-          particular, how they are embedded and how they can be recovered. This section develops
-          the mathematical intuition that directly motivates the architecture of the toy
-          autoencoder.
-        </p>
-        <p>
-          Suppose a model needs to represent
-          <katex-element expression="n"/>
-          distinct features
-          inside an embedding space with fewer dimensions. In the original feature space, each
-          feature occupies its own coordinate axis — reading off how strongly a feature is present
-          is as simple as looking at the corresponding coordinate. The challenge arises when these
-          features must be mapped into a lower-dimensional embedding space, where each feature is
-          no longer guaranteed its own axis and must instead be represented as a learned direction.
-        </p>
+        <p>Formally, a <strong>feature vector</strong> <katex-element expression="x = (x_1, \ldots, x_n)^T"/>
+          lives in <strong>feature
+            space</strong> <katex-element expression="F = \mathbb{R}^n"/>
+          , where each coordinate
+          <katex-element expression="x_i"/>
+          represents the activation strength of feature
+          <katex-element expression="f_i"/>
+          .</p>
       </div>
 
       <!-- Block 'both-spaces': Formal definitions of F, H, W -->
@@ -108,31 +116,18 @@ useParagraphRanges(ranges, activeBlockIndex)
           :class="{ 'active-block': activeBlockIndex === blockIdx('both-spaces') }"
       >
         <p>
-          Formally, a <strong>feature vector</strong>
-          <katex-element expression="x = (x_1, \ldots, x_n)^T"/>
-          lives in <strong>feature
-          space</strong>
-          <katex-element expression="F = \mathbb{R}^n"/>
-          , where each coordinate
-          <katex-element expression="x_i"/>
-          represents the activation strength of feature
-          <katex-element expression="f_i"/>
-          . The model maps
+           The model maps
           <katex-element expression="x"/>
-          into an <strong>embedding space</strong>
-          <katex-element expression="H = \mathbb{R}^m"/>
+          into an <strong>embedding space</strong> <katex-element expression="H = \mathbb{R}^m"/>
           , typically with
           <katex-element expression="m < n"/>
           . Inside this space, each feature
           <katex-element expression="f_i"/>
           is represented by a learned <strong>feature direction
-          vector</strong>
-          <katex-element expression="w_i \in \mathbb{R}^m"/>
-          . These
-          <katex-element expression="n"/>
+          vector</strong> <katex-element expression="w_i \in \mathbb{R}^m"/>
+          . These <katex-element expression="n"/>
           vectors form the columns of the <strong>weight
-          matrix</strong>
-          <katex-element expression="W = [w_1 \;\; \cdots \;\; w_n] \in \mathbb{R}^{m \times n}"/>
+          matrix</strong> <katex-element expression="W = [w_1 \;\; \cdots \;\; w_n] \in \mathbb{R}^{m \times n}"/>
           .
         </p>
       </div>
@@ -219,11 +214,9 @@ useParagraphRanges(ranges, activeBlockIndex)
           <strong>Gram matrix</strong> of the feature directions. Its entries
           <katex-element expression="(W^T W)_{ij} = w_i \cdot w_j"/>
           are the pairwise dot
-          products. The <strong>diagonal entries</strong>
-          <katex-element expression="w_i \cdot w_i = \|w_i\|^2"/>
+          products. The <strong>diagonal entries</strong> <katex-element expression="w_i \cdot w_i = \|w_i\|^2"/>
           are the squared lengths of
-          the feature directions. The <strong>off-diagonal entries</strong>
-          <katex-element expression="w_i \cdot w_j"/>
+          the feature directions. The <strong>off-diagonal entries</strong> <katex-element expression="w_i \cdot w_j"/>
           (
           <katex-element expression="i \neq j"/>
           ) quantify the <strong>cross-talk</strong>
