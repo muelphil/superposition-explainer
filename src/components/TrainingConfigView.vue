@@ -191,7 +191,6 @@ function fmtLR(lr: number) {
 
 .advanced-toggle {
   font-family: var(--font-family-label);
-  //color: var(--color-text-label);
   color: var(--color-text-tertiary);
   text-transform: uppercase;
   display: flex;
