@@ -165,7 +165,7 @@ const showSettings = ref(false)
   width: 100%;
   top: 0;
   z-index: 50;
-  //height: var(--header-height);
+  /* height: var(--header-height); */
   padding: 1rem 1rem 0;
   background: var(--color-bg-secondary);
   display: flex;
@@ -209,7 +209,7 @@ const showSettings = ref(false)
   grid-template-columns: 65fr 35fr;
   gap: 2rem;
   height: 100%;
-  padding-top: 10%;
+  padding-top: 5%;
   align-items: flex-start;
 }
 
@@ -287,7 +287,7 @@ const showSettings = ref(false)
   transition: color 0.12s;
 }
 .combined-tab-btn:hover {
-  color: var(--color-text-primary);
+  color: var(--color-text-primary) !important;
 }
 .combined-tab-btn.active {
   color: var(--color-text-secondary);

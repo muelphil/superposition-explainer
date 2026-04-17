@@ -7,7 +7,8 @@ import type {SelectionServiceType} from '../services/SelectionService'
 import {VIZ_SERVICE_KEY} from '../services/VizService'
 import {AE_VIEW_CONSTRAINTS_KEY} from './blogPost/aeStepTypes'
 import {TASK_EVENT_BUS_KEY} from './blogPost/taskSystem'
-import {neuronColorRgb} from '../utils/featureColor'
+import {neuronColorRgb, neuronBorderColorRgb, neuronFeatureBgRgb, neuronFeatureBorderRgb} from '../utils/featureColor'
+import {useFeatureColorsForIO} from '../services/SettingsService'
 import InputValue from './InputValue.vue'
 import ActivationIcons from './ActivationIcons.vue'
 import ConnectionsSvg from './autoencoderView/ConnectionsSvg.vue'
@@ -74,6 +75,23 @@ const dataRowEnd = computed(() => n.value + 3)
 function neuronScale(i: number): number {
   const imp = svc.featureImportance.value[i] ?? 1
   return Math.max(0.4, Math.sqrt(imp))
+}
+
+function inputNeuronBg(i: number): string {
+  const v = svc.currentInput.value[i] ?? 0
+  return useFeatureColorsForIO.value ? neuronFeatureBgRgb(v, i, n.value) : neuronColorRgb(v)
+}
+function inputNeuronBorder(i: number): string {
+  const v = svc.currentInput.value[i] ?? 0
+  return useFeatureColorsForIO.value ? neuronFeatureBorderRgb(v, i, n.value) : neuronBorderColorRgb(v)
+}
+function outputNeuronBg(i: number): string {
+  const v = decoderRevealed.value ? (svc.currentOutput.value[i] ?? 0) : 0
+  return useFeatureColorsForIO.value ? neuronFeatureBgRgb(v, i, n.value) : neuronColorRgb(v)
+}
+function outputNeuronBorder(i: number): string {
+  const v = decoderRevealed.value ? (svc.currentOutput.value[i] ?? 0) : 0
+  return useFeatureColorsForIO.value ? neuronFeatureBorderRgb(v, i, n.value) : neuronBorderColorRgb(v)
 }
 
 // ─── User input ───────────────────────────────────────────────────────────────
@@ -283,7 +301,8 @@ function resampleAll() {
             class="neuron"
             :class="{ 'neuron-selected': isInputSelected(i) }"
             :style="{
-            background: neuronColorRgb(svc.currentInput.value[i] ?? 0),
+            background: inputNeuronBg(i),
+            borderColor: inputNeuronBorder(i),
             transform: `scale(${neuronScale(i)})`,
           }"
         />
@@ -317,7 +336,8 @@ function resampleAll() {
             class="neuron"
             :class="{ 'neuron-selected': isOutputSelected(i) }"
             :style="{
-            background: decoderRevealed ? neuronColorRgb(svc.currentOutput.value[i] ?? 0) : neuronColorRgb(0),
+            background: outputNeuronBg(i),
+            borderColor: outputNeuronBorder(i),
             transform: `scale(${neuronScale(i)})`,
           }"
         />
@@ -353,7 +373,7 @@ function resampleAll() {
             :ref="(el) => { embNeuronRefs[k] = el as HTMLElement }"
             class="neuron emb-neuron"
             :class="[embDimClass(k), { 'neuron-selected': isEmbSelected(k) }]"
-            :style="{ background: neuronColorRgb(svc.currentEmbedding.value[k] ?? 0) }"
+            :style="{ background: neuronColorRgb(svc.currentEmbedding.value[k] ?? 0), borderColor: neuronBorderColorRgb(svc.currentEmbedding.value[k] ?? 0) }"
             :title="`h${k + 1} = ${fmt(svc.currentEmbedding.value[k] ?? 0)}`"
             @mouseenter="emb.enter(k)"
             @mouseleave="emb.leave"
@@ -444,7 +464,7 @@ function resampleAll() {
   font-size: 0.6rem;
   color: var(--color-text-secondary);
   font-family: var(--font-family-label);
-  //text-transform: uppercase;
+  /* text-transform: uppercase; */
   letter-spacing: 0.05em;
   line-height: 1.2;
   text-align: center;
@@ -490,7 +510,7 @@ function resampleAll() {
 
 .neuron.neuron-selected {
   box-shadow: 0 0 0 2.5px var(--color-selection), 0 0 8px var(--color-selection-glow);
-  border-color: var(--color-selection);
+  border-color: var(--color-selection) !important;
 }
 
 
@@ -547,7 +567,7 @@ function resampleAll() {
   width: var(--neuron-size);
   height: var(--neuron-size);
   border-radius: 50%;
-  border: 1px solid var(--color-neuron-border);
+  border: 2px solid var(--color-neuron-border);
   display: flex;
   align-items: center;
   justify-content: center;

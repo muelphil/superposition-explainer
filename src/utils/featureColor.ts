@@ -35,6 +35,52 @@ export function neuronColorRgb(v: number): string {
   return v >= 0 ? lerpWhite(t, NEURON_POSITIVE_RGB) : lerpWhite(t, NEURON_NEGATIVE_RGB)
 }
 
+// ── Neuron border colors ───────────────────────────────────────────────────────
+/** Dark orange endpoint for positive neuron borders (#ea580c orange-600) */
+export const BORDER_POSITIVE_RGB: readonly [number, number, number] = [234, 88, 12]
+/** Dark blue endpoint for negative neuron borders (#2563eb blue-600) */
+export const BORDER_NEGATIVE_RGB: readonly [number, number, number] = [37, 99, 235]
+/** Neutral border color at zero (#9ca3af gray-400 = --color-text-secondary) */
+const BORDER_ZERO_RGB: readonly [number, number, number] = [156, 163, 175]
+
+/**
+ * Border color for a standard neuron circle.
+ * v ≥ 0 → text-secondary → dark-orange-600; v < 0 → text-secondary → dark-blue-600.
+ * Scaled so |v| = 2 → full saturation.
+ */
+export function neuronBorderColorRgb(v: number): string {
+  const t = Math.abs(Math.max(-2, Math.min(2, v))) / 2
+  const [r0, g0, b0] = BORDER_ZERO_RGB
+  const [r1, g1, b1] = v >= 0 ? BORDER_POSITIVE_RGB : BORDER_NEGATIVE_RGB
+  return `rgb(${Math.round(r0 + (r1 - r0) * t)},${Math.round(g0 + (g1 - g0) * t)},${Math.round(b0 + (b1 - b0) * t)})`
+}
+
+// ── Feature-mode IO neuron colors ──────────────────────────────────────────────
+/** Neutral border at zero for feature-mode (#374151 = --color-text-secondary) */
+const FEATURE_BORDER_ZERO_RGB: readonly [number, number, number] = [156, 163, 175]
+
+/**
+ * Background for feature-colored IO neurons: white → feature color.
+ * v ≥ 0; scaled so v = 2 → full saturation.
+ */
+export function neuronFeatureBgRgb(v: number, featureIdx: number, numFeatures: number): string {
+  const t = Math.min(1, Math.abs(v) / 2)
+  const fRgb = sampleGradientSrgb(numFeatures <= 1 ? 0 : featureIdx / (numFeatures - 1))
+  return lerpWhite(t, fRgb)
+}
+
+/**
+ * Border for feature-colored IO neurons:
+ * v = 0 → text-primary; v = 2 → ~60% of feature color (darker).
+ */
+export function neuronFeatureBorderRgb(v: number, featureIdx: number, numFeatures: number): string {
+  const t = Math.min(1, Math.abs(v) / 2)
+  const [fr, fg, fb] = sampleGradientSrgb(numFeatures <= 1 ? 0 : featureIdx / (numFeatures - 1))
+  const r1 = Math.round(fr * 0.58), g1 = Math.round(fg * 0.58), b1 = Math.round(fb * 0.58)
+  const [r0, g0, b0] = FEATURE_BORDER_ZERO_RGB
+  return `rgb(${Math.round(r0 + (r1 - r0) * t)},${Math.round(g0 + (g1 - g0) * t)},${Math.round(b0 + (b1 - b0) * t)})`
+}
+
 /** Color used for the min-angle statistics chart line */
 export const MIN_ANGLE_CHART_COLOR = '#22c55e'  // green-500 = --color-add-btn
 

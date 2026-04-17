@@ -4,3 +4,6 @@ import { ref } from 'vue'
 
 /** Whether the purple input-point sphere is visible in the Embedding Space view. */
 export const showEmbeddingPoint = ref(true)
+
+/** Whether IO neurons use feature color gradient instead of blue → orange. */
+export const useFeatureColorsForIO = ref(false)

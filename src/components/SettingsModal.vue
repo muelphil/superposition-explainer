@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 import { X } from 'lucide-vue-next'
-import { showEmbeddingPoint } from '../services/SettingsService'
+import { showEmbeddingPoint, useFeatureColorsForIO } from '../services/SettingsService'
 
 defineProps<{ show: boolean }>()
 const emit = defineEmits<{ close: [] }>()
@@ -34,6 +34,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               class="setting-toggle"
               :checked="showEmbeddingPoint"
               @change="showEmbeddingPoint = ($event.target as HTMLInputElement).checked"
+            />
+          </div>
+          <div class="setting-row">
+            <label class="setting-label" for="setting-feature-colors">
+              Color input/output neurons by feature
+            </label>
+            <input
+              id="setting-feature-colors"
+              type="checkbox"
+              class="setting-toggle"
+              :checked="useFeatureColorsForIO"
+              @change="useFeatureColorsForIO = ($event.target as HTMLInputElement).checked"
             />
           </div>
         </div>

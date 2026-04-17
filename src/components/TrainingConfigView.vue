@@ -115,6 +115,7 @@ function fmtLR(lr: number) {
 }
 
 .cfg-label {
+  font-family: var(--font-family-label);
   font-size: 0.78rem;
   color: var(--color-text-label);
   white-space: nowrap;
@@ -190,13 +191,14 @@ function fmtLR(lr: number) {
 
 .advanced-toggle {
   font-family: var(--font-family-label);
+  //color: var(--color-text-label);
+  color: var(--color-text-tertiary);
   text-transform: uppercase;
   display: flex;
   align-items: center;
   gap: 0.3rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--color-text-label);
   background: none;
   border: none;
   padding: 0;

@@ -172,7 +172,6 @@ function onSliderChange(event: Event) {
   font-family: var(--font-family-number);
   letter-spacing: -1px;
   font-size: 0.85rem;
-  //font-size: 1rem;
   font-weight: 500;
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
