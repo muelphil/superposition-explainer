@@ -708,9 +708,10 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
 }
 
 .author-info {
+  line-height: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.3rem;
 }
 
 .author-name {

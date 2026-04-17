@@ -31,8 +31,11 @@ provide('selectionService', selSvc)
 const vizSvc = createVizService()
 provide(VIZ_SERVICE_KEY, vizSvc)
 
-// Start blank — reveal stages are driven by scroll position
+// Start fully hidden — reveal stages and panel visibility are driven by scroll position.
+// Both fields must be explicitly reset here because createVizService() defaults to 'full' / true
+// (the correct state for MainView where everything is always visible).
 vizSvc.revealStage.value = 'blank'
+vizSvc.showEmbeddingPanel.value = false
 
 // Template ref for the visualization container (used by reveal/pulse helpers)
 const vizRef = ref<HTMLElement | null>(null)
@@ -208,7 +211,10 @@ const ranges: ParagraphRange[] = [
       rangeStates[0] = svc.saveState()
       toyModelInitialized.value = false
       vizSvc.continueTrainingEnabled.value = true
-      vizSvc.showEmbeddingPanel.value = true
+      // Reset to hidden — forward transitions (exp1+) re-set this to true in their apply().
+      // Without this, scrolling back above the section leaves the panel visible.
+      vizSvc.showEmbeddingPanel.value = false
+      vizSvc.revealStage.value = 'blank'
       embeddingVizTaskList.setActive(false)
       dataTaskList.setActive(false)
       trainingObjectiveTaskList.setActive(false)
