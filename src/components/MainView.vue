@@ -11,6 +11,7 @@ import TrainingStatsView from './TrainingStatsView.vue'
 import TrainingActionButtons from './TrainingActionButtons.vue'
 import SettingsModal from './SettingsModal.vue'
 import BlogPost from './BlogPost.vue'
+import AppLogo from './AppLogo.vue'
 import {ChevronDown} from 'lucide-vue-next'
 
 const autoencoderService = createAutoencoderService()
@@ -32,7 +33,7 @@ const showSettings = ref(false)
 <template>
   <div class="main-view">
     <header class="app-header">
-      <h1 class="app-title"><span>Super</span><span>Position</span> Explainer</h1>
+      <AppLogo />
       <button class="header-icon-btn" @click="showSettings = true" title="Settings">
         <Settings :size="16" />
       </button>
@@ -164,8 +165,8 @@ const showSettings = ref(false)
   width: 100%;
   top: 0;
   z-index: 50;
-  height: var(--header-height);
-  padding: 0 1rem;
+  //height: var(--header-height);
+  padding: 1rem 1rem 0;
   background: var(--color-bg-secondary);
   display: flex;
   align-items: center;
@@ -173,13 +174,6 @@ const showSettings = ref(false)
   /* Soft fade below the header into the page content */
   -webkit-mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
   mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
-}
-
-.app-title {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
 }
 
 .header-icon-btn {
