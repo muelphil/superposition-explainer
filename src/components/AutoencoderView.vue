@@ -1029,7 +1029,6 @@ function onOutputClick(i: number) {
   color: var(--color-text-primary);
   font-weight: 700;
   pointer-events: none;
-  text-shadow: 0 0 3px var(--color-label-text-shadow);
 }
 
 /* ── Embedding column ─────────────────────────────────────── */
@@ -1120,14 +1119,6 @@ function onOutputClick(i: number) {
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  z-index: 2;
-}
-
-.col-subtext {
-  font-size: 0.62rem;
-  color: var(--color-text-secondary);
-  letter-spacing: 0.03em;
-  font-weight: 400;
   z-index: 2;
 }
 

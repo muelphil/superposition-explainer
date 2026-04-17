@@ -189,11 +189,12 @@ function fmtLR(lr: number) {
 .cfg-select:focus { border-color: var(--color-interactive); }
 
 .advanced-toggle {
+  font-family: var(--font-family-label);
+  text-transform: uppercase;
   display: flex;
   align-items: center;
   gap: 0.3rem;
   font-size: 0.75rem;
-  font-family: inherit;
   font-weight: 500;
   color: var(--color-text-label);
   background: none;
