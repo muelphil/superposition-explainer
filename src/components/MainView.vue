@@ -11,6 +11,7 @@ import TrainingStatsView from './TrainingStatsView.vue'
 import TrainingActionButtons from './TrainingActionButtons.vue'
 import SettingsModal from './SettingsModal.vue'
 import BlogPost from './BlogPost.vue'
+import {ChevronDown} from 'lucide-vue-next'
 
 const autoencoderService = createAutoencoderService()
 provide('autoencoderService', autoencoderService)
@@ -97,6 +98,10 @@ const showSettings = ref(false)
 
           </div>
         </div>
+      </div>
+      <div class="scroll-indicator">
+        <span class="label">Guided Introduction</span>
+        <ChevronDown class="icon" />
       </div>
     </main>
 
@@ -377,5 +382,45 @@ const showSettings = ref(false)
   color: var(--color-debug-highlight);
 }
 
+.scroll-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, -20px);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1;
+}
+.scroll-indicator .icon {
+  width: 16px;
+  height: 16px;
+
+  stroke: var(--color-text-secondary);
+
+  animation: scroll-bounce 1.6s ease-in-out infinite;
+}
+@keyframes scroll-bounce {
+  0% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(4px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+}
 
 </style>
