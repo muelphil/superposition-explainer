@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {inject, ref, computed, watch, onMounted, onUnmounted, nextTick, getCurrentInstance} from 'vue'
+import {inject, ref, computed, watch} from 'vue'
 import {RefreshCw, Plus, Minus} from 'lucide-vue-next'
 import type {AutoencoderServiceType} from '../services/AutoencoderService'
 import {INPUT_DIM_MIN, INPUT_DIM_MAX, EMB_DIM_MIN, EMB_DIM_MAX} from '../services/AutoencoderService'
@@ -10,6 +10,8 @@ import {TASK_EVENT_BUS_KEY} from './blogPost/taskSystem'
 import {neuronColorRgb} from '../utils/featureColor'
 import InputValue from './InputValue.vue'
 import ActivationIcons from './ActivationIcons.vue'
+import ConnectionsSvg from './autoencoderView/ConnectionsSvg.vue'
+import {useSelectionAndHover} from './autoencoderView/useSelectionAndHover'
 
 const props = defineProps<{ compact?: boolean }>()
 
@@ -32,17 +34,28 @@ const decoderRevealed = computed(() => vizSvc?.stageAtLeast('decoder') ?? true)
 // Importance tooltips (I_i values) only appear once the training objective block is reached.
 const importanceTooltipVisible = computed(() => vizSvc?.stageAtLeast('training') ?? true)
 
-// Unique SVG mask ID per instance — prevents collision when multiple
-// AutoencoderViews (e.g. main + blog compact) coexist on the page.
-const maskId = `neuron-mask-${getCurrentInstance()!.uid}`
-
 // ─── Template refs ────────────────────────────────────────────────────────────
 const containerRef = ref<HTMLElement | null>(null)
-const svgRef = ref<SVGElement | null>(null)
 
 const inputNeuronRefs = ref<(HTMLElement | null)[]>([])
 const embNeuronRefs = ref<(HTMLElement | null)[]>([])
 const outputNeuronRefs = ref<(HTMLElement | null)[]>([])
+
+// ─── Selection & hover ────────────────────────────────────────────────────────
+const {
+  inputDimClass,
+  outputDimClass,
+  embDimClass,
+  pathOpacity,
+  isInputSelected,
+  isOutputSelected,
+  isEmbSelected,
+  weight,
+  feature,
+  input,
+  emb,
+  output,
+} = useSelectionAndHover(selSvc, svc, eventBus)
 
 // ─── Dimensions ───────────────────────────────────────────────────────────────
 const n = computed(() => svc.config.inputDim)
@@ -110,131 +123,6 @@ const canRemoveInput = computed(() => !inputFixed.value && n.value > inputMin.va
 const canAddEmb = computed(() => !embFixed.value && m.value < embMax.value && !svc.isTraining.value)
 const canRemoveEmb = computed(() => !embFixed.value && m.value > embMin.value && !svc.isTraining.value)
 
-// ─── SVG connections ──────────────────────────────────────────────────────────
-
-interface SvgPath {
-  d: string
-  color: string
-  width: number
-  opacity: number
-  row: number
-  col: number
-  side: 'encoder' | 'decoder'
-}
-
-interface NeuronClip {
-  cx: number
-  cy: number
-  r: number
-}
-
-const svgPathsData = ref<SvgPath[]>([])
-const encoderPaths = computed(() => svgPathsData.value.filter(p => p.side === 'encoder'))
-const decoderPaths = computed(() => svgPathsData.value.filter(p => p.side === 'decoder'))
-const neuronClips = ref<NeuronClip[]>([])
-
-/** Returns the center position + radius of a neuron element in SVG/container coordinates. */
-function getNeuronInfo(el: HTMLElement | null | undefined): NeuronClip | null {
-  if (!el || !containerRef.value) return null
-  const er = el.getBoundingClientRect()
-  const cr = containerRef.value.getBoundingClientRect()
-  return {
-    cx: er.left - cr.left + er.width / 2,
-    cy: er.top - cr.top + er.height / 2,
-    r: er.height / 2,
-  }
-}
-
-function bezierPath(x1: number, y1: number, x2: number, y2: number): string {
-  const curve = Math.min(Math.abs(x2 - x1) * 0.4, 80)
-  return `M ${x1} ${y1} C ${x1 + curve} ${y1} ${x2 - curve} ${y2} ${x2} ${y2}`
-}
-
-function weightStyle(w: number): { color: string; width: number; opacity: number } {
-  const abs = Math.abs(w)
-  return {
-    color: w >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
-    width: 0.5 + Math.min(abs, 1.5) * 4,
-    opacity: 0.15 + Math.min(abs, 1) * 0.65,
-  }
-}
-
-/** Y offset so that `total` connections fan evenly within the neuron's diameter. */
-function spreadOffset(idx: number, total: number, diameter: number): number {
-  if (total <= 1) return 0
-  return (idx - (total - 1) / 2) * (diameter * 0.55 / Math.max(total - 1, 1))
-}
-
-function drawConnections() {
-  if (!svgRef.value || !containerRef.value) return
-
-  const W = svc.W.value
-  const paths: SvgPath[] = []
-  const clips: NeuronClip[] = []
-
-  // Collect neuron clip circles
-  for (let j = 0; j < n.value; j++) {
-    const inInfo = getNeuronInfo(inputNeuronRefs.value[j])
-    const outInfo = getNeuronInfo(outputNeuronRefs.value[j])
-    if (inInfo) clips.push(inInfo)
-    if (outInfo) clips.push(outInfo)
-  }
-  for (let k = 0; k < m.value; k++) {
-    const embInfo = getNeuronInfo(embNeuronRefs.value[k])
-    if (embInfo) clips.push(embInfo)
-  }
-
-  // Encoder: input neurons → embedding neurons
-  for (let k = 0; k < m.value; k++) {
-    const embInfo = getNeuronInfo(embNeuronRefs.value[k])
-    if (!embInfo) continue
-    for (let j = 0; j < n.value; j++) {
-      const inInfo = getNeuronInfo(inputNeuronRefs.value[j])
-      if (!inInfo) continue
-      const w = W[k]?.[j] ?? 0
-      const {color, width, opacity} = weightStyle(w)
-      // Fan: k-th connection fans at input; j-th connection fans at embedding
-      const sy = inInfo.cy + spreadOffset(k, m.value, inInfo.r * 2)
-      const ty = embInfo.cy + spreadOffset(j, n.value, embInfo.r * 2)
-      paths.push({d: bezierPath(inInfo.cx, sy, embInfo.cx, ty), color, width, opacity, row: k, col: j, side: 'encoder'})
-    }
-  }
-
-  // Decoder: embedding neurons → output neurons
-  for (let k = 0; k < m.value; k++) {
-    const embInfo = getNeuronInfo(embNeuronRefs.value[k])
-    if (!embInfo) continue
-    for (let j = 0; j < n.value; j++) {
-      const outInfo = getNeuronInfo(outputNeuronRefs.value[j])
-      if (!outInfo) continue
-      const w = W[k]?.[j] ?? 0
-      const {color, width, opacity} = weightStyle(w)
-      const sy = embInfo.cy + spreadOffset(j, n.value, embInfo.r * 2)
-      const ty = outInfo.cy + spreadOffset(k, m.value, outInfo.r * 2)
-      paths.push({d: bezierPath(embInfo.cx, sy, outInfo.cx, ty), color, width, opacity, row: k, col: j, side: 'decoder'})
-    }
-  }
-
-  svgPathsData.value = paths
-  neuronClips.value = clips
-}
-
-let resizeObserver: ResizeObserver | null = null
-
-onMounted(async () => {
-  await nextTick()
-  drawConnections()
-  if (containerRef.value) {
-    resizeObserver = new ResizeObserver(() => drawConnections())
-    resizeObserver.observe(containerRef.value)
-  }
-})
-
-onUnmounted(() => resizeObserver?.disconnect())
-
-watch(() => svc.W.value, () => drawConnections(), {deep: true})
-watch([n, m], () => drawConnections(), {flush: 'post'})
-watch(() => svc.featureImportance.value, () => drawConnections(), {flush: 'post'})
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmt(v: number): string {
@@ -257,7 +145,6 @@ const currentLoss = computed(() => {
 })
 
 // ─── Sampling ─────────────────────────────────────────────────────────────────
-// ─── Sampling ─────────────────────────────────────────────────────────────────
 function randn(): number {
   let u = 0, v = 0
   while (u === 0) u = Math.random()
@@ -278,269 +165,6 @@ function resampleAll() {
   eventBus?.emit('resample-clicked')
 }
 
-// ─── Hover / selection highlight logic ───────────────────────────────────────
-//
-// Architecture: each SelectionTarget maps to an Illumination — a description of
-// which neurons/paths are "lit" (everything else is dimmed).
-//
-// When both selection and hover are active:
-//   - Selection defines the base illumination.
-//   - Hover "narrows" it via set intersection ONLY when the hover is on a
-//     compatible (different) axis (e.g. feature selected + emb hovered → show
-//     only that feature AND that embedding neuron + their shared weights).
-//   - Incompatible hover (same axis, different index) is ignored so that
-//     selection always has precedence.
-//
-// The single `activeIllumination` computed is the source of truth. All dim /
-// opacity helpers derive from it — no ad-hoc functions needed.
-
-type IllumSet = Set<number> | 'all'
-
-interface Illumination {
-  inputs: IllumSet
-  outputs: IllumSet
-  embs: IllumSet
-  paths: (row: number, col: number) => boolean
-}
-
-const FEATURE_LIKE = new Set(['feature', 'input', 'output', 'bias', 'relu'])
-
-function illuminationFor(t: ReturnType<typeof selSvc.selected.valueOf> | null): Illumination {
-  if (!t) return {inputs: 'all', outputs: 'all', embs: 'all', paths: () => true}
-  if (FEATURE_LIKE.has(t.kind)) {
-    const i = (t as { idx: number }).idx
-    return {inputs: new Set([i]), outputs: new Set([i]), embs: 'all', paths: (_r, c) => c === i}
-  }
-  if (t.kind === 'emb') {
-    return {inputs: 'all', outputs: 'all', embs: new Set([t.idx]), paths: (r) => r === t.idx}
-  }
-  if (t.kind === 'weight') {
-    return {
-      inputs: new Set([t.col]),
-      outputs: new Set([t.col]),
-      embs: new Set([t.row]),
-      paths: (r, c) => r === t.row && c === t.col,
-    }
-  }
-  return {inputs: 'all', outputs: 'all', embs: 'all', paths: () => true}
-}
-
-function intersectSet(a: IllumSet, b: IllumSet): IllumSet {
-  if (a === 'all') return b
-  if (b === 'all') return a
-  const r = new Set([...a].filter(x => (b as Set<number>).has(x)))
-  return r.size > 0 ? r : a  // if empty, fall back to selection's set
-}
-
-function intersectIllum(sel: Illumination, hov: Illumination): Illumination {
-  return {
-    inputs: intersectSet(sel.inputs, hov.inputs),
-    outputs: intersectSet(sel.outputs, hov.outputs),
-    embs: intersectSet(sel.embs, hov.embs),
-    paths: (r, c) => sel.paths(r, c) && hov.paths(r, c),
-  }
-}
-
-/** Hover is compatible when it is on a different "axis" than the selection.
- *  Same-axis, different-index hovers are ignored (selection has precedence). */
-function hovIsCompatible(
-    sel: NonNullable<ReturnType<typeof selSvc.selected.valueOf>>,
-    hov: NonNullable<ReturnType<typeof selSvc.hovered.valueOf>>,
-): boolean {
-  const selF = FEATURE_LIKE.has(sel.kind)
-  const hovF = FEATURE_LIKE.has(hov.kind)
-  if (selF && hovF)
-    return (sel as { idx: number }).idx === (hov as { idx: number }).idx
-  if (sel.kind === 'emb' && hov.kind === 'emb')
-    return sel.idx === hov.idx
-  // A hovered weight is only compatible if it connects to the selected element
-  if (hov.kind === 'weight') {
-    if (selF) return hov.col === (sel as { idx: number }).idx
-    if (sel.kind === 'emb') return hov.row === sel.idx
-  }
-  return true
-}
-
-const activeIllumination = computed<Illumination>(() => {
-  const sel = selSvc.selected.value
-  const hov = selSvc.hovered.value
-  if (!sel && !hov) return illuminationFor(null)
-  if (!sel) return illuminationFor(hov)
-  if (!hov) return illuminationFor(sel)
-  return hovIsCompatible(sel, hov)
-      ? intersectIllum(illuminationFor(sel), illuminationFor(hov))
-      : illuminationFor(sel)
-})
-
-const isAnyActive = computed(() =>
-    selSvc.selected.value !== null || selSvc.hovered.value !== null
-)
-
-function inSet(s: IllumSet, i: number): boolean {
-  return s === 'all' || (s as Set<number>).has(i)
-}
-
-function isInputDimmed(i: number): boolean {
-  return isAnyActive.value && !inSet(activeIllumination.value.inputs, i)
-}
-
-function isOutputDimmed(i: number): boolean {
-  return isAnyActive.value && !inSet(activeIllumination.value.outputs, i)
-}
-
-function isEmbDimmed(k: number): boolean {
-  return isAnyActive.value && !inSet(activeIllumination.value.embs, k)
-}
-
-/** When an output neuron is the effective target, use half-dim instead of full dim. */
-const isOutputTargetActive = computed(() => {
-  const hov = selSvc.hovered.value
-  const sel = selSvc.selected.value
-  if (hov?.kind === 'output') return true
-  if (sel?.kind === 'output') return true
-  return false
-})
-
-/** The effective output index when output is active (hover priority). */
-const activeOutputIdx = computed<number | null>(() => {
-  const hov = selSvc.hovered.value
-  const sel = selSvc.selected.value
-  if (hov?.kind === 'output') return hov.idx
-  if (sel?.kind === 'output') return sel.idx
-  return null
-})
-
-/** Set of feature indices that are "lit" when an output is active:
- *  the output's own feature + all interfering features. */
-const outputLitFeatures = computed<Set<number>>(() => {
-  const outIdx = activeOutputIdx.value
-  if (outIdx === null) return new Set()
-  const lit = new Set([outIdx])
-
-  const W = svc.W.value
-  const embDim = svc.config.embeddingDim
-  const bi = svc.b.value[outIdx] ?? 0
-
-  // Compute vecI = W[:, outIdx]
-  const vecI = [W[0]?.[outIdx] ?? 0, embDim >= 2 ? (W[1]?.[outIdx] ?? 0) : 0, embDim >= 3 ? (W[2]?.[outIdx] ?? 0) : 0]
-  const lenSq = vecI[0] ** 2 + vecI[1] ** 2 + vecI[2] ** 2
-  if (lenSq < 1e-8) return lit
-
-  const len = Math.sqrt(lenSq)
-  const norm = [vecI[0] / len, vecI[1] / len, vecI[2] / len]
-  const tBoundary = -bi / len
-
-  for (let j = 0; j < svc.config.inputDim; j++) {
-    if (j === outIdx) continue
-    const vj = [W[0]?.[j] ?? 0, embDim >= 2 ? (W[1]?.[j] ?? 0) : 0, embDim >= 3 ? (W[2]?.[j] ?? 0) : 0]
-    const tJ = vj[0] * norm[0] + vj[1] * norm[1] + vj[2] * norm[2]
-    if (tJ > tBoundary) lit.add(j)
-  }
-  return lit
-})
-
-function inputDimClass(i: number): string {
-  if (!isInputDimmed(i)) return ''
-  if (!isOutputTargetActive.value) return 'dimmed'
-  // When output is active: interfering features get half-dim, non-interfering get full dim
-  return outputLitFeatures.value.has(i) ? 'half-dimmed' : 'dimmed'
-}
-
-function outputDimClass(i: number): string {
-  if (!isOutputDimmed(i)) return ''
-  if (!isOutputTargetActive.value) return 'dimmed'
-  return outputLitFeatures.value.has(i) ? 'half-dimmed' : 'dimmed'
-}
-
-function embDimClass(k: number): string {
-  if (!isEmbDimmed(k)) return ''
-  return isOutputTargetActive.value ? 'half-dimmed' : 'dimmed'
-}
-
-function pathOpacity(row: number, col: number, base: number): number {
-  if (!isAnyActive.value) return base
-  if (activeIllumination.value.paths(row, col)) return base
-  return isOutputTargetActive.value ? base * 0.4 : base * 0.1
-}
-
-/** Selection outline — reads selected only, independent of hover. */
-function isInputSelected(i: number): boolean {
-  const t = selSvc.selected.value;
-  return !!t && (t.kind === 'input' || t.kind === 'feature') && (t as { idx: number }).idx === i
-}
-
-function isOutputSelected(i: number): boolean {
-  const t = selSvc.selected.value;
-  return !!t && t.kind === 'output' && t.idx === i
-}
-
-function isEmbSelected(k: number): boolean {
-  const t = selSvc.selected.value;
-  return t?.kind === 'emb' && t.idx === k
-}
-
-
-function onWeightEnter(row: number, col: number) {
-  selSvc.setHover({kind: 'weight', row, col}, 'autoencoder')
-}
-
-function onWeightLeave() {
-  selSvc.clearHover()
-}
-
-function onWeightClick(row: number, col: number) {
-  selSvc.setSelected({kind: 'weight', row, col}, 'autoencoder')
-}
-
-function onFeatureEnter(i: number) {
-  selSvc.setHover({kind: 'feature', idx: i}, 'autoencoder')
-  eventBus?.emit('input-neuron-hovered', { index: i })
-}
-
-function onFeatureLeave() {
-  selSvc.clearHover()
-}
-
-function onFeatureClick(i: number) {
-  selSvc.setSelected({kind: 'feature', idx: i}, 'autoencoder')
-}
-
-function onInputEnter(i: number) {
-  selSvc.setHover({kind: 'input', idx: i}, 'autoencoder')
-  eventBus?.emit('input-neuron-hovered', { index: i })
-}
-
-function onInputLeave() {
-  selSvc.clearHover()
-}
-
-function onInputClick(i: number) {
-  selSvc.setSelected({kind: 'input', idx: i}, 'autoencoder')
-}
-
-function onEmbNeuronEnter(k: number) {
-  selSvc.setHover({kind: 'emb', idx: k}, 'autoencoder')
-}
-
-function onEmbNeuronLeave() {
-  selSvc.clearHover()
-}
-
-function onEmbNeuronClick(k: number) {
-  selSvc.setSelected({kind: 'emb', idx: k}, 'autoencoder')
-}
-
-function onOutputEnter(i: number) {
-  selSvc.setHover({kind: 'output', idx: i}, 'autoencoder')
-}
-
-function onOutputLeave() {
-  selSvc.clearHover()
-}
-
-function onOutputClick(i: number) {
-  selSvc.setSelected({kind: 'output', idx: i}, 'autoencoder')
-}
 </script>
 
 <template>
@@ -550,74 +174,17 @@ function onOutputClick(i: number) {
       ref="containerRef"
       :style="{ gridTemplateRows }"
   >
-    <!-- SVG overlay — visible paths masked at neuron circles; wide transparent hit paths for easy hover -->
-    <svg
-        ref="svgRef"
-        class="connections-svg"
-        :class="{ 'training-active': svc.isTraining.value }"
-        aria-hidden="true"
-    >
-      <defs>
-        <!-- Mask: white everywhere except black circles over neurons (hides lines inside circles) -->
-        <mask :id="maskId" maskUnits="userSpaceOnUse">
-          <rect x="-9999" y="-9999" width="19998" height="19998" fill="white"/>
-          <circle
-              v-for="(c, ci) in neuronClips"
-              :key="ci"
-              :cx="c.cx" :cy="c.cy" :r="c.r"
-              fill="black"
-          />
-        </mask>
-      </defs>
-
-      <!-- Visible styled paths — masked so they hide inside neurons.
-           Paths are wrapped in per-side <g> groups so the reveal system can
-           target the group's CSS opacity without conflicting with the per-path
-           opacity controlled by Vue's :opacity binding (hover dimming). -->
-      <g :mask="`url(#${maskId})`">
-        <g class="vis-path-group" data-side="encoder">
-          <path
-              v-for="(p, pi) in encoderPaths"
-              :key="pi"
-              class="vis-path"
-              :d="p.d"
-              fill="none"
-              :stroke="p.color"
-              :stroke-width="p.width"
-              :opacity="pathOpacity(p.row, p.col, p.opacity)"
-              style="pointer-events: none; stroke-linecap: round;"
-          />
-        </g>
-        <g class="vis-path-group" data-side="decoder">
-          <path
-              v-for="(p, pi) in decoderPaths"
-              :key="pi"
-              class="vis-path"
-              :d="p.d"
-              fill="none"
-              :stroke="p.color"
-              :stroke-width="p.width"
-              :opacity="pathOpacity(p.row, p.col, p.opacity)"
-              style="pointer-events: none; stroke-linecap: round;"
-          />
-        </g>
-      </g>
-
-      <!-- Invisible hit paths — wide transparent stroke for easy hover, outside mask -->
-      <path
-          v-for="(p, pi) in svgPathsData"
-          :key="`hit-${pi}`"
-          :data-side="p.side"
-          :d="p.d"
-          fill="none"
-          stroke="transparent"
-          stroke-width="12"
-          style="pointer-events: stroke; cursor: pointer;"
-          @mouseenter="onWeightEnter(p.row, p.col)"
-          @mouseleave="onWeightLeave"
-          @click.stop="onWeightClick(p.row, p.col)"
-      />
-    </svg>
+    <!-- SVG weight connections — child component handles paths, masks, resize observer -->
+    <ConnectionsSvg
+        :containerEl="containerRef"
+        :inputNeuronEls="inputNeuronRefs"
+        :embNeuronEls="embNeuronRefs"
+        :outputNeuronEls="outputNeuronRefs"
+        :pathOpacity="pathOpacity"
+        @weight-enter="weight.enter"
+        @weight-leave="weight.leave"
+        @weight-click="weight.click"
+    />
 
     <!-- ── Row 1: Column headings ──────────────────────────── -->
     <div class="col-heading" data-reveal="input-output" style="grid-column: 1; grid-row: 1">
@@ -687,8 +254,8 @@ function onOutputClick(i: number) {
           data-reveal="input-output"
           :class="inputDimClass(i)"
           :style="{ gridColumn: '1', gridRow: String(i + dataRowStart) }"
-          @mouseenter="onInputEnter(i)"
-          @mouseleave="onInputLeave"
+          @mouseenter="input.enter(i)"
+          @mouseleave="input.leave"
       >
         <InputValue
             :modelValue="userInputs[i] ?? 0"
@@ -707,9 +274,9 @@ function onOutputClick(i: number) {
           data-reveal="input-output"
           :class="inputDimClass(i)"
           :style="{ gridColumn: '3', gridRow: String(i + dataRowStart) }"
-          @mouseenter="onFeatureEnter(i)"
-          @mouseleave="onFeatureLeave"
-          @click="onFeatureClick(i)"
+          @mouseenter="feature.enter(i)"
+          @mouseleave="feature.leave"
+          @click="feature.click(i)"
       >
         <div
             :ref="(el) => { inputNeuronRefs[i] = el as HTMLElement }"
@@ -741,9 +308,9 @@ function onOutputClick(i: number) {
           data-reveal="input-output"
           :class="outputDimClass(i)"
           :style="{ gridColumn: '10', gridRow: String(i + dataRowStart) }"
-          @mouseenter="onOutputEnter(i)"
-          @mouseleave="onOutputLeave"
-          @click="onOutputClick(i)"
+          @mouseenter="output.enter(i)"
+          @mouseleave="output.leave"
+          @click="output.click(i)"
       >
         <div
             :ref="(el) => { outputNeuronRefs[i] = el as HTMLElement }"
@@ -788,9 +355,9 @@ function onOutputClick(i: number) {
             :class="[embDimClass(k), { 'neuron-selected': isEmbSelected(k) }]"
             :style="{ background: neuronColorRgb(svc.currentEmbedding.value[k] ?? 0) }"
             :title="`h${k + 1} = ${fmt(svc.currentEmbedding.value[k] ?? 0)}`"
-            @mouseenter="onEmbNeuronEnter(k)"
-            @mouseleave="onEmbNeuronLeave"
-            @click="onEmbNeuronClick(k)"
+            @mouseenter="emb.enter(k)"
+            @mouseleave="emb.leave"
+            @click="emb.click(k)"
         >
           <span class="emb-value">{{ fmt(svc.currentEmbedding.value[k] ?? 0) }}</span>
         </div>
@@ -847,34 +414,6 @@ function onOutputClick(i: number) {
 
 .ae-grid.compact .output-value{
   line-height: 1em;
-}
-
-/* ── SVG overlay ──────────────────────────────────────────── */
-.connections-svg {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-}
-
-/* Dashed lines — only shown and animated during training */
-.connections-svg .vis-path {
-  stroke-dasharray: none;
-}
-
-@keyframes dash-flow {
-  from {
-    stroke-dashoffset: 7;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-.connections-svg.training-active .vis-path {
-  stroke-dasharray: 1 6; /*When updating this, also update dash-flow above (dashoffset=sum)*/
-  animation: dash-flow 0.35s linear infinite;
 }
 
 /* ── Column headings ──────────────────────────────────────── */
@@ -1178,9 +717,9 @@ function onOutputClick(i: number) {
   transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 
-/* SVG paths hidden by side */
-.ae-grid--reveal-mode [data-side="encoder"],
-.ae-grid--reveal-mode [data-side="decoder"] {
+/* SVG paths hidden by side (in child ConnectionsSvg) */
+.ae-grid--reveal-mode :deep([data-side="encoder"]),
+.ae-grid--reveal-mode :deep([data-side="decoder"]) {
   opacity: 0 !important;
   visibility: hidden;
   pointer-events: none !important;
@@ -1209,7 +748,7 @@ function onOutputClick(i: number) {
   opacity: 0.5;
 }
 
-.ae-grid--reveal-mode [data-side][data-revealed] {
+.ae-grid--reveal-mode :deep([data-side][data-revealed]) {
   opacity: revert !important;
   visibility: visible;
   pointer-events: revert !important;
