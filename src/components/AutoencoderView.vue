@@ -240,7 +240,7 @@ function resampleAll() {
 
     <!-- Output col: weighted loss label + value -->
     <div class="sub-header-loss" data-reveal="training" style="grid-column: 12; grid-row: 2">
-      <span class="col-loss-label">weighted loss</span>
+      <span class="col-loss-label">Weighted Loss</span>
       <span class="col-loss-val" :class="{ zero: !isNonZero(currentLoss) }">
         {{ currentLoss.toFixed(3) }}
       </span>
@@ -443,7 +443,8 @@ function resampleAll() {
 .col-loss-label {
   font-size: 0.6rem;
   color: var(--color-text-secondary);
-  text-transform: uppercase;
+  font-family: var(--font-family-label);
+  //text-transform: uppercase;
   letter-spacing: 0.05em;
   line-height: 1.2;
   text-align: center;
@@ -563,7 +564,7 @@ function resampleAll() {
 }
 
 .emb-value {
-  font-size: 0.58rem;
+  font-size: 0.7rem;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-primary);
   font-weight: 700;
@@ -601,14 +602,15 @@ function resampleAll() {
 }
 
 .out-val {
-  font-size: 1rem;
+  font-size: 0.85rem;
+  letter-spacing: -1px;
   font-weight: 500;
   color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
 }
 
 .out-err {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: var(--color-error);
   font-variant-numeric: tabular-nums;
   text-align: center;

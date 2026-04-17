@@ -51,7 +51,8 @@
   /* Monospace font stack */
   --font-family-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Courier New', monospace;
   --font-family-label: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Courier New', monospace;
-  --font-family-number: initial; /* 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Courier New', monospace; */
+  /*--font-family-number: initial; !* 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Courier New', monospace; *!*/
+  --font-family-number: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Courier New', monospace;
 
   /* Selection / focus highlight */
   --color-selection:      #6366f1;  /* indigo-500 */
