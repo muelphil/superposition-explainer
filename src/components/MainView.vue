@@ -171,9 +171,6 @@ const showSettings = ref(false)
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* Soft fade below the header into the page content */
-  -webkit-mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
-  mask-image: linear-gradient(to bottom, black 95%, transparent 100%);
 }
 
 .header-icon-btn {
