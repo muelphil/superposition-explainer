@@ -99,7 +99,7 @@ function onSliderChange(event: Event) {
     >
       <defs>
         <linearGradient :id="gradId" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" :style="{ stopColor: 'var(--color-bg)' }" stop-opacity="0.3"/>
+          <stop offset="0%" :stop-color="featureHex" stop-opacity="0"/>
           <stop offset="100%" :stop-color="featureHex" stop-opacity="0.7"/>
         </linearGradient>
       </defs>
