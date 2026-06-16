@@ -565,14 +565,14 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
   box-sizing: border-box;
 }
 
-/* Text-only sections: match main app-content width */
+/* Text-only sections: constrained prose column for legibility */
 .text-section {
-  max-width: calc(1200px - 4rem);
+  max-width: var(--blog-prose-width);
 }
 
 /* ── Header ────────────────────────────────────────────────────── */
 .post-header {
-  max-width: calc(1200px - 4rem);
+  max-width: var(--blog-prose-width);
   border-bottom: 1px solid var(--color-border);
   padding-bottom: 2.5rem;
 }

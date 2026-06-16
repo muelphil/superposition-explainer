@@ -120,6 +120,11 @@
   --neuron-size-min: 1.4rem;
   --row-gap: 0.5rem;
 
+  /* Blog layout */
+  --blog-prose-width: 680px;     /* ideal single-column prose width */
+  --blog-viz-width: 600px;       /* fixed visualization column width */
+  --blog-column-gap: 3rem;       /* gap between text and viz columns */
+
   background-color: var(--color-bg);
   color: var(--color-text-primary);
 }

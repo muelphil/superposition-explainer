@@ -612,13 +612,13 @@ useParagraphRanges(ranges, activeBlockIndex)
  * text-column .text-block, active-block, viz-column, viz-sticky) live in BlogPost.vue.
  */
 .bases-section {
-  max-width: calc(1400px - 4rem);
+  max-width: calc(var(--blog-prose-width) + var(--blog-column-gap) + var(--blog-viz-width));
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 1fr minmax(512px, 600px);
-  column-gap: 3rem;
+  grid-template-columns: var(--blog-prose-width) var(--blog-viz-width);
+  column-gap: var(--blog-column-gap);
   align-items: start;
 }
 </style>
