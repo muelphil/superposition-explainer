@@ -222,7 +222,7 @@ function onPlotMousemove(e: MouseEvent) {
         <text
           :x="xScale(tick.angle).toFixed(1)"
           :y="(MARGIN_TOP + PLOT_H + MARGIN_TICK + 14).toFixed(1)"
-          text-anchor="middle" font-size="8"
+          text-anchor="middle" font-size="12"
           :style="{ fill: 'var(--color-text-secondary)' }"
         >{{ tick.label }}</text>
       </g>
@@ -232,7 +232,7 @@ function onPlotMousemove(e: MouseEvent) {
         v-for="tick in yTicks" :key="`yl-${tick.value}`"
         :x="(MARGIN_LEFT - MARGIN_TICK - 2).toFixed(1)"
         :y="(yScale(tick.value) + 3.5).toFixed(1)"
-        text-anchor="end" font-size="9"
+        text-anchor="end" font-size="12"
         :style="{ fill: 'var(--color-text-secondary)' }"
       >{{ tick.label }}</text>
 
@@ -251,23 +251,26 @@ function onPlotMousemove(e: MouseEvent) {
         <g v-for="m in hoverMarkers" :key="`hc-${m.d}`">
           <circle
             :cx="xScale(hoveredAngle).toFixed(1)" :cy="m.y.toFixed(1)"
-            r="5" :fill="m.color" fill-opacity="0.25" stroke="#000" stroke-width="1.2"
+            r="5" :fill="m.color" stroke="rgba(0,0,0,0.35)" stroke-width="1"
           />
         </g>
       </g>
 
       <!-- ── Tooltip ──────────────────────────────────────── -->
-      <HoverTooltip
+      <foreignObject
         v-if="hoverTooltip"
-        :x="hoverTooltip.tx"
-        :y="hoverTooltip.ty"
-        :angle="hoverTooltip.angle"
-        :value-d-15="hoverTooltip.d15n"
-        :value-d-3="hoverTooltip.d3n"
-        :color-d-15="dimColor(15, DIMENSIONS.length)"
-        :color-d-3="dimColor(3, DIMENSIONS.length)"
-        :flip="hoverTooltip.tx < xScale(hoveredAngle!)"
-      />
+        :x="hoverTooltip.tx.toFixed(1)"
+        :y="hoverTooltip.ty.toFixed(1)"
+        width="120" height="90"
+      >
+        <HoverTooltip
+          :angle="hoverTooltip.angle"
+          :value-d-15="hoverTooltip.d15n"
+          :value-d-3="hoverTooltip.d3n"
+          :color-d-15="dimColor(15, DIMENSIONS.length)"
+          :color-d-3="dimColor(3, DIMENSIONS.length)"
+        />
+      </foreignObject>
 
       <!-- ── X axis label ─────────────────────────────────── -->
       <text

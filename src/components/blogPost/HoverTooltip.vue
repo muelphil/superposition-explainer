@@ -11,62 +11,113 @@ defineProps<{
 </script>
 
 <template>
-  <foreignObject :x="x.toFixed(1)" :y="y.toFixed(1)" width="110" height="56">
-    <div xmlns="http://www.w3.org/1999/xhtml" class="chart-tooltip">
-      <div class="chart-tooltip-row">
-        <span
-          :style="{ '--katex-color': 'var(--color-text-primary)' }"
-          v-katex="`\\alpha_{\\min} = ${angle}^{\\circ}`"
-        />
-      </div>
-      <div class="chart-tooltip-row">
-        <span class="chart-tooltip-dot" :style="{ background: colorD15 }" />
-        <span v-katex="`d=15 \\;\\rightarrow\\; ${valueD15}`" />
-      </div>
-      <div class="chart-tooltip-row">
-        <span class="chart-tooltip-dot" :style="{ background: colorD3 }" />
-        <span v-katex="`d=3 \\;\\rightarrow\\; ${valueD3}`" />
-      </div>
+  <div
+      xmlns="http://www.w3.org/1999/xhtml"
+      class="chart-tooltip"
+      :style="{
+      '--circle-size': '10px',
+    }"
+      style="position:absolute;left:0;top:0;"
+  >
+    <!-- Angle header -->
+    <div class="chart-tooltip-header">
+      <span v-katex="`\\alpha_{\\text{min}} = ${angle}^{\\circ}`" />
     </div>
-  </foreignObject>
+
+    <!-- d=15 row -->
+    <div class="chart-tooltip-row row-d15">
+      <div
+          class="chart-tooltip-circle"
+          :style="{ backgroundColor: colorD15 }"
+      />
+      <span v-katex="`d=15 \\;\\rightarrow\\; ${valueD15}`" />
+    </div>
+
+    <!-- d=3 row -->
+    <div class="chart-tooltip-row row-d3">
+      <div
+          class="chart-tooltip-circle"
+          :style="{ backgroundColor: colorD3 }"
+      />
+      <span v-katex="`d=3 \\;\\rightarrow\\; ${valueD3}`" />
+    </div>
+  </div>
 </template>
 
 <style scoped>
 .chart-tooltip {
-  font-size: 11px;
-  line-height: 1.4;
-  padding: 5px 7px 5px 6px;
-  border: 0.6px solid var(--color-border);
-  border-radius: 3px;
+  font-size: 12px;
+  line-height: 1;
+
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto auto;
+
+  padding: 6px 8px;
+
   background: var(--color-bg);
-  display: inline-block;
-  white-space: nowrap;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+
+  box-sizing: border-box;
+  width: fit-content;
 }
 
-.chart-tooltip-row {
+/* ---------- Header ---------- */
+
+.chart-tooltip-header {
+  grid-column: 1;
+  grid-row: 1;
+
   display: flex;
   align-items: center;
-  gap: 5px;
+
+  padding-bottom: 5px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.chart-tooltip-row .katex {
-  font-size: 11px !important;
+/* ---------- Rows ---------- */
+
+.chart-tooltip-row {
+  grid-column: 1;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
 }
 
-.chart-tooltip-row:first-child .katex {
-  font-size: 11.5px !important;
+.row-d15 {
+  grid-row: 2;
 }
 
-.chart-tooltip-dot {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  border: 0.8px solid #000;
+.row-d3 {
+  grid-row: 3;
+  padding-top: 4px;
+}
+
+/* ---------- Circle ---------- */
+
+.chart-tooltip-circle {
   flex-shrink: 0;
+
+  width: var(--circle-size);
+  height: var(--circle-size);
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(0, 0, 0, 0.35);
+
+  box-sizing: border-box;
 }
 
-.chart-tooltip :deep(.katex) {
-  font-size: 11px !important;
+/* ---------- KaTeX ---------- */
+
+.chart-tooltip-header :deep(.katex),
+.chart-tooltip-row :deep(.katex) {
+  font-size: inherit;
+  line-height: 1;
+  margin: 0;
 }
 </style>
