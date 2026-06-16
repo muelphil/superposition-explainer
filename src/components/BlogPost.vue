@@ -158,16 +158,12 @@ import EmbeddingSuperpositionIllustration from "./EmbeddingSuperpositionIllustra
           feature.
         </p>
 
-        <figure style="margin: 0;">
-          <EmbeddingSuperpositionIllustration></EmbeddingSuperpositionIllustration>
-        </figure>
-
         <figure class="post-figure">
-          <img src="/plots/latent_space.png"
-               alt="Visualization of an embedding vector surrounded by numerous possible features" />
+          <EmbeddingSuperpositionIllustration></EmbeddingSuperpositionIllustration>
           <figcaption>
-            A numeric embedding vector capturing semantics, surrounded by numerous possible features
-            connecting to it — illustrating how many more features exist than dimensions available.
+            A model with a few thousand embedding dimensions (e.g. 4096) must represent hundreds
+            of thousands of potentially features that may interact and trigger knowledge.
+            The enormous feature space must be squeezed into a narrow bottleneck.
           </figcaption>
         </figure>
 
