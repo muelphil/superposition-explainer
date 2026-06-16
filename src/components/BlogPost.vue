@@ -2,6 +2,7 @@
 import BasesSection from './blogPost/BasesSection.vue'
 import AutoencoderSection from './blogPost/AutoencoderSection.vue'
 import SphericalCodesChart from './blogPost/SphericalCodesChart.vue'
+import EmbeddingSuperpositionIllustration from "./EmbeddingSuperpositionIllustration.vue";
 </script>
 
 <template>
@@ -156,6 +157,10 @@ import SphericalCodesChart from './blogPost/SphericalCodesChart.vue'
           far exceeding what any fixed number of embedding dimensions could accommodate with one axis per
           feature.
         </p>
+
+        <figure style="margin: 0;">
+          <EmbeddingSuperpositionIllustration></EmbeddingSuperpositionIllustration>
+        </figure>
 
         <figure class="post-figure">
           <img src="/plots/latent_space.png"
