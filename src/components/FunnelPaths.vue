@@ -175,6 +175,13 @@ onUnmounted(() => observer?.disconnect())
           <stop offset="60%" stop-color="#888" stop-opacity="0.8" />
           <stop offset="100%" stop-color="#555" stop-opacity="1" />
         </linearGradient>
+
+        <!-- Non-accent lines: fade to transparent in last 5% near vector -->
+        <linearGradient id="dimFadeGrad" x1="100%" y1="0%" x2="0%" y2="0%">
+          <stop offset="0%" stop-color="#b0b0b0" stop-opacity="1" />
+          <stop offset="95%" stop-color="#b0b0b0" stop-opacity="1" />
+          <stop offset="100%" stop-color="#b0b0b0" stop-opacity="0" />
+        </linearGradient>
       </defs>
 
       <!-- Funnel gradient fill -->
@@ -186,7 +193,7 @@ onUnmounted(() => observer?.disconnect())
         :key="i"
         :d="p.d"
         fill="none"
-        :stroke="p.isAccent ? 'url(#accentGrad)' : '#b0b0b0'"
+        :stroke="p.isAccent ? 'url(#accentGrad)' : 'url(#dimFadeGrad)'"
         :stroke-width="p.isAccent ? 1.5 : 1.0"
         :opacity="p.isAccent ? 0.9 : 0.25"
         :marker-end="p.isAccent ? 'url(#funnelArrowAccent)' : undefined"
