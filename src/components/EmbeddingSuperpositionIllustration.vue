@@ -30,10 +30,10 @@ import FunnelPaths from './FunnelPaths.vue'
   content: '';
   position: absolute;
   top: 0;
-  right: 0;
+  left: 0;
   width: 24px;
   height: 100%;
-  background: linear-gradient(to right, transparent, var(--color-bg));
+  background: linear-gradient(to left, transparent, var(--color-bg));
   pointer-events: none;
   z-index: 1000;
 }

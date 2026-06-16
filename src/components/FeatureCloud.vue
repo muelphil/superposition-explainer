@@ -1,41 +1,22 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { featureColor } from '../utils/featureColor'
 import { FEATURE_NAMES } from '../data/featureNames'
 
-defineProps<{
+const props = withDefaults(defineProps<{
   featureRowCount?: number
-}>()
+}>(), {
+  featureRowCount: 22,
+})
 
-/**
- * Pick a handful of unique feature names and assign a pastel color
- * derived from the gradient to each.
- */
-function randomFeatures(): { text: string; bgColor: string }[] {
-  const count = 4 //5 + Math.floor(Math.random() * 2)  // 5 or 6
-  const shuffled = [...FEATURE_NAMES].sort(() => Math.random() - 0.5)
-  return shuffled.slice(0, count).map(text => ({
-    text,
-    bgColor: pillColor(),
-  }))
-}
+const PILL_COUNT = 4
 
-/**
- * Evenly force-spread across the 3 gradient stop regions:
- *   0 → orange        (#F69F16)
- *   1 → pink          (#F73361)
- *   2 → blue          (#097AFA)
- * Then add random jitter within each segment so adjacent stops blend.
- */
 function pillColor(): string {
-  // Pick one of the 3 segments
   const seg = Math.floor(Math.random() * 3)
-  // t within segment [0.05, 0.95] so we don't hit exact boundaries
   const jitter = 0.05 + Math.random() * 0.9
-  // Map segment + jitter to overall gradient t ∈ [0, 1]
   const t = (seg + jitter) / 3
-  const rgb = featureColorAtT(t)
+  const rgb = featureColor(Math.round(t * 99), 100)
   const channels = rgb.slice(4, -1).split(',').map(Number)
-  // Gentle lerp toward white for pastel
   const lerp = 0.3 + Math.random() * 0.2
   const r = Math.round(channels[0] + (255 - channels[0]) * lerp)
   const g = Math.round(channels[1] + (255 - channels[1]) * lerp)
@@ -44,25 +25,35 @@ function pillColor(): string {
 }
 
 /**
- * Thin wrapper: sample the gradient at a specific t ∈ [0, 1] using the
- * same logic as featureColor but with an explicit t parameter.
+ * All rows computed together: shuffle once, then consume sequentially.
+ * Guarantees zero duplicates across all pills.
  */
-function featureColorAtT(t: number): string {
-  // Reuse featureColor by finding an equivalent (i, n) pair.
-  return featureColor(Math.round(t * 99), 100)
-}
+const rows = computed(() => {
+  const shuffled = [...FEATURE_NAMES].sort(() => Math.random() - 0.5)
+  const result: { text: string; bgColor: string }[][] = []
+
+  for (let row = 0; row < props.featureRowCount && shuffled.length >= PILL_COUNT; row++) {
+    const pills: { text: string; bgColor: string }[] = []
+    for (let p = 0; p < PILL_COUNT; p++) {
+      const name = shuffled.shift()!
+      pills.push({ text: name, bgColor: pillColor() })
+    }
+    result.push(pills)
+  }
+  return result
+})
 </script>
 
 <template>
   <div class="feature-cloud">
     <div
-      v-for="i in featureRowCount"
-      :key="i"
+      v-for="(pillRow, ri) in rows"
+      :key="ri"
       class="feature-row"
     >
       <span
-        v-for="(pill, fi) in randomFeatures()"
-        :key="`${i}-${fi}`"
+        v-for="(pill, pi) in pillRow"
+        :key="`${ri}-${pi}`"
         class="feature-pill"
         :style="{ backgroundColor: pill.bgColor }"
       >{{ pill.text }}</span>
@@ -77,14 +68,17 @@ function featureColorAtT(t: number): string {
   flex-direction: column;
   gap: 6px;
   padding: 8px 0;
-  mask-image: linear-gradient(to right, rgba(0, 0, 0, 0.85) 70%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 0.85) 100%);
+  align-items: flex-end;
+  mask-image: linear-gradient(to left, rgba(0, 0, 0, 0.85) 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to left, rgba(0, 0, 0, 0.85) 100%);
 }
 
 .feature-row {
   display: flex;
+  flex-direction: row-reverse;
   gap: 8px;
   flex-shrink: 0;
+  justify-content: flex-end;
 }
 
 .feature-pill {
@@ -105,8 +99,8 @@ function featureColorAtT(t: number): string {
   font-style: italic;
   color: var(--color-text-primary);
   opacity: 0.6;
-  padding: 6px 0 4px 4px;
+  padding: 6px 4px 4px 0;
   user-select: none;
-  text-align: left;
+  text-align: right;
 }
 </style>
