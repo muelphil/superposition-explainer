@@ -75,7 +75,7 @@ defineSlots<{
 .task-items {
   list-style: none;
   margin: 0 !important;
-  padding: 0;
+  padding: 0 !important;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;

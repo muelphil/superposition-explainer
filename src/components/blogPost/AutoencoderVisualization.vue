@@ -148,6 +148,7 @@ const visibleTabs = computed(() => {
 
 /* ── Tabs ──────────────────────────────────────────────── */
 .tab-bar {
+  font-family: var(--font-family-label);
   display: flex;
   gap: 1rem;
 }
