@@ -18,6 +18,7 @@ const MARGIN_TOP = 40
 const MARGIN_BOTTOM = 46
 const MARGIN_TICK = 4
 const PLOT_W = SVG_W - MARGIN_LEFT - MARGIN_RIGHT
+const HOVER_OVERFLOW = 32
 const PLOT_H = SVG_H - MARGIN_TOP - MARGIN_BOTTOM
 
 // ── Legend geometry ───────────────────────────────────────────────────────────────
@@ -160,13 +161,16 @@ function onPlotMousemove(e: MouseEvent) {
   const rect = svg.getBoundingClientRect()
   const svgW = rect.width / SVG_W
   const mouseX = (e.clientX - rect.left) / svgW
-  if (mouseX >= MARGIN_LEFT && mouseX <= xScale(X_END)) {
-    const t = (mouseX - MARGIN_LEFT) / PLOT_W
-    const angle = Math.round(X_START - t * (X_START - X_END))
-    hoveredAngle.value = (angle >= X_END && angle <= X_START) ? angle : null
-  } else {
-    hoveredAngle.value = null
-  }
+    if (mouseX >= MARGIN_LEFT && mouseX <= xScale(X_END) + HOVER_OVERFLOW) {
+      const t = Math.max(0, Math.min(1, (mouseX - MARGIN_LEFT) / PLOT_W))
+      const angle = Math.round(X_START - t * (X_START - X_END))
+      const newAngle: number | null = (angle >= X_END && angle <= X_START) ? angle : null
+      if (hoveredAngle.value !== newAngle) {
+        hoveredAngle.value = newAngle
+      }
+    } else if (hoveredAngle.value !== null) {
+      hoveredAngle.value = null
+    }
 }
 </script>
 
@@ -201,15 +205,8 @@ function onPlotMousemove(e: MouseEvent) {
         opacity="0.9"
       />
 
-      <!-- ── Hover capture area ───────────────────────────── -->
-      <rect
-        :x="MARGIN_LEFT" :y="MARGIN_TOP"
-        :width="PLOT_W" :height="PLOT_H"
-        fill="transparent"
-        @mousemove="onPlotMousemove"
-        @mouseleave="() => (hoveredAngle = null)"
-        style="pointer-events: all"
-      />
+
+
 
       <!-- ── X axis ticks + labels ────────────────────────── -->
       <g v-for="tick in xTicks" :key="`xt-${tick.angle}`">
@@ -262,6 +259,7 @@ function onPlotMousemove(e: MouseEvent) {
         :x="hoverTooltip.tx.toFixed(1)"
         :y="hoverTooltip.ty.toFixed(1)"
         width="130" height="90"
+        style="pointer-events: none"
       >
         <HoverTooltip
           :angle="hoverTooltip.angle"
@@ -291,6 +289,7 @@ function onPlotMousemove(e: MouseEvent) {
       <foreignObject
         :x="LEGEND_POS_X" :y="LEGEND_POS_Y"
         :width="LEGEND_W" :height="LEGEND_H"
+        style="pointer-events: none"
       >
         <DimLegend
           :width="LEGEND_W"
@@ -300,7 +299,17 @@ function onPlotMousemove(e: MouseEvent) {
           :color-top="dimColor(15, DIMENSIONS.length)"
           :color-bottom="dimColor(3, DIMENSIONS.length)"
         />
-      </foreignObject>
+       </foreignObject>
+
+      <!-- ── Hover capture area (must be last for z-order) ── -->
+      <rect
+        :x="MARGIN_LEFT" :y="MARGIN_TOP"
+        :width="PLOT_W + HOVER_OVERFLOW" :height="PLOT_H"
+        fill="transparent"
+        @mousemove="onPlotMousemove"
+        @mouseleave="() => (hoveredAngle = null)"
+        style="pointer-events: all"
+      />
     </svg>
   </div>
 </template>
