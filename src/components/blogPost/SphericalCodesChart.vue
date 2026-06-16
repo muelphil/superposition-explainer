@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import data from '../../data/sphericalCodesData.json'
 import DimLegend from './DimLegend.vue'
+import HoverTooltip from './HoverTooltip.vue'
 
 // ── Chart bounds ──────────────────────────────────────────────────────────────────
 const SVG_W = 680
@@ -22,11 +23,8 @@ const PLOT_H = SVG_H - MARGIN_TOP - MARGIN_BOTTOM
 // ── Legend geometry ───────────────────────────────────────────────────────────────
 const LEGEND_BAR_H = 60
 const LEGEND_CIRCLE_R = 4
-const LEGEND_INNER_PAD = 6
-const LEGEND_BAR_X = LEGEND_INNER_PAD + LEGEND_CIRCLE_R
-const LEGEND_TEXT_X = LEGEND_BAR_X + 12
-const LEGEND_W = 57
-const LEGEND_H = LEGEND_BAR_H + 2 * LEGEND_CIRCLE_R + 2 * LEGEND_INNER_PAD
+const LEGEND_W = 90
+const LEGEND_H = LEGEND_BAR_H + 2 * LEGEND_CIRCLE_R + 12
 const LEGEND_POS_X = MARGIN_LEFT + 10
 const LEGEND_POS_Y = MARGIN_TOP + 10
 
@@ -141,6 +139,21 @@ const hoverMarkers = computed(() => {
     .filter((m): m is typeof m & { y: number; n: number } => m.y != null && m.n != null)
 })
 
+const TOOLTIP_W = 115
+const TOOLTIP_H = 56
+const TOOLTIP_GAP = 8
+
+const hoverTooltip = computed(() => {
+  if (hoveredAngle.value == null || hoverMarkers.value.length < 2) return null
+  const cx = xScale(hoveredAngle.value)
+  const d15 = hoverMarkers.value.find(m => m.d === 15)!
+  const d3 = hoverMarkers.value.find(m => m.d === 3)!
+  const flip = cx + TOOLTIP_GAP + TOOLTIP_W > xScale(X_END)
+  const tx = flip ? cx - TOOLTIP_GAP - TOOLTIP_W : cx + TOOLTIP_GAP
+  const midY = (d15.y + d3.y) / 2 - TOOLTIP_H / 2
+  return { angle: hoveredAngle.value, tx, ty: midY, d15n: d15.n, d3n: d3.n }
+})
+
 function onPlotMousemove(e: MouseEvent) {
   const svg = svgRef.value
   if (!svg) return
@@ -243,6 +256,19 @@ function onPlotMousemove(e: MouseEvent) {
         </g>
       </g>
 
+      <!-- ── Tooltip ──────────────────────────────────────── -->
+      <HoverTooltip
+        v-if="hoverTooltip"
+        :x="hoverTooltip.tx"
+        :y="hoverTooltip.ty"
+        :angle="hoverTooltip.angle"
+        :value-d-15="hoverTooltip.d15n"
+        :value-d-3="hoverTooltip.d3n"
+        :color-d-15="dimColor(15, DIMENSIONS.length)"
+        :color-d-3="dimColor(3, DIMENSIONS.length)"
+        :flip="hoverTooltip.tx < xScale(hoveredAngle!)"
+      />
+
       <!-- ── X axis label ─────────────────────────────────── -->
       <text
         :x="((MARGIN_LEFT + xScale(X_END)) / 2).toFixed(1)" :y="(SVG_H - 6).toFixed(1)"
@@ -258,28 +284,20 @@ function onPlotMousemove(e: MouseEvent) {
         :transform="`rotate(-90, ${YAXIS_LABEL_X}, ${MARGIN_TOP + PLOT_H / 2})`"
       >Maximum number of vectors</text>
 
-      <!-- ── Gradient legend defs ─────────────────────────── -->
-      <defs>
-        <linearGradient id="dim-legend-grad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" :stop-color="dimColor(15, DIMENSIONS.length)" />
-          <stop offset="100%" :stop-color="dimColor(3, DIMENSIONS.length)" />
-        </linearGradient>
-      </defs>
-
       <!-- ── Dimension legend ─────────────────────────────── -->
-      <g :transform="`translate(${LEGEND_POS_X}, ${LEGEND_POS_Y})`">
+      <foreignObject
+        :x="LEGEND_POS_X" :y="LEGEND_POS_Y"
+        :width="LEGEND_W" :height="LEGEND_H"
+      >
         <DimLegend
-          :bar-h="LEGEND_BAR_H"
-          :bar-x="LEGEND_BAR_X"
-          :circle-r="LEGEND_CIRCLE_R"
-          :inner-pad="LEGEND_INNER_PAD"
-          :text-x="LEGEND_TEXT_X"
           :width="LEGEND_W"
           :height="LEGEND_H"
+          :bar-h="LEGEND_BAR_H"
+          :circle-r="LEGEND_CIRCLE_R"
           :color-top="dimColor(15, DIMENSIONS.length)"
           :color-bottom="dimColor(3, DIMENSIONS.length)"
         />
-      </g>
+      </foreignObject>
     </svg>
   </div>
 </template>

@@ -1,82 +1,182 @@
 <script setup lang="ts">
-/**
- * SVG dimension legend: gradient bar with two labeled circles.
- * All coordinates are relative to the translated group's (0,0) origin.
- * The gradient gradient id must be defined in the parent's <defs>.
- */
-const props = defineProps<{
-  barH: number
-  barX: number
-  circleR: number
-  innerPad: number
-  textX: number
-  width: number
-  height: number
-  colorTop: string
-  colorBottom: string
-}>()
+import { computed } from 'vue'
+
+const props = withDefaults(
+    defineProps<{
+      colorTop: string
+      colorBottom: string
+      circleSize?: number
+      barWidth?: number
+    }>(),
+    {
+      circleSize: 10,
+      barWidth: 4,
+    },
+)
+
+const gradientStyle = computed(() => ({
+  background: `linear-gradient(
+    to bottom,
+    ${props.colorTop},
+    ${props.colorBottom}
+  )`,
+}))
 </script>
 
 <template>
-  <g>
-    <rect
-      :width="width"
-      :height="height"
-      fill="var(--color-bg)"
-      fill-opacity="0.92"
-      stroke="var(--color-border)"
-      stroke-width="0.6"
-      rx="4"
-    />
-    <rect
-      :x="(barX - circleR).toFixed(1)"
-      :y="(innerPad + circleR).toFixed(1)"
-      :width="(circleR * 2).toFixed(1)"
-      :height="barH"
-      fill="url(#dim-legend-grad)"
-      :rx="circleR"
-    />
-    <circle
-      :cx="barX"
-      :cy="(innerPad + circleR + barH * 0.35).toFixed(1)"
-      r="1" fill="var(--color-text-secondary)" opacity="0.45"
-    />
-    <circle
-      :cx="barX"
-      :cy="(innerPad + circleR + barH * 0.5).toFixed(1)"
-      r="1" fill="var(--color-text-secondary)" opacity="0.45"
-    />
-    <circle
-      :cx="barX"
-      :cy="(innerPad + circleR + barH * 0.65).toFixed(1)"
-      r="1" fill="var(--color-text-secondary)" opacity="0.45"
-    />
-    <!-- Top and bottom circles on top of gradient -->
-    <circle
-      :cx="barX"
-      :cy="innerPad + circleR"
-      :r="circleR"
-      :fill="colorTop"
-      stroke="#000" stroke-width="0.5"
-    />
-    <circle
-      :cx="barX"
-      :cy="(innerPad + circleR + barH).toFixed(1)"
-      :r="circleR"
-      :fill="colorBottom"
-      stroke="#000" stroke-width="0.5"
-    />
-    <text
-      :x="textX"
-      :y="(innerPad + circleR).toFixed(1)"
-      font-size="10.5" font-weight="500" dominant-baseline="middle"
-      :style="{ fill: 'var(--color-text-primary)' }"
-    >d = 15</text>
-    <text
-      :x="textX"
-      :y="(innerPad + circleR + barH).toFixed(1)"
-      font-size="10.5" font-weight="500" dominant-baseline="middle"
-      :style="{ fill: 'var(--color-text-primary)' }"
-    >d = 3</text>
-  </g>
+  <div
+      class="dim-legend"
+      :style="{
+      '--circle-size': `${circleSize}px`,
+      '--circle-radius': `${circleSize / 2}px`,
+      '--bar-width': `${barWidth}px`,
+    }"
+  >
+    <!-- Left column -->
+    <div class="scale">
+      <div class="gradient" :style="gradientStyle" />
+
+      <div
+          class="circle circle-top"
+          :style="{ backgroundColor: colorTop }"
+      />
+
+      <div
+          class="circle circle-bottom"
+          :style="{ backgroundColor: colorBottom }"
+      />
+    </div>
+
+    <!-- Right column -->
+    <div class="label label-top">
+      <span v-katex="'d=15'" />
+    </div>
+
+    <div class="dots">
+      <span v-katex="'\\vdots'" />
+    </div>
+
+    <div class="label label-bottom">
+      <span v-katex="'d=3'" />
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.dim-legend {
+  position: relative;
+  font-size: 1em;
+  display: grid;
+  grid-template-columns: var(--circle-size) auto;
+  grid-template-rows:
+    var(--circle-size)
+    minmax(22px, 1fr)
+    var(--circle-size);
+
+  column-gap: 8px;
+  row-gap: 0;
+
+  align-items: center;
+
+  padding: 8px 10px;
+
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+
+  box-sizing: border-box;
+  width: fit-content;
+
+  pointer-events: none;
+}
+
+/* ---------- Scale ---------- */
+
+.scale {
+  position: relative;
+
+  grid-column: 1;
+  grid-row: 1 / 4;
+
+  width: var(--circle-size);
+  height: 100%;
+}
+
+.gradient {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: calc(2 * var(--circle-radius));
+  transform: translateX(-50%);
+  border-radius: 999px;
+  z-index: 0;
+}
+
+.circle {
+  position: absolute;
+
+  left: 50%;
+
+  width: var(--circle-size);
+  height: var(--circle-size);
+
+  transform: translateX(-50%);
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(0, 0, 0, 0.35);
+
+  box-sizing: border-box;
+
+  z-index: 1;
+}
+
+.circle-top {
+  top: 0;
+}
+
+.circle-bottom {
+  bottom: 0;
+}
+
+/* ---------- Labels ---------- */
+
+.label {
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.label-top {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.label-bottom {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.dots {
+  grid-column: 2;
+  grid-row: 2;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- KaTeX ---------- */
+
+.label :deep(.katex),
+.dots :deep(.katex) {
+  font-size: inherit;
+  line-height: 1;
+  margin: 0;
+}
+
+.dots :deep(.katex) {
+  opacity: 0.75;
+}
+</style>
