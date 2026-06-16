@@ -65,7 +65,7 @@ const gradientStyle = computed(() => ({
 <style scoped>
 .dim-legend {
   position: relative;
-  font-size: 1em;
+  font-size: 0.9em;
   display: grid;
   grid-template-columns: var(--circle-size) auto;
   grid-template-rows:

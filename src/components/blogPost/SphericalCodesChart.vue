@@ -261,7 +261,7 @@ function onPlotMousemove(e: MouseEvent) {
         v-if="hoverTooltip"
         :x="hoverTooltip.tx.toFixed(1)"
         :y="hoverTooltip.ty.toFixed(1)"
-        width="120" height="90"
+        width="130" height="90"
       >
         <HoverTooltip
           :angle="hoverTooltip.angle"
@@ -275,14 +275,14 @@ function onPlotMousemove(e: MouseEvent) {
       <!-- ── X axis label ─────────────────────────────────── -->
       <text
         :x="((MARGIN_LEFT + xScale(X_END)) / 2).toFixed(1)" :y="(SVG_H - 6).toFixed(1)"
-        text-anchor="middle" font-size="12" font-weight="500"
+        text-anchor="middle" font-size="13" font-weight="500"
         :style="{ fill: 'var(--color-text-primary)' }"
       >Minimum pairwise angle α (degrees)</text>
 
       <!-- ── Y axis label ─────────────────────────────────── -->
       <text
         :x="YAXIS_LABEL_X" :y="(MARGIN_TOP + PLOT_H / 2).toFixed(1)"
-        text-anchor="middle" font-size="12" font-weight="500"
+        text-anchor="middle" font-size="13" font-weight="500"
         :style="{ fill: 'var(--color-text-primary)' }"
         :transform="`rotate(-90, ${YAXIS_LABEL_X}, ${MARGIN_TOP + PLOT_H / 2})`"
       >Maximum number of vectors</text>

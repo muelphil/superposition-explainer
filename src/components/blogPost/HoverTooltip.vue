@@ -1,7 +1,5 @@
 <script setup lang="ts">
 defineProps<{
-  x: number
-  y: number
   angle: number
   valueD15: number
   valueD3: number
@@ -46,7 +44,7 @@ defineProps<{
 
 <style scoped>
 .chart-tooltip {
-  font-size: 12px;
+  font-size: 0.8em;
   line-height: 1;
 
   display: grid;
@@ -61,6 +59,8 @@ defineProps<{
 
   box-sizing: border-box;
   width: fit-content;
+  pointer-events: none;
+  z-index:10000000;
 }
 
 /* ---------- Header ---------- */
