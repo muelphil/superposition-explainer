@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import BasesSection from './blogPost/BasesSection.vue'
 import AutoencoderSection from './blogPost/AutoencoderSection.vue'
+import SphericalCodesChart from './blogPost/SphericalCodesChart.vue'
 </script>
 
 <template>
@@ -317,8 +318,7 @@ import AutoencoderSection from './blogPost/AutoencoderSection.vue'
         </p>
 
         <figure class="post-figure">
-          <img src="/plots/vectors_vs_angle_lin_y.png"
-               alt="Maximum number of unit vectors vs. minimum pairwise angle for dimensions 3 to 15" />
+          <SphericalCodesChart />
           <figcaption>
             Maximum number of unit vectors that can be simultaneously placed in a
             <katex-element expression="d" />-dimensional space such that every pair subtends an
