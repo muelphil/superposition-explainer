@@ -40,66 +40,71 @@ const showSettings = ref(false)
     </header>
 
     <main class="app-content">
-      <div class="app-layout">
+      <div class="app-container">
 
-        <!-- ── Left column: Autoencoder (65%) ─────────────── -->
-        <section class="left-col">
-          <h2 class="section-title">Autoencoder</h2>
-          <AutoencoderView />
-        </section>
+        <div class="app-layout">
 
-        <!-- ── Right column: Embedding + Combined panel (35%) -->
-        <div class="right-col">
+          <!-- ── Left column: Autoencoder (65%) ─────────────── -->
+          <section class="left-col">
+            <h2 class="section-title">Autoencoder</h2>
+            <AutoencoderView />
+          </section>
 
-          <!-- Embedding Space -->
-          <div>
-            <div class="section-title" style="margin-bottom:10px;">Embedding Space</div>
+          <!-- ── Right column: Embedding + Combined panel (35%) -->
+          <div class="right-col">
 
-            <section class="panel embedding-panel">
-              <EmbeddingView />
-            </section>
-          </div>
+            <!-- Embedding Space -->
+            <div>
+              <div class="section-title" style="margin-bottom:10px;">Embedding Space</div>
 
-
-
-          <!-- Combined tabbed panel -->
-          <div>
-            <!-- Tab headers — above the panel, like the Embedding Space title -->
-            <div class="combined-tab-bar" style="margin-bottom: 10px; margin-top:6px;">
-              <button
-                v-for="tab in (['training', 'statistics', 'weights'] as PanelTab[])"
-                :key="tab"
-                class="combined-tab-btn"
-                :class="{ active: activeTab === tab }"
-                @click="activeTab = tab"
-              >
-                {{ tab === 'training' ? 'Training' : tab === 'statistics' ? 'Statistics' : 'Weights' }}
-              </button>
+              <section class="panel embedding-panel">
+                <EmbeddingView />
+              </section>
             </div>
 
-            <div class="panel combined-panel">
 
-              <!-- Tab panes — keep all mounted so state is preserved -->
-              <div class="tab-pane" v-show="activeTab === 'training'">
-                <TrainingConfigView />
+
+            <!-- Combined tabbed panel -->
+            <div>
+              <!-- Tab headers — above the panel, like the Embedding Space title -->
+              <div class="combined-tab-bar" style="margin-bottom: 10px; margin-top:6px;">
+                <button
+                  v-for="tab in (['training', 'statistics', 'weights'] as PanelTab[])"
+                  :key="tab"
+                  class="combined-tab-btn"
+                  :class="{ active: activeTab === tab }"
+                  @click="activeTab = tab"
+                >
+                  {{ tab === 'training' ? 'Training' : tab === 'statistics' ? 'Statistics' : 'Weights' }}
+                </button>
               </div>
-              <div class="tab-pane tab-pane--flush" v-show="activeTab === 'statistics'">
-                <TrainingStatsView />
+
+              <div class="panel combined-panel">
+
+                <!-- Tab panes — keep all mounted so state is preserved -->
+                <div class="tab-pane" v-show="activeTab === 'training'">
+                  <TrainingConfigView />
+                </div>
+                <div class="tab-pane tab-pane--flush" v-show="activeTab === 'statistics'">
+                  <TrainingStatsView />
+                </div>
+                <div class="tab-pane tab-pane--weights" v-show="activeTab === 'weights'">
+                  <WeightView />
+                </div>
+
               </div>
-              <div class="tab-pane tab-pane--weights" v-show="activeTab === 'weights'">
-                <WeightView />
+
+              <!-- Training footer — below the panel -->
+              <div class="training-footer">
+                <TrainingActionButtons />
               </div>
 
             </div>
-
-            <!-- Training footer — below the panel -->
-            <div class="training-footer">
-              <TrainingActionButtons />
-            </div>
-
           </div>
         </div>
+
       </div>
+
       <div class="scroll-indicator">
         <span class="label">Guided Introduction</span>
         <ChevronDown class="icon" />
@@ -192,24 +197,30 @@ const showSettings = ref(false)
 }
 
 .app-content {
-  height: 100vh;
-  padding: var(--header-height) 2rem calc(3 * var(--header-height));
-  /* align-content: center; */
+  min-height: 100vh;
+  padding: var(--header-height) 2rem 3rem;
+  padding-bottom: 10px;
   width: 100%;
   max-width: 1200px;
-  align-self: center;
   box-sizing: border-box;
-  /* center within the page */
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ── Two-column layout ───────────────────────────────────────── */
+/* ── Vertical placement grid ──────────────────────────────────── */
+.app-container {
+  display: grid;
+  grid-template-rows: 1fr auto 2fr;
+  flex-grow: 1;
+}
+
+/* ── Content area (row 2) ────────────────────────────────────── */
 .app-layout {
+  grid-row: 2;
   display: grid;
   grid-template-columns: 65fr 35fr;
   gap: 2rem;
-  height: 100%;
-  padding-top: 5%;
   align-items: flex-start;
 }
 
@@ -374,10 +385,9 @@ const showSettings = ref(false)
 }
 
 .scroll-indicator {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translate(-50%, -20px);
+  position: sticky;
+  bottom: 0.25rem;
+  align-self: center;
 
   display: flex;
   flex-direction: column;
