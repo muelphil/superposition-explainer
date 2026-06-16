@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { featureColor } from '../../utils/featureColor'
 
 const props = withDefaults(
     defineProps<{
@@ -14,13 +15,28 @@ const props = withDefaults(
     },
 )
 
-const gradientStyle = computed(() => ({
-  background: `linear-gradient(
-    to bottom,
-    ${props.colorTop},
-    ${props.colorBottom}
-  )`,
-}))
+/**
+ * Build a CSS linear-gradient that matches the project's sRGB gradient
+ * exactly.  Samples intermediate stops at the same positions used by
+ * the SphericalCodesChart (DIMENSIONS length = 13, reversed).
+ *
+ * The gradient runs top→bottom: d=15 (orange, t=0) → d=3 (blue, t=1).
+ */
+const NUM_DIMENSIONS = 13
+
+const gradientStyle = computed(() => {
+  const stops: string[] = []
+
+  for (let i = 0; i < NUM_DIMENSIONS; i++) {
+    const color = featureColor(i, NUM_DIMENSIONS)
+    const pct = (i / (NUM_DIMENSIONS - 1)) * 100
+    stops.push(`${color} ${pct.toFixed(1)}%`)
+  }
+
+  return {
+    background: `linear-gradient(to bottom, ${stops.join(', ')})`,
+  }
+})
 </script>
 
 <template>
@@ -111,6 +127,7 @@ const gradientStyle = computed(() => ({
   transform: translateX(-50%);
   border-radius: 999px;
   z-index: 0;
+  opacity: 0.75;
 }
 
 .circle {

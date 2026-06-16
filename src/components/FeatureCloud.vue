@@ -107,5 +107,6 @@ function featureColorAtT(t: number): string {
   opacity: 0.6;
   padding: 6px 0 4px 4px;
   user-select: none;
+  text-align: left;
 }
 </style>

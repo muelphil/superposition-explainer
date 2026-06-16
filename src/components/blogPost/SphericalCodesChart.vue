@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import data from '../../data/sphericalCodesData.json'
 import DimLegend from './DimLegend.vue'
 import HoverTooltip from './HoverTooltip.vue'
+import { featureColor } from '../../utils/featureColor'
 
 // ── Chart bounds ──────────────────────────────────────────────────────────────────
 const SVG_W = 680
@@ -29,15 +30,17 @@ const LEGEND_H = LEGEND_BAR_H + 2 * LEGEND_CIRCLE_R + 12
 const LEGEND_POS_X = MARGIN_LEFT + 10
 const LEGEND_POS_Y = MARGIN_TOP + 10
 
-// ── Color gradient (green → yellow, matching Python script) ──────────────────────
-function dimColor(d: number, n: number): string {
-  const t = n <= 1 ? 0 : (d - DIMENSIONS[0]) / (DIMENSIONS[n - 1] - DIMENSIONS[0])
-  const r = Math.round(33 + (237 - 33) * t)
-  const g = Math.round(138 + (221 - 138) * t)
-  const b = Math.round(33 + (48 - 33) * t)
-  return `rgb(${r},${g},${b})`
-}
+// ── Dimension colors (uses the project feature gradient) ───────────────────────
+// d=3 (lowest) → blue (t=1), d=15 (highest) → orange (t=0).
+// The gradient is orange→pink→blue, so we reverse the mapping.
 const DIMENSIONS = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+const NUM_DIMENSIONS = DIMENSIONS.length
+
+function dimColor(d: number): string {
+  const idx = DIMENSIONS.indexOf(d)
+  const reversedIdx = NUM_DIMENSIONS - 1 - idx
+  return featureColor(reversedIdx, NUM_DIMENSIONS)
+}
 
 // ── Scales ────────────────────────────────────────────────────────────────────────
 function xScale(angle: number): number {
@@ -100,7 +103,7 @@ function nAtAngle(d: number, angle: number): number | null {
 // ── Series ────────────────────────────────────────────────────────────────────────
 const chartData = computed(() => DIMENSIONS.map(d => ({
   d,
-  color: dimColor(d, DIMENSIONS.length),
+  color: dimColor(d),
   path: buildStepPath((data as Record<string, { cos: number; n: number }[]>)[String(d)] || []),
 })))
 
@@ -135,7 +138,7 @@ const hoverMarkers = computed(() => {
   return HIGHLIGHT_DIMS
     .map(d => {
       const n = nAtAngle(d, angle)
-      return { d, n, color: dimColor(d, DIMENSIONS.length), y: n != null ? yScale(n) : null }
+      return { d, n, color: dimColor(d), y: n != null ? yScale(n) : null }
     })
     .filter((m): m is typeof m & { y: number; n: number } => m.y != null && m.n != null)
 })
@@ -265,8 +268,8 @@ function onPlotMousemove(e: MouseEvent) {
           :angle="hoverTooltip.angle"
           :value-d-15="hoverTooltip.d15n"
           :value-d-3="hoverTooltip.d3n"
-          :color-d-15="dimColor(15, DIMENSIONS.length)"
-          :color-d-3="dimColor(3, DIMENSIONS.length)"
+          :color-d-15="dimColor(15)"
+          :color-d-3="dimColor(3)"
         />
       </foreignObject>
 
@@ -296,8 +299,8 @@ function onPlotMousemove(e: MouseEvent) {
           :height="LEGEND_H"
           :bar-h="LEGEND_BAR_H"
           :circle-r="LEGEND_CIRCLE_R"
-          :color-top="dimColor(15, DIMENSIONS.length)"
-          :color-bottom="dimColor(3, DIMENSIONS.length)"
+          :color-top="dimColor(15)"
+          :color-bottom="dimColor(3)"
         />
        </foreignObject>
 
