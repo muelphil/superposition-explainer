@@ -733,17 +733,17 @@ import ParamScaleChart from './ParamScaleChart.vue'
   Scoped under .blog-post to avoid polluting the global namespace.
 -->
 <style lang="scss">
-//$accent: var(--color-interactive);
-$accent: linear-gradient(
-    to bottom,
-    #6f9ef0 0%,
-    #7eaef6 18%,
-    #6898e8 36%,
-    #77a7f2 55%,
-    #628fdc 73%,
-    #729ff0 88%,
-    #6b99e9 100%
-);
+$accent: var(--color-interactive);
+//$accent: linear-gradient(
+//    to bottom,
+//    #6f9ef0 0%,
+//    #7eaef6 18%,
+//    #6898e8 36%,
+//    #77a7f2 55%,
+//    #628fdc 73%,
+//    #729ff0 88%,
+//    #6b99e9 100%
+//);
 $spotlight-opacity: 0.45;
 
 /* ── Shared styles for viz sections ────────────────────────────── */

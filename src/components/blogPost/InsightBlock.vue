@@ -30,7 +30,7 @@ const { revealedHtml, visible, done } = useTextReveal(revealContainer, props.tas
       ref="insightRef"
       class="insight-block"
     >
-      <div class="insight-header">
+      <div class="task-list-header">
         <Lightbulb :size="14" class="header-icon" />
         Insight
       </div>
@@ -53,7 +53,6 @@ const { revealedHtml, visible, done } = useTextReveal(revealContainer, props.tas
 
 .insight-block {
   margin: 0;
-  background: var(--color-task-bg);
   border: none;
   font-size: 0.88rem;
   line-height: 1.6;
@@ -61,18 +60,6 @@ const { revealedHtml, visible, done } = useTextReveal(revealContainer, props.tas
   padding-top: 10px;
 }
 
-.insight-header {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-text-label);
-  margin-bottom: 0.3rem;
-  font-family: var(--font-family-label);
-}
 
 .header-icon {
   flex-shrink: 0;

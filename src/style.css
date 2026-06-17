@@ -36,13 +36,13 @@
   --color-error-light:     #fee2e2;  /* red-100 */
 
   /* Interactive */
-  --color-interactive:     #3b82f6;  /* blue-500 */
-  --color-interactive-hover: #2563eb; /* blue-600 */
+  --color-interactive:     #6592df;  /* blue-500 */
+  --color-interactive-hover: #3b73d0; /* blue-600 */
   --color-interactive-disabled: #d1d5db; /* gray-300 */
 
   /* Borders */
   --color-border:          #e5e7eb;  /* gray-200 */
-  --color-border-focus:    #3b82f6;
+  --color-border-focus:    #3a63a7;
 
   /* Neuron add/remove buttons */
   --color-add-btn:         #22c55e;  /* green-500 */

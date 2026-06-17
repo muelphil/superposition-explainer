@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { TaskList, TaskState } from './taskSystem'
 import { FlaskConical } from 'lucide-vue-next'
 import InsightBlock from './InsightBlock.vue'
+import TaskCheckbox from './TaskCheckbox.vue'
 
 const props = defineProps<{
   taskList: TaskList
@@ -37,9 +38,7 @@ const optionalTasks = computed(() =>
           'task-blocked': task.blocked,
         }"
       >
-        <span class="task-checkbox" aria-hidden="true">
-          <template v-if="task.completed">✓</template>
-        </span>
+        <TaskCheckbox :completed="task.completed" :blocked="task.blocked" />
         <span class="task-body">
           <span class="task-label" v-html="task.label"></span>
           <span v-if="task.note" class="task-note" v-html="task.note"></span>
@@ -61,9 +60,7 @@ const optionalTasks = computed(() =>
             'task-blocked': task.blocked,
           }"
         >
-          <span class="task-checkbox" aria-hidden="true">
-            <template v-if="task.completed">✓</template>
-          </span>
+          <TaskCheckbox :completed="task.completed" :blocked="task.blocked" />
           <span class="task-body">
             <span class="task-label" v-html="task.label"></span>
             <span v-if="task.note" class="task-note" v-html="task.note"></span>
@@ -80,12 +77,9 @@ const optionalTasks = computed(() =>
   </div>
 </template>
 
-<style scoped>
+<style>
 .task-list {
-  border: 1px solid var(--color-task-border);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  background: var(--color-task-bg);
+  padding: 0 1rem;
 }
 
 .task-list-header {
@@ -96,9 +90,14 @@ const optionalTasks = computed(() =>
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-text-label);
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
   font-family: var(--font-family-label);
+  color: white;
+  background-color: #6592df;
+  inline-size: min-content;
+  padding: 4px 4px 4px 6px;
+  border-radius: 4px 4px 4px 4px;
+  margin-left: -33px;
 }
 
 .header-icon {
@@ -132,34 +131,6 @@ const optionalTasks = computed(() =>
   font-size: 0.92rem;
   line-height: 1.5;
   color: var(--color-text-primary);
-}
-
-.task-checkbox {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.2rem;
-  height: 1.2rem;
-  flex-shrink: 0;
-  margin-top: 0.15rem; /* align with first line of text */
-  border-radius: 3px;
-  border: 1.5px solid var(--color-task-checkbox-border);
-  background: var(--color-bg);
-  font-size: 0.72rem;
-  color: var(--color-task-checkbox-border);
-  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
-}
-
-.task-completed .task-checkbox {
-  background: var(--color-task-check-bg);
-  border-color: var(--color-task-check-bg);
-  color: var(--color-bg);
-}
-
-.task-blocked .task-checkbox {
-  border-color: var(--color-task-blocked);
-  background: var(--color-bg);
-  font-size: 0.65rem;
 }
 
 .task-blocked .task-label {
