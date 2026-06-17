@@ -71,6 +71,17 @@ const dataRowStart = 3
 const dataRowEnd = computed(() => n.value + 3)
 
 // ─── Color helpers ────────────────────────────────────────────────────────────
+/** Neutral (white) background and gray border for embedding neurons when feature colors are on. */
+const NEUTRAL_BG = 'rgb(255,255,255)'
+const NEUTRAL_BORDER = 'rgb(156,163,175)'
+
+function embNeuronBg(v: number): string {
+  return useFeatureColorsForIO.value ? NEUTRAL_BG : neuronColorRgb(v)
+}
+function embNeuronBorder(v: number): string {
+  return useFeatureColorsForIO.value ? NEUTRAL_BORDER : neuronBorderColorRgb(v)
+}
+
 /** Scale so that neuron AREA ∝ importance (area = π r² → r ∝ √imp → scale ∝ √imp) */
 function neuronScale(i: number): number {
   const imp = svc.featureImportance.value[i] ?? 1
@@ -373,7 +384,7 @@ function resampleAll() {
             :ref="(el) => { embNeuronRefs[k] = el as HTMLElement }"
             class="neuron emb-neuron"
             :class="[embDimClass(k), { 'neuron-selected': isEmbSelected(k) }]"
-            :style="{ background: neuronColorRgb(svc.currentEmbedding.value[k] ?? 0), borderColor: neuronBorderColorRgb(svc.currentEmbedding.value[k] ?? 0) }"
+            :style="{ background: embNeuronBg(svc.currentEmbedding.value[k] ?? 0), borderColor: embNeuronBorder(svc.currentEmbedding.value[k] ?? 0) }"
             :title="`h${k + 1} = ${fmt(svc.currentEmbedding.value[k] ?? 0)}`"
             @mouseenter="emb.enter(k)"
             @mouseleave="emb.leave"

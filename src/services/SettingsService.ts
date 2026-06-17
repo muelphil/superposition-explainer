@@ -6,4 +6,4 @@ import { ref } from 'vue'
 export const showEmbeddingPoint = ref(true)
 
 /** Whether IO neurons use feature color gradient instead of blue → orange. */
-export const useFeatureColorsForIO = ref(false)
+export const useFeatureColorsForIO = ref(true)
