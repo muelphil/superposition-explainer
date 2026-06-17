@@ -35,6 +35,7 @@ export function useEmbeddingScene(
     selSvc: SelectionServiceType,
     staticMode = false,
     fullOutputOverlay = false,
+    disableZoom = false,
 ) {
     // ── Three.js scene state ──────────────────────────────────────
     let renderer: THREE.WebGLRenderer | null = null
@@ -182,7 +183,7 @@ export function useEmbeddingScene(
             oc.maxDistance = CAMERA_MAX_DIST
             oc.enablePan = staticMode ? false : true
             oc.enableRotate = false
-            oc.enableZoom = !staticMode
+            oc.enableZoom = !(staticMode || disableZoom)
             controls = oc
         }
 

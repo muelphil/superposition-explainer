@@ -11,6 +11,7 @@ const props = defineProps<{
   selectionService?: SelectionServiceType
   staticMode?: boolean
   fullOutputOverlay?: boolean
+  disableZoom?: boolean
 }>()
 
 const svc    = props.autoencoderService ?? inject<AutoencoderServiceType>('autoencoderService')!
@@ -20,7 +21,7 @@ const containerRef = ref<HTMLDivElement   | null>(null)
 const canvasRef    = ref<HTMLCanvasElement | null>(null)
 
 const { onMouseMove, onMouseLeave, onCanvasMouseDown, onCanvasClick, resetCamera } =
-  useEmbeddingScene(canvasRef, containerRef, svc, selSvc, !!props.staticMode, !!props.fullOutputOverlay)
+  useEmbeddingScene(canvasRef, containerRef, svc, selSvc, !!props.staticMode, !!props.fullOutputOverlay, !!props.disableZoom)
 
 const inputDim = computed(() => svc.config.inputDim)
 </script>

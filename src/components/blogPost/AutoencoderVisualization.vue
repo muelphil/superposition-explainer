@@ -51,7 +51,7 @@ const visibleTabs = computed(() => {
       <div class="ae-bottom-section embedding-panel" v-show="showEmbeddingPanel">
         <div class="ae-viz-title">Embedding Space</div>
         <div class="ae-viz-panel panel-embedding">
-          <EmbeddingView />
+          <EmbeddingView :disableZoom="true" />
         </div>
       </div>
 
@@ -144,6 +144,7 @@ const visibleTabs = computed(() => {
   padding: 0;
   gap: 0;
   overflow: hidden;
+  flex: none;
 }
 
 /* ── Tabs ──────────────────────────────────────────────── */
