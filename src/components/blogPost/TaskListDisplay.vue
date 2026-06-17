@@ -1,15 +1,23 @@
 <script setup lang="ts">
-import type { TaskList } from './taskSystem'
+import { computed } from 'vue'
+import type { TaskList, TaskState } from './taskSystem'
 import { FlaskConical } from 'lucide-vue-next'
 import InsightBlock from './InsightBlock.vue'
 
-defineProps<{
+const props = defineProps<{
   taskList: TaskList
 }>()
 
 defineSlots<{
   insight(): any
 }>()
+
+const mandatoryTasks = computed(() =>
+  props.taskList.tasks.value.filter((t: TaskState) => !t.optional)
+)
+const optionalTasks = computed(() =>
+  props.taskList.tasks.value.filter((t: TaskState) => t.optional)
+)
 </script>
 
 <template>
@@ -21,13 +29,12 @@ defineSlots<{
 
     <ul class="task-items">
       <li
-        v-for="task in taskList.tasks.value"
+        v-for="task in mandatoryTasks"
         :key="task.id"
         class="task-item"
         :class="{
           'task-completed': task.completed,
           'task-blocked': task.blocked,
-          'task-optional': task.optional,
         }"
       >
         <span class="task-checkbox" aria-hidden="true">
@@ -38,9 +45,33 @@ defineSlots<{
           <span v-if="task.note" class="task-note" v-html="task.note"></span>
         </span>
         <span v-if="task.progress" class="task-badge task-progress">{{ task.progress.current }}/{{ task.progress.total }}</span>
-        <span v-if="task.optional" class="task-badge">optional</span>
       </li>
     </ul>
+
+    <!-- Optional tasks section -->
+    <template v-if="optionalTasks.length">
+      <div class="optional-section-header">Optional</div>
+      <ul class="task-items">
+        <li
+          v-for="task in optionalTasks"
+          :key="task.id"
+          class="task-item"
+          :class="{
+            'task-completed': task.completed,
+            'task-blocked': task.blocked,
+          }"
+        >
+          <span class="task-checkbox" aria-hidden="true">
+            <template v-if="task.completed">✓</template>
+          </span>
+          <span class="task-body">
+            <span class="task-label" v-html="task.label"></span>
+            <span v-if="task.note" class="task-note" v-html="task.note"></span>
+          </span>
+          <span v-if="task.progress" class="task-badge task-progress">{{ task.progress.current }}/{{ task.progress.total }}</span>
+        </li>
+      </ul>
+    </template>
 
     <!-- Insight appended inside same box, only after unlock -->
     <InsightBlock v-if="$slots.insight" :task-list="taskList">
@@ -72,6 +103,17 @@ defineSlots<{
 
 .header-icon {
   flex-shrink: 0;
+}
+
+.optional-section-header {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-label);
+  margin-top: 0.75rem;
+  margin-bottom: 0.35rem;
 }
 
 .task-items {
