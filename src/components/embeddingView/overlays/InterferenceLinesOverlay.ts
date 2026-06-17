@@ -1,14 +1,11 @@
 import * as THREE from 'three'
 import type { SceneCtx, SceneOverlay } from '../types'
-import { setCylinderEnds } from '../sceneHelpers'
-
-const RADIUS    = 0.008
-const COLOR     = 0xef4444   // red-500
-const OPACITY   = 0.8
-const RENDER_ORDER = 10
+import { DashedCylinders } from '../sceneHelpers'
+import { ERROR_LINE_COLOR, ERROR_LINE_OPACITY, ERROR_LINE_RENDER_ORDER,
+  ERROR_DASH_SIZE, ERROR_GAP_SIZE, ARROW_SHAFT_RADIUS } from '../constants'
 
 /**
- * Red continuous cylinders from each interfering vector's tip to its perpendicular
+ * Red dashed cylinders from each interfering vector's tip to its perpendicular
  * projection onto the ReLU surface.
  *
  * A vector j ≠ i "interferes" when its tip is in the active half-space
@@ -21,11 +18,11 @@ const RENDER_ORDER = 10
  */
 export class InterferenceLinesOverlay implements SceneOverlay {
   private ctx!: SceneCtx
-  private cylinders: THREE.Mesh[] = []
-  private geoms:     THREE.CylinderGeometry[] = []
-  private mats:      THREE.MeshBasicMaterial[] = []
+  private dashedLines: (DashedCylinders | null)[] = []
 
   private readonly _proj = new THREE.Vector3()
+  private readonly _from = new THREE.Vector3()
+  private readonly _to   = new THREE.Vector3()
 
   constructor(private readonly featureIdx: number) {}
 
@@ -33,27 +30,22 @@ export class InterferenceLinesOverlay implements SceneOverlay {
     this.ctx = ctx
 
     const n = ctx.svc.config.inputDim
+    const mat = new THREE.MeshBasicMaterial({
+      color:       ERROR_LINE_COLOR,
+      transparent: true,
+      opacity:     ERROR_LINE_OPACITY,
+      depthTest:   false,
+    })
+
     for (let j = 0; j < n; j++) {
       if (j === this.featureIdx) {
-        this.cylinders.push(null!)
-        this.geoms.push(null!)
-        this.mats.push(null!)
+        this.dashedLines.push(null)
         continue
       }
-      const mat = new THREE.MeshBasicMaterial({
-        color:       COLOR,
-        transparent: true,
-        opacity:     OPACITY,
-        depthTest:   false,
-      })
-      const geom = new THREE.CylinderGeometry(RADIUS, RADIUS, 1, 6)
-      const mesh = new THREE.Mesh(geom, mat)
-      mesh.renderOrder = RENDER_ORDER
-      mesh.visible = false
-      ctx.scene.add(mesh)
-      this.cylinders.push(mesh)
-      this.geoms.push(geom)
-      this.mats.push(mat)
+      const dc = new DashedCylinders(ARROW_SHAFT_RADIUS, ERROR_DASH_SIZE, ERROR_GAP_SIZE, mat, ERROR_LINE_RENDER_ORDER)
+      dc.group.visible = false
+      ctx.scene.add(dc.group)
+      this.dashedLines.push(dc)
     }
 
     this.update()
@@ -62,15 +54,12 @@ export class InterferenceLinesOverlay implements SceneOverlay {
   tick() { this.update() }
 
   dispose() {
-    for (let j = 0; j < this.cylinders.length; j++) {
-      if (j === this.featureIdx) continue
-      this.ctx.scene.remove(this.cylinders[j])
-      this.geoms[j].dispose()
-      this.mats[j].dispose()
+    for (let j = 0; j < this.dashedLines.length; j++) {
+      if (!this.dashedLines[j]) continue
+      this.ctx.scene.remove(this.dashedLines[j]!.group)
+      this.dashedLines[j]!.dispose()
     }
-    this.cylinders = []
-    this.geoms = []
-    this.mats  = []
+    this.dashedLines = []
   }
 
   private update() {
@@ -91,26 +80,25 @@ export class InterferenceLinesOverlay implements SceneOverlay {
     const n = this.ctx.svc.config.inputDim
     for (let j = 0; j < n; j++) {
       if (j === this.featureIdx) continue
+      const dc = this.dashedLines[j]
+      if (!dc) continue
 
       const vecJ = this.ctx.featureVec(j)
       const tJ = vecJ.dot(vecINorm)
 
       if (tJ > tBoundary) {
-        this._proj.copy(vecJ)
-          .addScaledVector(vecINorm, -(tJ - tBoundary))
-
-        setCylinderEnds(this.cylinders[j], vecJ, this._proj)
-        this.cylinders[j].visible = true
+        this._proj.copy(vecJ).addScaledVector(vecINorm, -(tJ - tBoundary))
+        dc.update(vecJ, this._proj)
+        dc.group.visible = true
       } else {
-        this.cylinders[j].visible = false
+        dc.group.visible = false
       }
     }
   }
 
   private hideAll() {
-    for (let j = 0; j < this.cylinders.length; j++) {
-      if (j === this.featureIdx) continue
-      this.cylinders[j].visible = false
+    for (let j = 0; j < this.dashedLines.length; j++) {
+      if (this.dashedLines[j]) this.dashedLines[j]!.group.visible = false
     }
   }
 }

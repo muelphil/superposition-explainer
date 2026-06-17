@@ -33,6 +33,7 @@ export function useEmbeddingScene(
     containerRef: Ref<HTMLDivElement | null>,
     svc: AutoencoderServiceType,
     selSvc: SelectionServiceType,
+    staticMode = false,
 ) {
     // ── Three.js scene state ──────────────────────────────────────
     let renderer: THREE.WebGLRenderer | null = null
@@ -137,6 +138,7 @@ export function useEmbeddingScene(
         labelRenderer.domElement.style.top = '0'
         labelRenderer.domElement.style.left = '0'
         labelRenderer.domElement.style.pointerEvents = 'none'
+        labelRenderer.domElement.style.zIndex = '10'
         container.appendChild(labelRenderer.domElement)
 
         scene = new THREE.Scene()
@@ -145,13 +147,14 @@ export function useEmbeddingScene(
         const fovHalfRad = (CAMERA_FOV / 2) * (Math.PI / 180)
         const fitRadius = Math.hypot(AXIS_LEN, AXIS_LABEL_PERP) + CAMERA_MARGIN
         const camDist = fitRadius / Math.tan(fovHalfRad)
+        const zoomFactor = staticMode ? 0.75 : 1
 
         const embDim = svc.config.embeddingDim
         if (embDim === 3) {
             const dir = new THREE.Vector3(...CAMERA_3D_DIR).normalize()
-            camera.position.copy(dir.multiplyScalar(camDist))
+            camera.position.copy(dir.multiplyScalar(camDist * zoomFactor))
         } else {
-            camera.position.set(0, 0, camDist)
+            camera.position.set(0, 0, camDist * zoomFactor)
         }
         camera.lookAt(0, 0, 0)
 
@@ -164,6 +167,11 @@ export function useEmbeddingScene(
             tc.dynamicDampingFactor = CAMERA_DAMPING
             tc.minDistance = CAMERA_MIN_DIST
             tc.maxDistance = CAMERA_MAX_DIST
+            if (staticMode) {
+                tc.noRotate = true
+                tc.noZoom = true
+                tc.noPan = true
+            }
             controls = tc
         } else {
             const oc = new OrbitControls(camera, canvas)
@@ -171,13 +179,15 @@ export function useEmbeddingScene(
             oc.dampingFactor = CAMERA_DAMPING
             oc.minDistance = CAMERA_MIN_DIST
             oc.maxDistance = CAMERA_MAX_DIST
-            oc.enablePan = true
+            oc.enablePan = staticMode ? false : true
             oc.enableRotate = false
+            oc.enableZoom = !staticMode
             controls = oc
         }
 
         buildAxes()
         buildVecs()
+        overlayManager.rebuild()
         renderLoop()
     }
 
@@ -327,6 +337,7 @@ export function useEmbeddingScene(
             new THREE.SphereGeometry(0.045, 14, 14),
             new THREE.MeshBasicMaterial({color: EMBEDDING_POINT_COLOR_HEX}),
         )
+        embPointMesh.renderOrder = -1  // behind feature vectors (0) so vectors draw on top
         embPointMesh.visible = showEmbeddingPoint.value
         scene.add(embPointMesh)
         updateEmbPoint()
@@ -341,6 +352,8 @@ export function useEmbeddingScene(
             dim >= 2 ? (h[1] ?? 0) : 0,
             dim >= 3 ? (h[2] ?? 0) : 0,
         )
+        // In static mode, offset behind camera so vectors render on top
+        if (staticMode) embPointMesh.position.z -= 0.04
     }
 
     function applyVecGeom(vv: VecVis) {
@@ -521,7 +534,8 @@ export function useEmbeddingScene(
         overlayManager.tick()
 
         // Suppress hover detection while mouse is down (user is rotating/panning)
-        if (!mouseIsDown) {
+        // Also suppress in static mode
+        if (!mouseIsDown && !staticMode) {
             raycaster.setFromCamera(mouseNDC, camera)
             const vecHits = raycaster.intersectObjects(vecs.map(vv => vv.hitMesh))
             const axisHits = raycaster.intersectObjects(axisHitMeshes)
@@ -561,6 +575,7 @@ export function useEmbeddingScene(
 
     // ── Mouse / canvas events ─────────────────────────────────────
     function onMouseMove(e: MouseEvent) {
+        if (staticMode) return
         const c = canvasRef.value
         if (!c) return
         const r = c.getBoundingClientRect()
@@ -569,6 +584,7 @@ export function useEmbeddingScene(
     }
 
     function onMouseLeave() {
+        if (staticMode) return
         mouseNDC.set(-9999, -9999)
         mouseIsDown = false
         if (lastHoverKey !== '') {
@@ -581,6 +597,7 @@ export function useEmbeddingScene(
     let mouseDownPos = {x: 0, y: 0}
 
     function onCanvasMouseDown(e: MouseEvent) {
+        if (staticMode) return
         mouseDownPos = {x: e.clientX, y: e.clientY}
         mouseIsDown = true
     }
@@ -590,6 +607,7 @@ export function useEmbeddingScene(
     }
 
     function onCanvasClick(e: MouseEvent) {
+        if (staticMode) return
         if (Math.hypot(e.clientX - mouseDownPos.x, e.clientY - mouseDownPos.y) > 4) return
         const h = selSvc.hovered.value
         if (h?.kind === 'feature') {
@@ -605,12 +623,13 @@ export function useEmbeddingScene(
         const fovHalfRad = (CAMERA_FOV / 2) * (Math.PI / 180)
         const fitRadius = Math.hypot(AXIS_LEN, AXIS_LABEL_PERP) + CAMERA_MARGIN
         const camDist = fitRadius / Math.tan(fovHalfRad)
+        const zoomFactor = staticMode ? 0.75 : 1  // resetCamera mirror of init()
 
         if (svc.config.embeddingDim === 3) {
             const dir = new THREE.Vector3(...CAMERA_3D_DIR).normalize()
-            camera.position.copy(dir.multiplyScalar(camDist))
+            camera.position.copy(dir.multiplyScalar(camDist * zoomFactor))
         } else {
-            camera.position.set(0, 0, camDist)
+            camera.position.set(0, 0, camDist * zoomFactor)
         }
         camera.lookAt(0, 0, 0)
         controls.target.set(0, 0, 0)

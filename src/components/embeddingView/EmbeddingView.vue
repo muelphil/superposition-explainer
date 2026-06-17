@@ -6,14 +6,20 @@ import type { SelectionServiceType } from '../../services/SelectionService'
 import { useEmbeddingScene } from './useEmbeddingScene'
 import EmbeddingLegend from './EmbeddingLegend.vue'
 
-const svc    = inject<AutoencoderServiceType>('autoencoderService')!
-const selSvc = inject<SelectionServiceType>('selectionService')!
+const props = defineProps<{
+  autoencoderService?: AutoencoderServiceType
+  selectionService?: SelectionServiceType
+  staticMode?: boolean
+}>()
+
+const svc    = props.autoencoderService ?? inject<AutoencoderServiceType>('autoencoderService')!
+const selSvc = props.selectionService ?? inject<SelectionServiceType>('selectionService')!
 
 const containerRef = ref<HTMLDivElement   | null>(null)
 const canvasRef    = ref<HTMLCanvasElement | null>(null)
 
 const { onMouseMove, onMouseLeave, onCanvasMouseDown, onCanvasClick, resetCamera } =
-  useEmbeddingScene(canvasRef, containerRef, svc, selSvc)
+  useEmbeddingScene(canvasRef, containerRef, svc, selSvc, !!props.staticMode)
 
 const inputDim = computed(() => svc.config.inputDim)
 </script>
@@ -23,6 +29,10 @@ const inputDim = computed(() => svc.config.inputDim)
     <canvas
       ref="canvasRef"
       class="emb-canvas"
+      :class="{
+        'emb-canvas--static': staticMode,
+        'emb-canvas--wide': staticMode,
+      }"
       @mousemove="onMouseMove"
       @mouseleave="onMouseLeave"
       @mousedown="onCanvasMouseDown"
@@ -30,8 +40,9 @@ const inputDim = computed(() => svc.config.inputDim)
     />
 
 
-    <!-- Camera reset — upper right -->
+    <!-- Camera reset — upper right (hidden in static mode) -->
     <button
+      v-if="!staticMode"
       class="camera-reset-btn"
       title="Reset camera"
       @click="resetCamera"
@@ -61,6 +72,13 @@ const inputDim = computed(() => svc.config.inputDim)
   border-radius: inherit;
 }
 .emb-canvas:active { cursor: grabbing; }
+.emb-canvas--static {
+  cursor: default;
+}
+.emb-canvas--wide {
+  aspect-ratio: auto;
+  height: 378px;
+}
 
 
 

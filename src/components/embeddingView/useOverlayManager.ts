@@ -197,5 +197,7 @@ export function useOverlayManager(
         inputShelved = false
       }
     },
+    /** Force-rebuild overlays — call after scene init to pick up pre-existing selections. */
+    rebuild,
   }
 }

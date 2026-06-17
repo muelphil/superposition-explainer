@@ -201,10 +201,9 @@ export class ReluRegionOverlay implements SceneOverlay {
     }
 
     // ── Label position (in the inactive region) ────────────────
-    const labelPerp = dim === 1 ? new THREE.Vector3(0, 1, 0) : this._perp.clone()
+    // Centered on the feature vector direction into the inactive region
     this.label.position.copy(this._biasPos)
       .addScaledVector(vecNorm, -LABEL_OFFSET)
-      .addScaledVector(labelPerp, 0.08)
 
     // ── Rotate label parallel to the boundary line ─────────────
     // Only meaningful in 1D/2D where the boundary is a visible line.
@@ -283,22 +282,24 @@ export class ReluRegionOverlay implements SceneOverlay {
    * perpendicular boundary line.  If the result is upside-down, flip 180°.
    */
   private rotateLabel() {
-    const cam = this.ctx.camera
+    const dim = this.ctx.svc.config.embeddingDim
 
-    // Project the boundary direction (perp) to screen space
-    const biasSS = this._biasPos.clone().project(cam)
-    const perpTip = this._biasPos.clone().add(this._perp).project(cam)
+    let angleRad: number
+    if (dim === 1) {
+      angleRad = 0  // horizontal
+    } else {
+      // perp = (-y, x, 0) for the feature vector (x, y)
+      // Screen-space: x→right, y→up. CSS rotate() is clockwise for positive.
+      // atan2(y, x) gives CCW angle; negate for CSS CW convention.
+      angleRad = -Math.atan2(this._perp.y, this._perp.x)
+    }
 
-    const dx = perpTip.x - biasSS.x
-    const dy = perpTip.y - biasSS.y
-
-    let angleDeg = Math.atan2(dy, dx) * (180 / Math.PI)
+    let angleDeg = angleRad * (180 / Math.PI)
 
     // Flip if upside down (text should be readable left-to-right)
     if (angleDeg > 90)  angleDeg -= 180
     if (angleDeg < -90) angleDeg += 180
 
-    // Apply to the inner element (CSS2DRenderer controls the outer wrapper's transform)
-    this.labelInner.style.transform = `rotate(${-angleDeg}deg)`
+    this.labelInner.style.transform = `rotate(${angleDeg}deg)`
   }
 }

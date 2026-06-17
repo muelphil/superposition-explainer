@@ -2,6 +2,7 @@
 import BasesSection from './blogPost/BasesSection.vue'
 import AutoencoderSection from './blogPost/AutoencoderSection.vue'
 import SphericalCodesChart from './blogPost/SphericalCodesChart.vue'
+import InterferenceIllustration from './blogPost/InterferenceIllustration.vue'
 import EmbeddingSuperpositionIllustration from "./EmbeddingSuperpositionIllustration.vue";
 import ParamScaleChart from './ParamScaleChart.vue'
 </script>
@@ -261,8 +262,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
         </p>
 
         <figure class="post-figure">
-          <img src="/plots/interference.png"
-               alt="Plot of superposition with one active feature, showing interference and bias cancellation" />
+          <InterferenceIllustration />
           <figcaption>
             With one active feature, the projection of the embedding onto each other feature
             direction produces a nonzero interference term. The learned bias cancels this expected
