@@ -67,6 +67,7 @@ defineSlots<{
   letter-spacing: 0.06em;
   color: var(--color-text-label);
   margin-bottom: 0.5rem;
+  font-family: var(--font-family-label);
 }
 
 .header-icon {

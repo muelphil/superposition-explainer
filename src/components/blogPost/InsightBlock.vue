@@ -58,6 +58,7 @@ const { revealedHtml, visible, done } = useTextReveal(revealContainer, props.tas
   font-size: 0.88rem;
   line-height: 1.6;
   color: var(--color-text-primary);
+  padding-top: 10px;
 }
 
 .insight-header {
@@ -70,6 +71,7 @@ const { revealedHtml, visible, done } = useTextReveal(revealContainer, props.tas
   letter-spacing: 0.06em;
   color: var(--color-text-label);
   margin-bottom: 0.3rem;
+  font-family: var(--font-family-label);
 }
 
 .header-icon {
