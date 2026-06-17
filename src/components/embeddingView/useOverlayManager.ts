@@ -56,6 +56,12 @@
  *   tick() is called every render frame for all active overlays.
  *   disposeAll() is called on scene teardown (e.g. dimension change).
  *
+ * COMPOSITION
+ * ────────────
+ * Each overlay class does one visual thing.  resolveOverlays() composes them
+ * freely — the illustration gets a full output-decoding overlay set while the
+ * main app only gets a bias point + label.
+ *
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -69,17 +75,29 @@ import { InputDirectionOverlay } from './overlays/InputDirectionOverlay'
 import { AxisGradientOverlay } from './overlays/AxisGradientOverlay'
 import { ProjectionLineOverlay } from './overlays/ProjectionLineOverlay'
 import { DropLineOverlay } from './overlays/DropLineOverlay'
-import { BiasPointOverlay } from './overlays/BiasPointOverlay'
+import { BiasDotOverlay } from './overlays/BiasDotOverlay'
+import { BiasLabelOverlay } from './overlays/BiasLabelOverlay'
+import { BiasErrorLineOverlay } from './overlays/BiasErrorLineOverlay'
 import { ReluRegionOverlay } from './overlays/ReluRegionOverlay'
 import { InterferenceLinesOverlay } from './overlays/InterferenceLinesOverlay'
 
 /** Kinds that identify a single input feature index. */
 const FEATURE_KINDS = new Set(['input', 'feature', 'output', 'bias', 'relu'])
 
-/** Helper: build the standard output-decoding overlay set. */
-function outputOverlays(idx: number): SceneOverlay[] {
+/** Main app output overlay: bias dot + indexed label only. */
+function outputOverlaysApp(idx: number): SceneOverlay[] {
   return [
-    new BiasPointOverlay(idx),
+    new BiasDotOverlay(idx),
+    new BiasLabelOverlay(idx, true),
+  ]
+}
+
+/** Illustration output overlay: full decoding set. */
+function outputOverlaysFull(idx: number): SceneOverlay[] {
+  return [
+    new BiasDotOverlay(idx),
+    new BiasLabelOverlay(idx, false),
+    new BiasErrorLineOverlay(idx),
     new ReluRegionOverlay(idx),
     new InterferenceLinesOverlay(idx),
   ]
@@ -96,16 +114,18 @@ function outputOverlays(idx: number): SceneOverlay[] {
 function resolveOverlays(
   _sel: SelectionTarget,
   _rawHov: SelectionTarget,
+  _full: boolean,
 ): SceneOverlay[] {
   const _hov = effectiveHover(_sel, _rawHov)
+  const output = _full ? outputOverlaysFull : outputOverlaysApp
 
   // ── Priority hover kinds ──────────────────────────────────────
   if (_hov?.kind === 'input')  return [new InputDirectionOverlay(_hov.idx)]
-  if (_hov?.kind === 'output') return outputOverlays(_hov.idx)
+  if (_hov?.kind === 'output') return output(_hov.idx)
 
   // ── Output selected (+ optional valid hover) ─────────────────
   if (_sel?.kind === 'output') {
-    return outputOverlays(_sel.idx)
+    return output(_sel.idx)
   }
 
   // ── Cross-case: feature-kind + emb axis ───────────────────────
@@ -116,8 +136,8 @@ function resolveOverlays(
     const hovIsEmb     = _hov.kind === 'emb'
 
     if ((selIsFeature && hovIsEmb) || (selIsEmb && hovIsFeature)) {
-      const featureTarget = selIsFeature ? _sel : _hov
-      const embTarget     = selIsEmb     ? _sel : _hov
+      const featureTarget = selIsFeature ? _sel! : _hov!
+      const embTarget     = selIsEmb     ? _sel! : _hov!
       const fIdx = 'idx' in featureTarget ? featureTarget.idx : 0
       return [
         new ProjectionLineOverlay(fIdx, embTarget.idx),
@@ -133,7 +153,7 @@ function resolveOverlays(
   switch (target.kind) {
     case 'input':   return [new InputDirectionOverlay(target.idx)]
     case 'emb':     return [new AxisGradientOverlay(target.idx)]
-    case 'output':  return outputOverlays(target.idx)
+    case 'output':  return output(target.idx)
     default:        return []
   }
 }
@@ -143,6 +163,7 @@ function resolveOverlays(
 export function useOverlayManager(
   getCtx: () => SceneCtx | null,
   selSvc: SelectionServiceType,
+  fullOutputOverlay = false,
 ) {
   let active: SceneOverlay[] = []
   let inputShelved = false
@@ -173,7 +194,7 @@ export function useOverlayManager(
 
     if (!ctx) return
 
-    const overlays = resolveOverlays(selSvc.selected.value, selSvc.hovered.value)
+    const overlays = resolveOverlays(selSvc.selected.value, selSvc.hovered.value, fullOutputOverlay)
     for (const overlay of overlays) {
       overlay.build(ctx)
       active.push(overlay)

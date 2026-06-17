@@ -34,6 +34,7 @@ export function useEmbeddingScene(
     svc: AutoencoderServiceType,
     selSvc: SelectionServiceType,
     staticMode = false,
+    fullOutputOverlay = false,
 ) {
     // ── Three.js scene state ──────────────────────────────────────
     let renderer: THREE.WebGLRenderer | null = null
@@ -74,7 +75,7 @@ export function useEmbeddingScene(
     }
 
     // ── Overlay manager ───────────────────────────────────────────
-    const overlayManager = useOverlayManager(getCtx, selSvc)
+    const overlayManager = useOverlayManager(getCtx, selSvc, fullOutputOverlay)
 
     // ── Scene lifecycle ───────────────────────────────────────────
     function teardown() {
@@ -431,28 +432,29 @@ export function useEmbeddingScene(
         const HALF_DIM_OPACITY = 0.65
 
         if (isOutputActive) {
-            // Output active: show selected output vec + interfering vecs in color
             dimVecs = true
             litVecSet = new Set<number>()
             const outIdx = outputTarget!.idx
             litVecSet.add(outIdx)
 
-            // Compute interfering vector indices
-            const W = svc.W.value
-            const embDim = svc.config.embeddingDim
-            const vecI = featureVec(W, embDim, outIdx)
-            const lenSq = vecI.lengthSq()
-            if (lenSq > 1e-8) {
-                const bi = svc.b.value[outIdx] ?? 0
-                const len = Math.sqrt(lenSq)
-                const vecINorm = vecI.clone().normalize()
-                const tBoundary = -bi / len
-                const n = svc.config.inputDim
-                for (let j = 0; j < n; j++) {
-                    if (j === outIdx) continue
-                    const vecJ = featureVec(W, embDim, j)
-                    const tJ = vecJ.dot(vecINorm)
-                    if (tJ > tBoundary) litVecSet.add(j)
+            // In full mode (illustration), also keep interfering vectors lit
+            if (fullOutputOverlay) {
+                const W = svc.W.value
+                const embDim = svc.config.embeddingDim
+                const vecI = featureVec(W, embDim, outIdx)
+                const lenSq = vecI.lengthSq()
+                if (lenSq > 1e-8) {
+                    const bi = svc.b.value[outIdx] ?? 0
+                    const len = Math.sqrt(lenSq)
+                    const vecINorm = vecI.clone().normalize()
+                    const tBoundary = -bi / len
+                    const n = svc.config.inputDim
+                    for (let j = 0; j < n; j++) {
+                        if (j === outIdx) continue
+                        const vecJ = featureVec(W, embDim, j)
+                        const tJ = vecJ.dot(vecINorm)
+                        if (tJ > tBoundary) litVecSet.add(j)
+                    }
                 }
             }
 

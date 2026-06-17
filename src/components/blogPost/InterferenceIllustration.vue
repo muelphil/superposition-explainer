@@ -42,6 +42,7 @@ selSvc.setSelected({ kind: 'output', idx: 0 }, 'embedding')
       :autoencoderService="svc"
       :selectionService="selSvc"
       static-mode
+      full-output-overlay
     />
   </div>
 </template>
