@@ -81,8 +81,8 @@ export function neuronFeatureBorderRgb(v: number, featureIdx: number, numFeature
   return `rgb(${Math.round(r0 + (r1 - r0) * t)},${Math.round(g0 + (g1 - g0) * t)},${Math.round(b0 + (b1 - b0) * t)})`
 }
 
-/** Color used for the min-angle statistics chart line */
-export const MIN_ANGLE_CHART_COLOR = '#22c55e'  // green-500 = --color-add-btn
+/** Color used for the min-angle statistics chart line (pink, mid-gradient) */
+export const MIN_ANGLE_CHART_COLOR = '#F73361'  // pink = --color-gradient-mid
 
 // ── Gradient definition ────────────────────────────────────────────────────────
 // Add/remove/reorder CSS hex stops to change the feature color gradient.

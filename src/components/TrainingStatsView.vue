@@ -22,9 +22,9 @@ watch(selected, (val) => {
 })
 
 const tabs: { key: MetricKey; label: string; color: string; yLabel: string }[] = [
-  { key: 'loss',     label: 'Loss',            color: 'var(--color-interactive)', yLabel: 'loss' },
-  { key: 'presence', label: 'Feature Presence', color: 'var(--color-positive)',   yLabel: 'features' },
-  { key: 'angle',    label: 'Min Angle',        color: 'var(--color-add-btn)',       yLabel: '°' },
+  { key: 'loss',     label: 'Loss',            color: '#097AFA', yLabel: 'loss' },
+  { key: 'presence', label: 'Feature Presence', color: '#F69F16', yLabel: 'features' },
+  { key: 'angle',    label: 'Min Angle',        color: '#F73361', yLabel: '°' },
 ]
 const activeTab = computed(() => tabs.find(t => t.key === selected.value)!)
 
