@@ -330,6 +330,7 @@ function featureVecLength(c: number): number {
   display: flex;
   align-items: flex-end;
   padding-bottom: 0.1rem;
+  gap: 1.5px;
 }
 
 .corner {

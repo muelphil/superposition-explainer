@@ -112,7 +112,7 @@ function barColor(idx: number): string {
 .param-bar {
   height: 18px;
   border-radius: 4px;
-  opacity: 0.5;
+  opacity: 0.7;
 }
 
 .param-value {
