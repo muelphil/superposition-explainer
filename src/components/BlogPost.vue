@@ -3,6 +3,7 @@ import BasesSection from './blogPost/BasesSection.vue'
 import AutoencoderSection from './blogPost/AutoencoderSection.vue'
 import SphericalCodesChart from './blogPost/SphericalCodesChart.vue'
 import EmbeddingSuperpositionIllustration from "./EmbeddingSuperpositionIllustration.vue";
+import ParamScaleChart from './ParamScaleChart.vue'
 </script>
 
 <template>
@@ -99,13 +100,13 @@ import EmbeddingSuperpositionIllustration from "./EmbeddingSuperpositionIllustra
         </p>
 
         <figure class="post-figure">
-          <img src="/plots/model_size_depending_on_emb_dim.png"
-               alt="Total parameter count of a GPT-style dense decoder transformer as a function of its embedding dimension" />
+          <ParamScaleChart />
           <figcaption>
-            Total parameter count of a GPT-style dense decoder transformer as a function of its embedding /
-            model dimension <katex-element expression="d_{\text{model}}" />, for five prominent architecture
-            families. Because parameter count grows quadratically with <katex-element expression="d_{\text{model}}" />, even modest increases in embedding dimension
-            incur a steep cost in parameters.
+            Parameter count for a GPT-style dense decoder transformer (L = 96 layers, V = 50,257
+            vocabulary, context window 2,048) as a function of embedding dimension
+            <katex-element expression="d_{\text{model}}" />. The dominant term
+            <katex-element expression="\sim 12 L \cdot d_{\text{model}}^2" /> means that doubling
+            the embedding dimension roughly quadruples the parameter count.
           </figcaption>
         </figure>
 
