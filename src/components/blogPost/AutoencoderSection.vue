@@ -310,7 +310,7 @@ useParagraphRanges(ranges, activeBlockIndex)
   <div class="ae-section post-section">
     <!-- Text column -->
     <h2 class="section-heading" style="grid-column: 1 / -1;">The Toy Autoencoder</h2>
-    <div class="text-column">
+     <div class="text-column" data-scroll-dir="down">
 
       <!-- ═══ Block 'intro' — blank state, nothing revealed ═══ -->
       <div

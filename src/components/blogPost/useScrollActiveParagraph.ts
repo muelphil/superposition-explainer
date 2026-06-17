@@ -11,6 +11,10 @@ import { ref, onMounted, onUnmounted, type Ref } from 'vue'
  * (i.e. before the first block or after the last block), so that the section
  * is inactive before the user scrolls into it and after they leave it.
  *
+ * Also sets a CSS class on the nearest .text-column parent to indicate scroll
+ * direction (scroll-down | scroll-up), so variant 4's animation can animate in
+ * the matching direction.
+ *
  * Non-activatable content should simply omit a ref — blockRefs must be a
  * contiguous, dense array of only the activatable elements.
  */
@@ -19,6 +23,13 @@ export function useScrollActiveBlock(
 ): { activeBlockIndex: Ref<number> } {
   const activeBlockIndex = ref(-1)
   let observer: IntersectionObserver | null = null
+  let prevY = 0
+
+  const dirClass = (parent: HTMLElement | null, direction: 'down' | 'up') => {
+    if (!parent) return
+    const el = parent.closest('[data-scroll-dir]')
+    if (el) el.setAttribute('data-scroll-dir', direction)
+  }
 
   function updateActive() {
     const els = blockRefs.value
@@ -26,11 +37,9 @@ export function useScrollActiveBlock(
 
     const viewportFocal = window.innerHeight * 0.4
 
-    // Collect valid (non-null) elements in order
     const valid: HTMLElement[] = els.filter((el): el is HTMLElement => el !== null)
     if (valid.length === 0) return
 
-    // Deactivate when the focal line is above the first block or below the last
     const firstRect = valid[0].getBoundingClientRect()
     const lastRect = valid[valid.length - 1].getBoundingClientRect()
     if (viewportFocal < firstRect.top || viewportFocal > lastRect.bottom) {
@@ -38,7 +47,6 @@ export function useScrollActiveBlock(
       return
     }
 
-    // Find the block closest to the focal line
     let bestIdx = 0
     let bestDist = Infinity
     for (let i = 0; i < els.length; i++) {
@@ -58,18 +66,27 @@ export function useScrollActiveBlock(
 
   onMounted(() => {
     observer = new IntersectionObserver(updateActive, {
-      // Fire frequently as elements scroll through the viewport
       threshold: Array.from({ length: 11 }, (_, i) => i / 10),
     })
 
-    // Observe all block elements
     blockRefs.value.forEach(el => {
       if (el) observer!.observe(el)
     })
 
-    window.addEventListener('scroll', updateActive, { passive: true })
+    prevY = window.scrollY
 
-    // Run once on mount so initial state reflects current scroll position
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY
+      const parent = blockRefs.value[0]?.closest('.text-column') as HTMLElement
+      if (parent){
+        if (y > prevY) dirClass(parent, 'down')
+        else if (y < prevY) dirClass(parent, 'up')
+        else dirClass(parent, 'down')
+        prevY = y
+        updateActive()
+      }
+    }, { passive: true })
+
     updateActive()
   })
 

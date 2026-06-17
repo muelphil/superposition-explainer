@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, provide, onUnmounted } from 'vue'
-import { createBasesService, MAPPING_STAGES, type MappingStage, type CoordinateStage } from '../../services/BasesService'
+import { createBasesService, type MappingStage, type CoordinateStage } from '../../services/BasesService'
 import { useScrollActiveBlock } from './useScrollActiveParagraph'
 import { useParagraphRanges, type ParagraphRange } from './useParagraphRanges'
 import { TaskList, TaskEventBus, TASK_EVENT_BUS_KEY } from './taskSystem'
@@ -125,7 +125,7 @@ useParagraphRanges(ranges, activeBlockIndex)
   <div class="bases-section post-section">
     <h2 class="section-heading" style=" grid-column: 1 / -1;">Geometric Foundations: Bases and Feature Representation</h2>
     <!-- Text column -->
-    <div class="text-column">
+     <div class="text-column" data-scroll-dir="down">
 
       <!-- Block 'feature-space': Intro + feature space concept -->
       <p>

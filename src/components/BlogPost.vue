@@ -732,7 +732,20 @@ import ParamScaleChart from './ParamScaleChart.vue'
   Non-scoped: shared styles for blog viz-section children (BasesSection, AutoencoderSection).
   Scoped under .blog-post to avoid polluting the global namespace.
 -->
-<style>
+<style lang="scss">
+//$accent: var(--color-interactive);
+$accent: linear-gradient(
+    to bottom,
+    #6f9ef0 0%,
+    #7eaef6 18%,
+    #6898e8 36%,
+    #77a7f2 55%,
+    #628fdc 73%,
+    #729ff0 88%,
+    #6b99e9 100%
+);
+$spotlight-opacity: 0.45;
+
 /* ── Shared styles for viz sections ────────────────────────────── */
 
 /* Text column — prevent overflow shrink */
@@ -749,10 +762,11 @@ import ParamScaleChart from './ParamScaleChart.vue'
   color: var(--color-text-primary);
 }
 
-/* Text blocks: scroll-active indicator via border-left */
+/* ── Text block base (shared across all variants) ─────────────── */
 .blog-post .text-column .text-block {
   margin: 0 0 1.5rem;
-  padding: 0.5rem 0.75rem;
+  //padding: 0.5rem 0 0.5rem 1rem;
+  padding-left: 1rem;
   border-left: 3px solid transparent;
   border-radius: 0 6px 6px 0;
   transition: background-color 0.25s ease, border-color 0.25s ease;
@@ -766,10 +780,71 @@ import ParamScaleChart from './ParamScaleChart.vue'
   margin-bottom: 0;
 }
 
-/* Active block highlight (scroll-driven) */
-.blog-post .active-block {
-  background-color: var(--color-active-paragraph-bg);
-  border-left-color: var(--color-interactive) !important;
+ /* ══ Underline Accent (direction-aware) ═══════════════════════ */
+/* Growing uses .active-block::after origin (grows from that edge).
+   Shrinking uses .text-block::after origin (shrinks toward that edge).
+
+   Scroll down → grow from top, shrink toward bottom
+   Scroll up   → grow from bottom, shrink toward top */
+.blog-post .text-column .text-block {
+  position: relative;
+  border-left: none !important;
+  transition: opacity 0.3s ease-out;
+  opacity: 1;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: $accent;
+    border-radius: 2px;
+    transform: scaleY(0);
+    opacity: 0;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  }
+}
+
+/* Dim non-active paragraphs when one is active */
+.blog-post .text-column:has(.active-block) .text-block:not(.active-block) {
+  opacity: $spotlight-opacity;
+}
+
+/* Dim all direct children of .post-body that don't contain the active block */
+.blog-post:has(.active-block) .post-body > :not(:has(.active-block)) {
+  opacity: $spotlight-opacity;
+  transition: opacity 0.3s ease-out;
+}
+.blog-post .post-body > * {
+  transition: opacity 0.3s ease-out;
+}
+
+/* Shrink direction (non-active state) */
+.blog-post .text-column[data-scroll-dir="down"] .text-block::after {
+  transform-origin: bottom;
+}
+.blog-post .text-column[data-scroll-dir="up"] .text-block::after {
+  transform-origin: top;
+}
+
+/* Grow direction (active state) — must match specificity of shrink selectors */
+.blog-post .text-column[data-scroll-dir="down"] .active-block::after {
+  transform-origin: top;
+}
+.blog-post .text-column[data-scroll-dir="up"] .active-block::after {
+  transform-origin: bottom;
+}
+
+.blog-post .text-column .active-block {
+  border-left: none !important;
+
+  &::after {
+    transform: scaleY(1);
+    opacity: 1;
+    transition: transform 0.35s ease-out, opacity 0.35s ease-out;
+  }
 }
 
 /* Inline KaTeX in prose: match surrounding text size */
