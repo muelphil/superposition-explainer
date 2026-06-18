@@ -13,7 +13,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   'weight-enter': [row: number, col: number]
   'weight-leave': []
-  'weight-click': [row: number, col: number]
 }>()
 
 const svc = inject<AutoencoderServiceType>('autoencoderService')!
@@ -230,7 +229,6 @@ watch(() => svc.featureImportance.value, () => drawConnections(), {flush: 'post'
         style="pointer-events: stroke; cursor: pointer;"
         @mouseenter="emit('weight-enter', p.row, p.col)"
         @mouseleave="emit('weight-leave')"
-        @click.stop="emit('weight-click', p.row, p.col)"
     />
   </svg>
 </template>

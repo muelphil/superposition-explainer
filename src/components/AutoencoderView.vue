@@ -48,9 +48,6 @@ const {
   outputDimClass,
   embDimClass,
   pathOpacity,
-  isInputSelected,
-  isOutputSelected,
-  isEmbSelected,
   weight,
   feature,
   input,
@@ -194,6 +191,15 @@ function resampleAll() {
   eventBus?.emit('resample-clicked')
 }
 
+/** Toggle input neuron: 0 ↔ 1 */
+function toggleInput(i: number) {
+  const v = userInputs.value[i] ?? 0
+  const newVal = v > 0.5 ? 0 : 1
+  userInputs.value[i] = newVal
+  svc.runForward([...userInputs.value])
+  eventBus?.emit('input-value-changed', { index: i, value: newVal })
+}
+
 </script>
 
 <template>
@@ -212,7 +218,6 @@ function resampleAll() {
         :pathOpacity="pathOpacity"
         @weight-enter="weight.enter"
         @weight-leave="weight.leave"
-        @weight-click="weight.click"
     />
 
     <!-- ── Row 1: Column headings ──────────────────────────── -->
@@ -305,12 +310,11 @@ function resampleAll() {
           :style="{ gridColumn: '3', gridRow: String(i + dataRowStart) }"
           @mouseenter="feature.enter(i)"
           @mouseleave="feature.leave"
-          @click="feature.click(i)"
+          @click="toggleInput(i)"
       >
         <div
             :ref="(el) => { inputNeuronRefs[i] = el as HTMLElement }"
             class="neuron"
-            :class="{ 'neuron-selected': isInputSelected(i) }"
             :style="{
             background: inputNeuronBg(i),
             borderColor: inputNeuronBorder(i),
@@ -340,12 +344,10 @@ function resampleAll() {
           :style="{ gridColumn: '10', gridRow: String(i + dataRowStart) }"
           @mouseenter="output.enter(i)"
           @mouseleave="output.leave"
-          @click="output.click(i)"
       >
         <div
             :ref="(el) => { outputNeuronRefs[i] = el as HTMLElement }"
             class="neuron"
-            :class="{ 'neuron-selected': isOutputSelected(i) }"
             :style="{
             background: outputNeuronBg(i),
             borderColor: outputNeuronBorder(i),
@@ -383,12 +385,11 @@ function resampleAll() {
             :key="k"
             :ref="(el) => { embNeuronRefs[k] = el as HTMLElement }"
             class="neuron emb-neuron"
-            :class="[embDimClass(k), { 'neuron-selected': isEmbSelected(k) }]"
+            :class="embDimClass(k)"
             :style="{ background: embNeuronBg(svc.currentEmbedding.value[k] ?? 0), borderColor: embNeuronBorder(svc.currentEmbedding.value[k] ?? 0) }"
             :title="`h${k + 1} = ${fmt(svc.currentEmbedding.value[k] ?? 0)}`"
             @mouseenter="emb.enter(k)"
             @mouseleave="emb.leave"
-            @click="emb.click(k)"
         >
           <span class="emb-value">{{ fmt(svc.currentEmbedding.value[k] ?? 0) }}</span>
         </div>
@@ -483,18 +484,8 @@ function resampleAll() {
 }
 
 /* ── Highlight / dim ──────────────────────────────────────── */
-.neuron-wrap.dimmed {
-  opacity: 0.18;
-}
-
-.neuron.dimmed {
-  opacity: 0.18;
-}
-
-:deep(.input-value.dimmed),
-.cell-hover-zone.dimmed,
-.output-value.dimmed {
-  opacity: 0.18;
+.dimmed{
+  opacity: 0.5;
 }
 
 .neuron-wrap.half-dimmed {
@@ -517,11 +508,6 @@ function resampleAll() {
 :deep(.input-value),
 .output-value {
   transition: opacity 0.15s;
-}
-
-.neuron.neuron-selected {
-  box-shadow: 0 0 0 2.5px var(--color-selection), 0 0 8px var(--color-selection-glow);
-  border-color: var(--color-selection) !important;
 }
 
 

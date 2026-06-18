@@ -677,12 +677,17 @@ export function useEmbeddingScene(
         if (embPointMesh) embPointMesh.visible = v
     })
 
+    function setStaticOverlay(target: SelectionTarget | null) {
+        overlayManager.setStaticOverlay(target)
+    }
+
     return {
         onMouseMove,
         onMouseLeave,
         onCanvasMouseDown,
         onCanvasClick,
         resetCamera,
+        setStaticOverlay,
     }
 }
 

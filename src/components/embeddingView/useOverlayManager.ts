@@ -170,11 +170,24 @@ export function useOverlayManager(
 ) {
   let active: SceneOverlay[] = []
   let inputShelved = false
+  let staticOverlayTarget: SelectionTarget | null = null
+
+  /** Resolve the effective selection target: static overlay takes precedence, then selected. */
+  function effectiveSelection(): SelectionTarget | null {
+    if (staticOverlayTarget) return staticOverlayTarget
+    return selSvc.selected.value
+  }
+
+  /** Set a static overlay target that bypasses SelectionService. */
+  function setStaticOverlay(target: SelectionTarget | null) {
+    staticOverlayTarget = target
+    rebuild()
+  }
 
   /** Resolve the effective output target (hover priority over select). */
   function activeOutputIdx(): number | null {
     const hov = selSvc.hovered.value
-    const sel = selSvc.selected.value
+    const sel = effectiveSelection()
     if (hov?.kind === 'output') return hov.idx
     if (sel?.kind === 'output') return sel.idx
     return null
@@ -197,7 +210,7 @@ export function useOverlayManager(
 
     if (!ctx) return
 
-    const overlays = resolveOverlays(ctx, selSvc.selected.value, selSvc.hovered.value, fullOutputOverlay)
+    const overlays = resolveOverlays(ctx, effectiveSelection(), selSvc.hovered.value, fullOutputOverlay)
     for (const overlay of overlays) {
       overlay.build(ctx)
       active.push(overlay)
@@ -215,6 +228,7 @@ export function useOverlayManager(
     disposeAll() {
       active.forEach(o => o.dispose())
       active = []
+      staticOverlayTarget = null
       if (inputShelved) {
         const ctx = getCtx()
         if (ctx) ctx.svc.restoreInput()
@@ -223,5 +237,7 @@ export function useOverlayManager(
     },
     /** Force-rebuild overlays — call after scene init to pick up pre-existing selections. */
     rebuild,
+    /** Set a static overlay target that bypasses SelectionService. */
+    setStaticOverlay,
   }
 }

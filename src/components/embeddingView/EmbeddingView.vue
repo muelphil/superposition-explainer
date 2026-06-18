@@ -2,7 +2,7 @@
 import { ref, computed, inject } from 'vue'
 import { Compass } from 'lucide-vue-next'
 import type { AutoencoderServiceType } from '../../services/AutoencoderService'
-import type { SelectionServiceType } from '../../services/SelectionService'
+import type { SelectionServiceType, SelectionTarget } from '../../services/SelectionService'
 import { useEmbeddingScene } from './useEmbeddingScene'
 import EmbeddingLegend from './EmbeddingLegend.vue'
 
@@ -12,6 +12,7 @@ const props = defineProps<{
   staticMode?: boolean
   fullOutputOverlay?: boolean
   disableZoom?: boolean
+  staticOverlayTarget?: SelectionTarget
 }>()
 
 const svc    = props.autoencoderService ?? inject<AutoencoderServiceType>('autoencoderService')!
@@ -20,8 +21,13 @@ const selSvc = props.selectionService ?? inject<SelectionServiceType>('selection
 const containerRef = ref<HTMLDivElement   | null>(null)
 const canvasRef    = ref<HTMLCanvasElement | null>(null)
 
-const { onMouseMove, onMouseLeave, onCanvasMouseDown, onCanvasClick, resetCamera } =
+const { onMouseMove, onMouseLeave, onCanvasMouseDown, onCanvasClick, resetCamera, setStaticOverlay } =
   useEmbeddingScene(canvasRef, containerRef, svc, selSvc, !!props.staticMode, !!props.fullOutputOverlay, !!props.disableZoom)
+
+// Expose setStaticOverlay for parent components (e.g. InterferenceIllustration)
+defineExpose({
+  setStaticOverlay,
+})
 
 const inputDim = computed(() => svc.config.inputDim)
 </script>

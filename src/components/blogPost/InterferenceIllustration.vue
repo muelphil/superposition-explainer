@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { createAutoencoderService } from '../../services/AutoencoderService'
 import { createSelectionService } from '../../services/SelectionService'
 import EmbeddingView from '../embeddingView/EmbeddingView.vue'
@@ -33,12 +33,21 @@ svc.currentInput.value = unitInput
 svc.currentEmbedding.value = [W[0][0], W[1][0]]
 
 const selSvc = createSelectionService()
-selSvc.setSelected({ kind: 'output', idx: 0 }, 'embedding')
+
+// Apply the full output overlay set directly — no SelectionService dependency.
+const viewRef = ref<InstanceType<typeof EmbeddingView> | null>(null)
+onMounted(async () => {
+  await nextTick()
+  if (viewRef.value?.setStaticOverlay) {
+    viewRef.value.setStaticOverlay({ kind: 'output', idx: 0 })
+  }
+})
 </script>
 
 <template>
   <div class="interference-illustration">
     <EmbeddingView
+      ref="viewRef"
       :autoencoderService="svc"
       :selectionService="selSvc"
       static-mode

@@ -47,8 +47,6 @@ function illumForTarget(t: SelectionTarget): WvIllum | null {
 }
 
 const activeIllum = computed<WvIllum | null>(() => {
-  const sel = selSvc.selected.value
-  if (sel) return illumForTarget(sel)
   const hov = selSvc.hovered.value
   if (hov) return illumForTarget(hov)
   return null
@@ -89,42 +87,13 @@ function rowHeaderHighlighted(r: number): boolean {
   return (illum.wRows as Set<number>).has(r)
 }
 
-// ─── Selection indicators ─────────────────────────────────────────────────────
-function isColSelected(c: number): boolean {
-  const sel = selSvc.selected.value
-  if (!sel) return false
-  return (sel.kind === 'feature' || sel.kind === 'input' || sel.kind === 'output') && sel.idx === c
-}
-
-function isRowSelected(r: number): boolean {
-  const sel = selSvc.selected.value
-  if (!sel) return false
-  return sel.kind === 'emb' && sel.idx === r
-}
-
-function isCellSelected(r: number, c: number): boolean {
-  const sel = selSvc.selected.value
-  if (!sel) return false
-  return sel.kind === 'weight' && sel.row === r && sel.col === c
-}
-
-function isBiasSelected(c: number): boolean {
-  const sel = selSvc.selected.value
-  if (!sel) return false
-  return sel.kind === 'bias' && sel.idx === c
-}
-
 function clearHover() { selSvc.clearHover() }
 
 // ─── Hover / click wrappers ───────────────────────────────────────────────────
 function onColEnter(c: number) { selSvc.setHover({ kind: 'feature', idx: c }, 'weights') }
-function onColClick(c: number) { selSvc.setSelected({ kind: 'feature', idx: c }, 'weights') }
 function onRowEnter(r: number) { selSvc.setHover({ kind: 'emb', idx: r }, 'weights') }
-function onRowClick(r: number) { selSvc.setSelected({ kind: 'emb', idx: r }, 'weights') }
 function onCellEnter(r: number, c: number) { selSvc.setHover({ kind: 'weight', row: r, col: c }, 'weights') }
-function onCellClick(r: number, c: number) { selSvc.setSelected({ kind: 'weight', row: r, col: c }, 'weights') }
 function onBiasEnter(c: number) { selSvc.setHover({ kind: 'bias', idx: c }, 'weights') }
-function onBiasClick(c: number) { selSvc.setSelected({ kind: 'bias', idx: c }, 'weights') }
 
 // ─── Color / value helpers ────────────────────────────────────────────────────
 
@@ -170,11 +139,9 @@ function featureVecLength(c: number): number {
             :class="{
               highlighted: colHeaderHighlighted(c - 1),
               dimmed:      isActive() && !colHeaderHighlighted(c - 1),
-              selected:    isColSelected(c - 1),
             }"
             @mouseenter="onColEnter(c - 1)"
             @mouseleave="clearHover"
-            @click="onColClick(c - 1)"
             v-katex="`w_{${c}}`"
           />
           <div class="col-header-spacer" />
@@ -189,11 +156,9 @@ function featureVecLength(c: number): number {
               :class="{
                 highlighted: rowHeaderHighlighted(r - 1),
                 dimmed:      isActive() && !rowHeaderHighlighted(r - 1),
-                selected:    isRowSelected(r - 1),
               }"
               @mouseenter="onRowEnter(r - 1)"
               @mouseleave="clearHover"
-              @click="onRowClick(r - 1)"
               v-katex="`h_{${r}}`"
             />
           </div>
@@ -206,12 +171,10 @@ function featureVecLength(c: number): number {
                 :class="{
                   highlighted: cellHighlighted(r - 1, c - 1),
                   dimmed:      isActive() && !cellHighlighted(r - 1, c - 1),
-                  selected:    isCellSelected(r - 1, c - 1),
                 }"
                 :style="{ background: valColorRgb(wVal(r - 1, c - 1)) }"
                 @mouseenter="onCellEnter(r - 1, c - 1)"
                 @mouseleave="clearHover"
-                @click="onCellClick(r - 1, c - 1)"
               >
                 <span class="cell-val">{{ fmt(wVal(r - 1, c - 1)) }}</span>
               </div>
@@ -256,12 +219,10 @@ function featureVecLength(c: number): number {
               :class="{
                 highlighted: biasHighlighted(c - 1),
                 dimmed:      isActive() && !biasHighlighted(c - 1),
-                selected:    isBiasSelected(c - 1),
               }"
               :style="{ background: valColorRgb(bVal(c - 1)) }"
               @mouseenter="onBiasEnter(c - 1)"
               @mouseleave="clearHover"
-              @click="onBiasClick(c - 1)"
             >
               <span class="cell-val">{{ fmt(bVal(c - 1)) }}</span>
             </div>
@@ -371,11 +332,6 @@ function featureVecLength(c: number): number {
   opacity: 0.3;
 }
 
-.col-header.selected :deep(.katex) {
-  color: var(--color-selection);
-  font-weight: 700;
-}
-
 /* ══ Matrix body ═════════════════════════════════════════════════ */
 .matrix-body-row {
   display: flex;
@@ -415,11 +371,6 @@ function featureVecLength(c: number): number {
 
 .row-header.dimmed {
   opacity: 0.3;
-}
-
-.row-header.selected :deep(.katex) {
-  color: var(--color-selection);
-  font-weight: 700;
 }
 
 .row-header-ghost {
@@ -471,11 +422,6 @@ function featureVecLength(c: number): number {
 .matrix-cell.highlighted {
   border-color: var(--color-text-secondary);
   box-shadow: var(--shadow-ring-subtle);
-}
-
-.matrix-cell.selected {
-  border-color: var(--color-selection);
-  box-shadow: 0 0 0 2px var(--color-selection-ring);
 }
 
 .matrix-cell.dimmed {

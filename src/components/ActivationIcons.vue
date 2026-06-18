@@ -22,8 +22,6 @@ const reluClipping = computed(() => props.preActivation <= 0)
 function onBiasEnter()  { selSvc.setHover({ kind: 'bias', idx: props.featureIdx }, 'autoencoder') }
 function onReluEnter()  { selSvc.setHover({ kind: 'relu', idx: props.featureIdx }, 'autoencoder') }
 function onIconLeave()  { selSvc.clearHover() }
-function onBiasClick()  { selSvc.setSelected({ kind: 'bias', idx: props.featureIdx }, 'autoencoder') }
-function onReluClick()  { selSvc.setSelected({ kind: 'relu', idx: props.featureIdx }, 'autoencoder') }
 </script>
 
 <template>
@@ -34,7 +32,6 @@ function onReluClick()  { selSvc.setSelected({ kind: 'relu', idx: props.featureI
       :style="{ background: biasBackground }"
       @mouseenter="onBiasEnter"
       @mouseleave="onIconLeave"
-      @click="onBiasClick"
     >
       <span class="bias-label" v-katex="`b_{${props.featureIdx + 1}}`" />
     </div>
@@ -45,7 +42,6 @@ function onReluClick()  { selSvc.setSelected({ kind: 'relu', idx: props.featureI
       :class="{ 'relu-clipping': reluClipping }"
       @mouseenter="onReluEnter"
       @mouseleave="onIconLeave"
-      @click="onReluClick"
     >
       <span class="relu-svg" v-html="reluIconSvg" />
     </div>

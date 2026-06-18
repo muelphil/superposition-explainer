@@ -15,7 +15,6 @@ const items = computed(() => Array.from({ length: props.inputDim }, (_, i) => i)
 
 function onEnter(i: number) { selSvc.setHover({ kind: 'feature', idx: i }, 'embedding') }
 function onLeave()          { selSvc.clearHover() }
-function onClick(i: number) { selSvc.setSelected({ kind: 'feature', idx: i }, 'embedding') }
 </script>
 
 <template>
@@ -27,7 +26,6 @@ function onClick(i: number) { selSvc.setSelected({ kind: 'feature', idx: i }, 'e
       :class="{ dimmed: hoveredFeatureIdx !== null && hoveredFeatureIdx !== i }"
       @mouseenter="onEnter(i)"
       @mouseleave="onLeave()"
-      @click="onClick(i)"
     >
       <span class="legend-swatch" :style="{ background: featureColorCss(i, inputDim) }" />
       <span class="legend-text" v-katex="`w_{${i + 1}}`" />

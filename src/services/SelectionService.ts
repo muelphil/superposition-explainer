@@ -76,20 +76,9 @@ export function createSelectionService() {
     hoveredOrigin.value = null
   }
 
-  function setSelected(target: SelectionTarget, origin: OriginView) {
-    // Toggle: clicking the same target clears the selection
-    const curr = selected.value
-    if (
-      target !== null && curr !== null &&
-      target.kind === curr.kind &&
-      JSON.stringify(target) === JSON.stringify(curr)
-    ) {
-      selected.value       = null
-      selectedOrigin.value = null
-    } else {
-      selected.value       = target
-      selectedOrigin.value = target !== null ? origin : null
-    }
+  function setSelected(_target: SelectionTarget, _origin: OriginView) {
+    // Selection is disabled — overlays are now set directly via EmbeddingView.setStaticOverlay().
+    // This method is kept for API compatibility but is a no-op.
   }
 
   function clearSelected() {

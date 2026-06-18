@@ -132,27 +132,6 @@ const showSettings = ref(false)
         <span v-else class="debug-none">—</span>
       </span>
 
-      <span class="debug-divider">│</span>
-
-      <span class="debug-section">
-        <span class="debug-label">Selected</span>
-        <template v-if="selSvc.selected.value">
-          <span class="debug-kind">{{ selSvc.selected.value.kind }}</span>
-          <span class="debug-coords" v-if="selSvc.selected.value.kind === 'weight'">
-            [{{ selSvc.selected.value.row }},{{ selSvc.selected.value.col }}]
-          </span>
-          <span class="debug-coords" v-else>[{{ selSvc.selected.value.idx }}]</span>
-          <span class="debug-origin">← {{ selSvc.selectedOrigin.value }}</span>
-        </template>
-        <span v-else class="debug-none">—</span>
-      </span>
-
-      <button
-        v-if="selSvc.selected.value"
-        class="debug-deselect"
-        @click="selSvc.clearSelected()"
-        title="Clear selection"
-      >✕ deselect</button>
     </div>
   </div>
 </template>
