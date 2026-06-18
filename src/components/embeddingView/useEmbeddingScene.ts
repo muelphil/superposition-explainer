@@ -1,7 +1,6 @@
 import {watch, onMounted, onUnmounted, nextTick, type Ref} from 'vue'
 import * as THREE from 'three'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
-import {TrackballControls} from 'three/examples/jsm/controls/TrackballControls.js'
 import {CSS2DRenderer} from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import type {AutoencoderServiceType} from '../../services/AutoencoderService'
 import type {SelectionServiceType, SelectionTarget} from '../../services/SelectionService'
@@ -42,7 +41,7 @@ export function useEmbeddingScene(
     let labelRenderer: CSS2DRenderer | null = null
     let scene: THREE.Scene | null = null
     let camera: THREE.PerspectiveCamera | null = null
-    let controls: OrbitControls | TrackballControls | null = null
+    let controls: OrbitControls | null = null
     let rafId = 0
 
     const raycaster = new THREE.Raycaster()
@@ -162,20 +161,22 @@ export function useEmbeddingScene(
         camera.lookAt(0, 0, 0)
 
         if (embDim >= 3) {
-            // TrackballControls for free rotation without polar angle clamping
-            const tc = new TrackballControls(camera, canvas)
-            tc.rotateSpeed = 3.0
-            tc.zoomSpeed = 1.2
-            tc.panSpeed = 0.8
-            tc.dynamicDampingFactor = CAMERA_DAMPING
-            tc.minDistance = CAMERA_MIN_DIST
-            tc.maxDistance = CAMERA_MAX_DIST
+            // OrbitControls for precise rotation in 3D
+            const oc = new OrbitControls(camera, canvas)
+            oc.enableDamping = true
+            oc.dampingFactor = CAMERA_DAMPING
+            oc.rotateSpeed = 0.8
+            oc.zoomSpeed = 1.2
+            oc.minDistance = CAMERA_MIN_DIST
+            oc.maxDistance = CAMERA_MAX_DIST
+            oc.enablePan = staticMode ? false : true
             if (staticMode) {
-                tc.noRotate = true
-                tc.noZoom = true
-                tc.noPan = true
+                oc.enableRotate = false
+                oc.enableZoom = false
+            } else {
+                oc.enableZoom = !disableZoom
             }
-            controls = tc
+            controls = oc
         } else {
             const oc = new OrbitControls(camera, canvas)
             oc.enableDamping = true
