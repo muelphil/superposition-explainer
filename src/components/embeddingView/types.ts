@@ -24,6 +24,8 @@ export interface SceneCtx {
   selSvc:        SelectionServiceType
   /** Current weight column i as a Vector3 in embedding space. */
   featureVec:    (i: number) => THREE.Vector3
+  /** Access to visual vector representations (for overlays that need to modify them). */
+  getVecs:       () => VecVis[]
 }
 
 /**

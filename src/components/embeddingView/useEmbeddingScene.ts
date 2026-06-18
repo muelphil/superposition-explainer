@@ -72,6 +72,7 @@ export function useEmbeddingScene(
             svc,
             selSvc,
             featureVec: (i) => featureVec(svc.W.value, svc.config.embeddingDim, i),
+            getVecs: () => vecs,
         }
     }
 
@@ -492,10 +493,14 @@ export function useEmbeddingScene(
             const isLit = !dimVecs || (litVecSet !== null && litVecSet.has(vv.idx))
             const col = isLit ? vv.color : DIM_COLOR
             const opacity = isLit ? 1.0 : (isOutputActive ? HALF_DIM_OPACITY : DIM_OPACITY)
-            const sm = vv.shaft.material as THREE.MeshBasicMaterial
-            const hm = vv.head.material as THREE.MeshBasicMaterial
-            sm.color.copy(col); sm.opacity = opacity
-            hm.color.copy(col); hm.opacity = opacity
+            const sm = vv.shaft.material
+            const hm = vv.head.material
+            if (sm instanceof THREE.ShaderMaterial) continue
+            if (hm instanceof THREE.ShaderMaterial) continue
+            const bsm = sm as THREE.MeshBasicMaterial
+            const bhm = hm as THREE.MeshBasicMaterial
+            bsm.color.copy(col); bsm.opacity = opacity
+            bhm.color.copy(col); bhm.opacity = opacity
         }
 
         // ── Axis highlighting ─────────────────────────────────────────

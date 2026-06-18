@@ -68,7 +68,7 @@
 import { watch } from 'vue'
 import type { SelectionTarget, SelectionServiceType } from '../../services/SelectionService'
 import { effectiveHover } from '../../services/SelectionService'
-import type { SceneCtx, SceneOverlay } from './types'
+import type { SceneCtx, SceneOverlay, VecVis } from './types'
 
 // ── Overlay registry ───────────────────────────────────────────────────────────
 import { InputDirectionOverlay } from './overlays/InputDirectionOverlay'
@@ -80,6 +80,7 @@ import { BiasLabelOverlay } from './overlays/BiasLabelOverlay'
 import { BiasErrorLineOverlay } from './overlays/BiasErrorLineOverlay'
 import { ReluRegionOverlay } from './overlays/ReluRegionOverlay'
 import { InterferenceLinesOverlay } from './overlays/InterferenceLinesOverlay'
+import { MaskedVectorOverlay } from './overlays/MaskedVectorOverlay'
 
 /** Kinds that identify a single input feature index. */
 const FEATURE_KINDS = new Set(['input', 'feature', 'output', 'bias', 'relu'])
@@ -93,13 +94,14 @@ function outputOverlaysApp(idx: number): SceneOverlay[] {
 }
 
 /** Illustration output overlay: full decoding set. */
-function outputOverlaysFull(idx: number): SceneOverlay[] {
+function outputOverlaysFull(idx: number, getVecs: () => VecVis[]): SceneOverlay[] {
   return [
     new BiasDotOverlay(idx),
     new BiasLabelOverlay(idx, false),
     new BiasErrorLineOverlay(idx),
     new ReluRegionOverlay(idx),
     new InterferenceLinesOverlay(idx),
+    new MaskedVectorOverlay(idx, getVecs),
   ]
 }
 
@@ -112,12 +114,13 @@ function outputOverlaysFull(idx: number): SceneOverlay[] {
  * resolver combines them freely.
  */
 function resolveOverlays(
+  ctx: SceneCtx,
   _sel: SelectionTarget,
   _rawHov: SelectionTarget,
   _full: boolean,
 ): SceneOverlay[] {
   const _hov = effectiveHover(_sel, _rawHov)
-  const output = _full ? outputOverlaysFull : outputOverlaysApp
+  const output = (i: number) => _full ? outputOverlaysFull(i, ctx.getVecs) : outputOverlaysApp(i)
 
   // ── Priority hover kinds ──────────────────────────────────────
   if (_hov?.kind === 'input')  return [new InputDirectionOverlay(_hov.idx)]
@@ -194,7 +197,7 @@ export function useOverlayManager(
 
     if (!ctx) return
 
-    const overlays = resolveOverlays(selSvc.selected.value, selSvc.hovered.value, fullOutputOverlay)
+    const overlays = resolveOverlays(ctx, selSvc.selected.value, selSvc.hovered.value, fullOutputOverlay)
     for (const overlay of overlays) {
       overlay.build(ctx)
       active.push(overlay)
