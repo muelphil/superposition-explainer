@@ -529,8 +529,10 @@ import ParamScaleChart from './ParamScaleChart.vue'
             <a href="https://youtu.be/9-Jl0dxWQs8" target="_blank" rel="noopener">youtube.com</a>
           </li>
           <li>
-            Sloane, N. J. A. <em>Tables of Spherical Codes.</em>
-            <a href="http://spherical-codes.org/" target="_blank" rel="noopener">spherical-codes.org</a>
+            Cohn, H. (2024). <em>Table of Spherical Codes.</em> Dataset. MIT DSpace.
+            <a href="https://hdl.handle.net/1721.1/153543" target="_blank" rel="noopener">hdl.handle.net/1721.1/153543</a>.
+            See also:
+            <a href="https://spherical-codes.org/" target="_blank" rel="noopener">spherical-codes.org</a>
           </li>
           <li>
             Neuronpedia.
