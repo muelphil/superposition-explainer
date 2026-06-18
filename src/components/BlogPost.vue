@@ -13,11 +13,11 @@ import ParamScaleChart from './ParamScaleChart.vue'
 
       <!-- ── Header ───────────────────────────────────────────── -->
       <header class="post-header post-section">
-        <div class="post-meta">
-          <span class="post-date">April 2, 2025</span>
-          <span class="post-separator">·</span>
-          <span class="post-read-time">8 min read</span>
-        </div>
+<!--        <div class="post-meta">-->
+<!--          <span class="post-date">April 2, 2025</span>-->
+<!--          <span class="post-separator">·</span>-->
+<!--          <span class="post-read-time">8 min read</span>-->
+<!--        </div>-->
 
         <h1 class="post-title">
           Superposition in Neural Networks: A Visual Exploration
@@ -334,10 +334,10 @@ import ParamScaleChart from './ParamScaleChart.vue'
           Concrete examples from optimal spherical code tables
           (<a href="https://spherical-codes.org/" target="_blank" rel="noopener">spherical-codes.org</a>):
           in <katex-element expression="d = 3" /> with a minimum angle of
-          <katex-element expression="63^\circ" />, up to <strong>10 unit vectors</strong> fit
-          (<katex-element expression="\sim 3.3\times" /> the dimension). In
-          <katex-element expression="d = 15" /> with the same threshold, up to <strong>1,000 unit
-          vectors</strong> fit (<katex-element expression="\sim 67\times" /> the dimension).
+          <katex-element expression="63^\circ" />, up to <strong>12 unit vectors</strong> fit
+          (<katex-element expression="\sim 4\times" /> the dimension). In
+          <katex-element expression="d = 15" /> with the same threshold, up to <strong>990 unit
+          vectors</strong> fit (<katex-element expression="\sim 66\times" /> the dimension).
         </p>
 
         <p>
@@ -557,7 +557,6 @@ import ParamScaleChart from './ParamScaleChart.vue'
   font-size: 1rem;
   line-height: 1.75;
   color: var(--color-text-primary);
-  gap: 3.5rem;
 }
 
 /* Every section is horizontally centered within the page */

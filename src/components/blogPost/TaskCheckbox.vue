@@ -51,7 +51,7 @@ defineProps<{
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: check-pop 0.3s ease-out forwards;
+  animation: check-pop 1s ease-out forwards;
 }
 
 .check-svg {

@@ -566,6 +566,8 @@ function resampleAll() {
   transition: opacity 0.12s;
   z-index: 100;
   pointer-events: none;
+
+  font-family: var(--font-family-mono)
 }
 
 .neuron-tooltip :deep(.katex) {

@@ -57,7 +57,7 @@ const { revealedHtml, visible, done } = useTextReveal(revealContainer, props.tas
   font-size: 0.88rem;
   line-height: 1.6;
   color: var(--color-text-primary);
-  padding-top: 10px;
+  padding-top: 1em; 
 }
 
 
@@ -67,6 +67,7 @@ const { revealedHtml, visible, done } = useTextReveal(revealContainer, props.tas
 
 .insight-content {
   min-height: 1.2em;
+  padding-left: 0.5em;
 }
 
 </style>

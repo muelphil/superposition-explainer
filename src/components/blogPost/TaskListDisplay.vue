@@ -79,7 +79,7 @@ const optionalTasks = computed(() =>
 
 <style>
 .task-list {
-  padding: 0 1rem;
+  /*padding: 0 1rem;*/
 }
 
 .task-list-header {
@@ -90,14 +90,14 @@ const optionalTasks = computed(() =>
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
   font-family: var(--font-family-label);
   color: white;
   background-color: #6592df;
   inline-size: min-content;
-  padding: 4px 4px 4px 6px;
+  padding: 4px 6px;
   border-radius: 4px 4px 4px 4px;
-  margin-left: -33px;
+  /*margin-left: -33px;*/
 }
 
 .header-icon {
@@ -118,10 +118,10 @@ const optionalTasks = computed(() =>
 .task-items {
   list-style: none;
   margin: 0 !important;
-  padding: 0 !important;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  padding-left: 0.5em !important;
 }
 
 .task-item {
