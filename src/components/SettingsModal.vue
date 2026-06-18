@@ -69,7 +69,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .modal-card {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   width: 360px;
   max-width: calc(100vw - 2rem);

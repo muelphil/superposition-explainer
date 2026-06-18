@@ -29,20 +29,11 @@ import ParamScaleChart from './ParamScaleChart.vue'
         </p>
 
         <div class="post-authors">
-          <div class="author">
-            <div class="author-avatar">PM</div>
-            <div class="author-info">
-              <span class="author-name">Philip Müller</span>
-              <span class="author-affiliation">Helmholtz-Zentrum Dresden-Rossendorf</span>
-            </div>
-          </div>
-          <div class="author">
-            <div class="author-avatar">MS</div>
-            <div class="author-info">
-              <span class="author-name">Max Schmidt</span>
-              <span class="author-affiliation">Department of Computer Science</span>
-            </div>
-          </div>
+          <span class="author-name">Philip Müller</span>
+          <span class="author-separator">·</span>
+          <span class="author-name">TODO</span>
+          <span class="author-separator">·</span>
+          <span class="author-name">Peter Steinbach</span>
         </div>
       </header>
 
@@ -609,15 +600,28 @@ import ParamScaleChart from './ParamScaleChart.vue'
 .post-body :deep(figure.post-figure img) {
   max-width: 100%;
   height: auto;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
 }
 
 .post-body :deep(figure.post-figure figcaption) {
   margin-top: 0.5rem;
   font-size: 0.85rem;
-  color: var(--color-text-secondary);
+  color: var(--color-text-label);
   line-height: 1.5;
+}
+
+.post-body :deep(blockquote) {
+  margin: 1.5rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--color-interactive);
+  background: var(--color-active-paragraph-bg);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-style: italic;
+  color: var(--color-text-strong);
+}
+.post-body :deep(blockquote p) {
+  margin: 0;
 }
 
 .post-body :deep(ol),
@@ -685,46 +689,17 @@ import ParamScaleChart from './ParamScaleChart.vue'
 
 .post-authors {
   display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.author {
-  display: flex;
   align-items: center;
-  gap: 0.65rem;
-}
-
-.author-avatar {
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 50%;
-  background: var(--color-bg-stub);
-  color: var(--color-text-label);
-  font-size: 0.7rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  letter-spacing: 0.04em;
-  flex-shrink: 0;
-}
-
-.author-info {
-  line-height: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.75rem;
+  font-size: 0.92rem;
 }
 
 .author-name {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--color-text-strong);
+  font-weight: 500;
 }
 
-.author-affiliation {
-  font-size: 0.75rem;
+.author-separator {
   color: var(--color-text-secondary);
 }
 </style>
@@ -763,11 +738,18 @@ $spotlight-opacity: 0.45;
   color: var(--color-text-primary);
 }
 
+.blog-post .section-heading.full-span {
+  grid-column: 1 / -1;
+}
+
+.blog-post .section-heading.experiments-heading {
+  margin-top: 2rem;
+}
+
 /* ── Text block base (shared across all variants) ─────────────── */
 .blog-post .text-column .text-block {
   margin: 0 0 1.5rem;
-  //padding: 0.5rem 0 0.5rem 1rem;
-  padding-left: 1rem;
+  padding: 0.5rem 1rem;
   border-left: 3px solid transparent;
   border-radius: 0 6px 6px 0;
   transition: background-color 0.25s ease, border-color 0.25s ease;
@@ -790,7 +772,7 @@ $spotlight-opacity: 0.45;
 .blog-post .text-column .text-block {
   position: relative;
   border-left: none !important;
-  transition: opacity 0.3s ease-out;
+  transition: opacity 0.3s ease-out, background-color 0.25s ease;
   opacity: 1;
 
   &::after {
@@ -799,9 +781,9 @@ $spotlight-opacity: 0.45;
     left: 0;
     top: 0;
     bottom: 0;
-    width: 4px;
+    width: 5px;
     background: $accent;
-    border-radius: 2px;
+    border-radius: 3px;
     transform: scaleY(0);
     opacity: 0;
     transition: transform 0.3s ease-out, opacity 0.3s ease-out;
@@ -814,6 +796,9 @@ $spotlight-opacity: 0.45;
 }
 .blog-post .text-column .text-block:not(.active-block) {
   cursor: pointer;
+}
+.blog-post .text-column .text-block:not(.active-block):hover {
+  background-color: var(--color-bg-subtle);
 }
 
 /* Dim all direct children of .post-body that don't contain the active block */
@@ -842,6 +827,7 @@ $spotlight-opacity: 0.45;
 }
 
 .blog-post .text-column .active-block {
+  background-color: var(--color-active-paragraph-bg);
   border-left: none !important;
 
   &::after {

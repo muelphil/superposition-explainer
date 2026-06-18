@@ -254,7 +254,7 @@ function featureVecLength(c: number): number {
   padding: 0.3rem 0.5rem;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   width: 100%;
   box-sizing: border-box;
 }

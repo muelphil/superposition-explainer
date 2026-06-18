@@ -55,13 +55,21 @@ function onTrainClick() {
   gap: 0.5rem;
 }
 
+.footer-btns button{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
 .reset-btn {
   flex: 0 0 auto;
   padding: 0.5rem 0.85rem;
   font-size: 0.82rem;
   font-weight: 600;
   font-family: inherit;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   cursor: pointer;
   transition: background 0.15s, opacity 0.15s;
@@ -77,7 +85,7 @@ function onTrainClick() {
   font-size: 0.88rem;
   font-weight: 600;
   font-family: inherit;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
   transition: background 0.15s;

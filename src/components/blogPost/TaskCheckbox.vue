@@ -34,7 +34,7 @@ defineProps<{
   font-size: 0.72rem;
   color: var(--color-task-checkbox-border);
   transition: background-color 0.2s, border-color 0.2s, color 0.2s;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .task-completed {

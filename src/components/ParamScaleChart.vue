@@ -124,11 +124,11 @@ function barColor(idx: number): string {
 /* ────────────────────────────────────────── */
 
 .param-dim-header,
-.param-bar-header {
-  font-family: 'SF Mono', 'Fira Code', monospace;
+.param-param-header {
+  font-family: var(--font-family-mono);
   font-size: 12px;
-  letter-spacing: 0.06em;
   color: var(--color-text-secondary);
+  letter-spacing: 0.06em;
   user-select: none;
 }
 
@@ -145,11 +145,10 @@ function barColor(idx: number): string {
 /* ────────────────────────────────────────── */
 
 .param-dim {
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: var(--font-family-mono);
   font-size: 13px;
   color: var(--color-text-primary);
   text-align: right;
-  white-space: nowrap;
   user-select: none;
 }
 
@@ -166,7 +165,7 @@ function barColor(idx: number): string {
 .param-bar {
   position: relative;
   height: 22px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   opacity: 0.8;
 
   display: flex;
@@ -177,9 +176,10 @@ function barColor(idx: number): string {
 }
 
 .param-value {
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: var(--font-family-mono);
   font-size: 13px;
   font-weight: 600;
+  color: var(--color-text-primary);
   white-space: nowrap;
   user-select: none;
 }

@@ -34,6 +34,6 @@ defineProps<{
   margin-top: 8px;
   font-size: 13px;
   color: var(--color-text-secondary);
-  font-family: Inter, sans-serif;
+  font-family: var(--font-family-label);
 }
 </style>

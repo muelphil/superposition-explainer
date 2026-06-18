@@ -233,7 +233,7 @@ const visiblePauseSteps = computed(() => {
   color: var(--color-text-primary);
   background: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 0.15rem 0.3rem;
   cursor: pointer;
   outline: none;
@@ -273,7 +273,7 @@ const visiblePauseSteps = computed(() => {
   font-size: 0.78rem;
   color: var(--color-text-secondary);
   border: 1px dashed var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   margin: 0.75rem 1.25rem;
 }
 </style>

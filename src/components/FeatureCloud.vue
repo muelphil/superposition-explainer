@@ -82,7 +82,7 @@ const rows = computed(() => {
 }
 
 .feature-pill {
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: var(--font-family-label);
   font-size: 11px;
   line-height: 1;
   padding: 3px 8px;

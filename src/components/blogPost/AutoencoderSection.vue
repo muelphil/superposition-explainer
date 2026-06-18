@@ -309,7 +309,7 @@ useParagraphRanges(ranges, activeBlockIndex)
   <!-- Single-root section: owns its own CSS grid, centered at wider width -->
   <div class="ae-section post-section">
     <!-- Text column -->
-    <h2 class="section-heading" style="grid-column: 1 / -1;">The Toy Autoencoder</h2>
+    <h2 class="section-heading full-span">The Toy Autoencoder</h2>
      <div class="text-column" data-scroll-dir="down">
 
       <!-- ═══ Block 'intro' — blank state, nothing revealed ═══ -->
@@ -576,7 +576,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- Section 4: Experiments                                                 -->
       <!-- ═══════════════════════════════════════════════════════════════════════ -->
 
-      <h2 class="section-heading" style="margin-top: 2.5rem;">Experiments</h2>
+      <h2 class="section-heading full-span experiments-heading">Experiments</h2>
 
       <!-- ═══ Experiments intro (no text-block — not activatable) ═══ -->
 
@@ -702,7 +702,7 @@ useParagraphRanges(ranges, activeBlockIndex)
               roughly opposite pairs. Features sharing an axis point in opposite directions: when
               only one is active, the decoder recovers it well. When both are active
               simultaneously, their contributions cancel in embedding space, causing significant
-              error — but with <katex-element expression="S = 0.1" />, this co-activation
+              error — but with <katex-element expression="S = 0.9" />, this co-activation
               happens only about 1% of the time. The model accepts rare large errors in exchange
               for representing more features.
             </p>

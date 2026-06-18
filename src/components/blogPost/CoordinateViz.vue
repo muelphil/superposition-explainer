@@ -571,7 +571,7 @@ const recoveryExpression = computed(() => {
   height: auto;
   display: block;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-bg);
   border: 1px solid var(--color-border);
 }
@@ -602,7 +602,7 @@ const recoveryExpression = computed(() => {
 .math-panel {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
   text-align: center;
 }

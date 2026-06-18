@@ -55,7 +55,7 @@ defineProps<{
 
   background: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
 
   box-sizing: border-box;
   width: fit-content;

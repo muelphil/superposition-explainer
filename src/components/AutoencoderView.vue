@@ -453,7 +453,7 @@ function toggleInput(i: number) {
   font-family: var(--font-family-label);
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--color-text-title);
+  color: var(--color-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   z-index: 2;
@@ -647,7 +647,7 @@ function toggleInput(i: number) {
   height: 20px;
   background: transparent;
   border: 1px solid var(--color-interactive-disabled);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   color: var(--color-text-action);
   white-space: nowrap;

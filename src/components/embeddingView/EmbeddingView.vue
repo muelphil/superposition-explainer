@@ -85,7 +85,7 @@ const inputDim = computed(() => svc.config.inputDim)
 }
 .emb-canvas--wide {
   aspect-ratio: auto;
-  height: 378px;
+  height: var(--emb-static-height);
 }
 
 
@@ -107,7 +107,7 @@ const inputDim = computed(() => svc.config.inputDim)
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border: 1px solid var(--color-border);
-  border-radius: 20px;
+  border-radius: var(--radius-full);
   padding: 0.2rem 0.65rem;
   pointer-events: auto;
 }

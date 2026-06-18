@@ -123,7 +123,7 @@ useParagraphRanges(ranges, activeBlockIndex)
 <template>
   <!-- Single-root section: owns its own CSS grid, centered at wider width -->
   <div class="bases-section post-section">
-    <h2 class="section-heading" style=" grid-column: 1 / -1;">Geometric Foundations: Bases and Feature Representation</h2>
+    <h2 class="section-heading full-span">Geometric Foundations: Bases and Feature Representation</h2>
     <!-- Text column -->
      <div class="text-column" data-scroll-dir="down">
 

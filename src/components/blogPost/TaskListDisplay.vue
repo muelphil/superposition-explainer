@@ -86,18 +86,16 @@ const optionalTasks = computed(() =>
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
   margin-bottom: 0.8rem;
   font-family: var(--font-family-label);
   color: white;
-  background-color: #6592df;
+  background-color: var(--color-interactive);
   inline-size: min-content;
-  padding: 4px 6px;
-  border-radius: 4px 4px 4px 4px;
-  /*margin-left: -33px;*/
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
 }
 
 .header-icon {
@@ -106,9 +104,7 @@ const optionalTasks = computed(() =>
 
 .optional-section-header {
   font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-weight: 600;
   color: var(--color-text-secondary);
   font-family: var(--font-family-label);
   margin-top: 0.75rem;

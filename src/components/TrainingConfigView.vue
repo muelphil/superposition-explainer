@@ -175,7 +175,7 @@ function fmtLR(lr: number) {
   color: var(--color-text-primary);
   background: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 0.15rem 0.3rem;
   cursor: pointer;
   outline: none;
