@@ -302,7 +302,7 @@ const ranges: ParagraphRange[] = [
 ]
 
 const paragraphRefs = ref<(HTMLElement | null)[]>([])
-const { activeBlockIndex } = useScrollActiveBlock(paragraphRefs)
+const { activeBlockIndex, scrollToBlock } = useScrollActiveBlock(paragraphRefs)
 useParagraphRanges(ranges, activeBlockIndex)
 </script>
 <template>
@@ -315,7 +315,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- ═══ Block 'intro' — blank state, nothing revealed ═══ -->
       <div
           :ref="(el) => paragraphRefs[blockIdx('intro')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('intro') }"
       >
         <p>
@@ -331,7 +331,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- ═══ Block 'architecture' — reveals input+output neurons ═══ -->
       <div
           :ref="(el) => paragraphRefs[blockIdx('architecture')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('architecture') }"
       >
         <p>
@@ -346,7 +346,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- ═══ Block 'embedding' — reveals embedding neurons ═══ -->
       <div
           :ref="(el) => paragraphRefs[blockIdx('embedding')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('embedding') }"
       >
         <p>
@@ -360,7 +360,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- ═══ Block 'encoder' — reveals encoder connections (embedding panel not yet shown) ═══ -->
       <div
           :ref="(el) => paragraphRefs[blockIdx('encoder')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('encoder') }"
       >
         <p>
@@ -382,7 +382,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- ═══ Block 'embedding-viz' — reveals embedding space panel, interaction tasks ═══ -->
       <div
           :ref="(el) => paragraphRefs[blockIdx('embedding-viz')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('embedding-viz') }"
       >
         <p>
@@ -398,7 +398,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- ═══ Block 'weights-view' — reveals weights panel ═══ -->
       <div
           :ref="(el) => paragraphRefs[blockIdx('weights-view')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('weights-view') }"
       >
         <p>
@@ -413,7 +413,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- ═══ Block 'decoder' — reveals decoder connections + bias/ReLU + output values ═══ -->
       <div
           :ref="(el) => paragraphRefs[blockIdx('decoder')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('decoder') }"
       >
         <p>
@@ -453,7 +453,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- ═══ Block 'tied-weights' — no new reveal, just text ═══ -->
       <div
           :ref="(el) => paragraphRefs[blockIdx('tied-weights')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('tied-weights') }"
       >
         <p>
@@ -470,7 +470,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- ═══ Block 'bias-relu' — triggers continuous bias/ReLU pulse ═══ -->
       <div
           :ref="(el) => paragraphRefs[blockIdx('bias-relu')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('bias-relu') }"
       >
         <p>
@@ -486,7 +486,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- ═══ Block 'data' — reveals half-normal backdrop + resample ═══ -->
       <div
           :ref="(el) => paragraphRefs[blockIdx('data')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('data') }"
       >
         <p>
@@ -524,7 +524,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- ═══ Block 'training' — reveals training tab + stats + weighted loss ═══ -->
       <div
           :ref="(el) => paragraphRefs[blockIdx('training')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('training') }"
       >
         <p>
@@ -591,7 +591,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <h3>Experiment 1: Two Features in Two Dimensions</h3>
       <div
           :ref="(el) => paragraphRefs[blockIdx('exp1')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('exp1') }"
       >
 
@@ -615,7 +615,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <h3>Experiment 2: More Features Than Dimensions</h3>
       <div
           :ref="(el) => paragraphRefs[blockIdx('exp2')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('exp2') }"
       >
 
@@ -649,7 +649,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <h3>Interlude: Feature Sparsity</h3>
       <div
           :ref="(el) => paragraphRefs[blockIdx('interlude')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('interlude') }"
       >
 
@@ -685,7 +685,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <h3>Experiment 3: Sparsity Changes the Game</h3>
       <div
           :ref="(el) => paragraphRefs[blockIdx('exp3')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('exp3') }"
       >
 
@@ -720,7 +720,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <h3>Experiment 4: Beyond Doubling</h3>
       <div
           :ref="(el) => paragraphRefs[blockIdx('exp4')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('exp4') }"
       >
 

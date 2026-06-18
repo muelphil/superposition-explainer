@@ -56,7 +56,7 @@ function blockIdx(id: BlockId): number { return BLOCK_IDS.indexOf(id) }
 // ─── Scroll tracking ─────────────────────────────────────────────────────────
 
 const blockRefs = ref<(HTMLElement | null)[]>([])
-const { activeBlockIndex } = useScrollActiveBlock(blockRefs)
+const { activeBlockIndex, scrollToBlock } = useScrollActiveBlock(blockRefs)
 
 watch(activeBlockIndex, (idx) => {
   if (idx >= 0) svc.setActiveParagraph(idx)
@@ -146,7 +146,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       </p>
       <div
           :ref="(el) => blockRefs[blockIdx('feature-space')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('feature-space') }"
       >
         <p>Formally, a <strong>feature vector</strong> <katex-element expression="x = (x_1, \ldots, x_n)^T"/>
@@ -162,7 +162,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- Block 'both-spaces': Formal definitions of F, H, W -->
       <div
           :ref="(el) => blockRefs[blockIdx('both-spaces')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('both-spaces') }"
       >
         <p>
@@ -185,7 +185,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- Block 'encoding': Embedding with W -->
       <div
           :ref="(el) => blockRefs[blockIdx('encoding')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('encoding') }"
       >
         <p>
@@ -212,7 +212,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- Block 'decoding': Recovery with W^T + substitution -->
       <div
           :ref="(el) => blockRefs[blockIdx('decoding')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('decoding') }"
       >
         <p>
@@ -254,7 +254,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <!-- Block 'gram-matrix': Gram matrix and identity condition -->
       <div
           :ref="(el) => blockRefs[blockIdx('gram-matrix')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('gram-matrix') }"
       >
         <p>
@@ -289,7 +289,7 @@ useParagraphRanges(ranges, activeBlockIndex)
 
       <div
           :ref="(el) => blockRefs[blockIdx('2d-intro')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('2d-intro') }"
       >
         <p>
@@ -337,7 +337,7 @@ useParagraphRanges(ranges, activeBlockIndex)
 
       <div
           :ref="(el) => blockRefs[blockIdx('arbitrary-vectors')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('arbitrary-vectors') }"
       >
       <p>
@@ -369,7 +369,7 @@ useParagraphRanges(ranges, activeBlockIndex)
 
       <div
           :ref="(el) => blockRefs[blockIdx('arbitrary-projection')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('arbitrary-projection') }"
       >
       <p>
@@ -471,7 +471,7 @@ useParagraphRanges(ranges, activeBlockIndex)
 
       <div
           :ref="(el) => blockRefs[blockIdx('orthogonal-basis')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('orthogonal-basis') }"
       >
       <p>
@@ -536,7 +536,7 @@ useParagraphRanges(ranges, activeBlockIndex)
 
       <div
           :ref="(el) => blockRefs[blockIdx('orthonormal-basis')] = el as HTMLElement"
-          class="text-block"
+          @click="scrollToBlock($event.currentTarget)" class="text-block"
           :class="{ 'active-block': activeBlockIndex === blockIdx('orthonormal-basis') }"
       >
       <p>
