@@ -810,6 +810,9 @@ $spotlight-opacity: 0.45;
 .blog-post .text-column:has(.active-block) .text-block:not(.active-block) {
   opacity: $spotlight-opacity;
 }
+.blog-post .text-column .text-block:not(.active-block) {
+  cursor: pointer;
+}
 
 /* Dim all direct children of .post-body that don't contain the active block */
 .blog-post:has(.active-block) .post-body > :not(:has(.active-block)) {
