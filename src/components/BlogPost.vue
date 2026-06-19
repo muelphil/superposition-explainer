@@ -700,7 +700,26 @@ import ParamScaleChart from './ParamScaleChart.vue'
 }
 
 .author-separator {
-  color: var(--color-text-secondary);
+  color: var(--color-border);
+}
+
+@media (max-width: 768px) {
+  .post-body {
+    padding: 2rem 0.75rem 4rem;
+  }
+
+  .post-title {
+    font-size: 1.5rem;
+  }
+
+  .post-subtitle {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .post-header {
+    padding-bottom: 1.5rem;
+  }
 }
 </style>
 
@@ -844,13 +863,11 @@ $spotlight-opacity: 0.45;
 }
 .blog-post .viz-column {
   min-width: 0;
-  align-self: stretch;
-  /*align-content: center;*/
+  align-self: start;
 }
 
-/* Sticky visualization panel */
 .blog-post .viz-sticky {
-  position: sticky;
-  top: 6rem;
+  overflow: hidden;
 }
+
 </style>

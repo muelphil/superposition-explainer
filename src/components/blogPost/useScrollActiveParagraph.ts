@@ -1,4 +1,5 @@
-import {ref, onMounted, onUnmounted, type Ref} from 'vue'
+import {ref, onMounted, onUnmounted, watch, type Ref} from 'vue'
+import { emitActiveBlockSeen } from './activeBlockBus'
 
 /**
  * Tracks which text-block element is closest to the vertical center of the
@@ -24,6 +25,15 @@ export function useScrollActiveBlock(
     const activeBlockIndex = ref(-1)
     let observer: IntersectionObserver | null = null
     let prevY = 0
+
+    watch(activeBlockIndex, (idx) => {
+        if (idx >= 0) {
+            const el = blockRefs.value[idx]
+            if (el) {
+                emitActiveBlockSeen(el)
+            }
+        }
+    })
 
     const dirClass = (parent: HTMLElement | null, direction: 'down' | 'up') => {
         if (!parent) return

@@ -217,7 +217,6 @@ onUnmounted(() => observer?.disconnect())
   justify-content: flex-end;
   position: relative;
   min-height: 320px;
-  min-width: 600px;
 }
 
 .funnel-vector {
@@ -241,5 +240,33 @@ onUnmounted(() => observer?.disconnect())
 .funnel-features {
   flex: 0 0 auto;
   z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .funnel-container {
+    min-height: 240px;
+    padding: 0 0.5rem;
+  }
+
+  .funnel-spacer {
+    flex: 0 0 60px;
+  }
+
+  .funnel-features :deep(.feature-pill) {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  .funnel-features :deep(.feature-ellipsis) {
+    font-size: 10px;
+  }
+
+  .funnel-vector :deep(.katex) {
+    font-size: 1.1em !important;
+  }
+
+  .funnel-vector :deep(.vector-label) {
+    font-size: 11px;
+  }
 }
 </style>

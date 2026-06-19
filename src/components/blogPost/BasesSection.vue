@@ -5,6 +5,7 @@ import { useScrollActiveBlock } from './useScrollActiveParagraph'
 import { useParagraphRanges, type ParagraphRange } from './useParagraphRanges'
 import { TaskList, TaskEventBus, TASK_EVENT_BUS_KEY } from './taskSystem'
 import BasesVisualization from './BasesVisualization.vue'
+import VizSection from './VizSection.vue'
 import TaskListDisplay from './TaskListDisplay.vue'
 import {k} from "./tasks/aeTaskHelpers.ts";
 
@@ -19,8 +20,8 @@ provide(TASK_EVENT_BUS_KEY, eventBus)
 // Task: drag the embedding dot along w₁
 let hasDragged = false
 const dragTaskList = new TaskList([{
-  id: 'drag-embedding',
-  label: `Drag the embedding ${k('y')} (the purple dot) along the direction of ${k('w_1')}. Observe projections on both ${k('w_1')} and ${k('w_2')}`,
+    id: 'drag-embedding',
+    label: `Drag the embedding ${k('y')} (the purple dot) along the direction of ${k('w_2')}. Observe projections on both ${k('w_1')} and ${k('w_2')}`,
   setup: () => ({
     events: ['drag-embedding'] as string[],
     onEvent: () => { hasDragged = true },
@@ -110,9 +111,11 @@ const ranges: ParagraphRange[] = [
         svc.coordinateStage.value = blockCoordinateStage[id]
       }
       svc.coordinateSubStage.value = (id && blockCoordinateSubStage[id]) ?? 0
+      dragTaskList.setActive(id === 'arbitrary-projection')
     },
     leave: () => {
       svc.activeViz.value = 'mapping'
+      dragTaskList.setActive(false)
     },
   },
 ]
@@ -121,9 +124,11 @@ useParagraphRanges(ranges, activeBlockIndex)
 </script>
 
 <template>
-  <!-- Single-root section: owns its own CSS grid, centered at wider width -->
-  <div class="bases-section post-section">
-    <h2 class="section-heading full-span">Geometric Foundations: Bases and Feature Representation</h2>
+  <VizSection heading="Geometric Foundations: Bases and Feature Representation">
+    <template #heading>
+      <h2 class="section-heading full-span">Geometric Foundations: Bases and Feature Representation</h2>
+    </template>
+    <template #text>
     <!-- Text column -->
      <div class="text-column" data-scroll-dir="down">
 
@@ -595,30 +600,17 @@ useParagraphRanges(ranges, activeBlockIndex)
         meaning that some degree of interference between features is unavoidable. How the model
         navigates this forced compromise is the subject of the experiments that follow.
       </p>
-    </div>
+      </div>
+    </template>
 
-    <!-- Visualization column (sticky) -->
-    <div class="viz-column">
+    <template #viz>
       <div class="viz-sticky">
         <BasesVisualization/>
       </div>
-    </div>
-  </div>
+    </template>
+  </VizSection>
 </template>
 
 <style scoped>
-/*
- * Layout only. Shared typography and interaction styles (section-heading,
- * text-column .text-block, active-block, viz-column, viz-sticky) live in BlogPost.vue.
- */
-.bases-section {
-  max-width: calc(var(--blog-prose-width) + var(--blog-column-gap) + var(--blog-viz-width));
-  width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-  display: grid;
-  grid-template-columns: var(--blog-prose-width) var(--blog-viz-width);
-  column-gap: var(--blog-column-gap);
-  align-items: start;
-}
+/* Layout handled by VizSection wrapper. Interaction styles in BlogPost.vue. */
 </style>

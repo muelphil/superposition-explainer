@@ -126,7 +126,7 @@ function barColor(idx: number): string {
 .param-dim-header,
 .param-param-header {
   font-family: var(--font-family-mono);
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-text-secondary);
   letter-spacing: 0.06em;
   user-select: none;
@@ -138,6 +138,8 @@ function barColor(idx: number): string {
 
 .param-bar-header {
   text-align: left;
+  font-size:14px;
+  color: var(--color-text-secondary);
 }
 
 /* ────────────────────────────────────────── */

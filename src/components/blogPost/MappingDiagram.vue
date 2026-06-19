@@ -27,6 +27,13 @@ const stageClasses = computed(() => {
 .mapping-diagram {
   width: 100%;
   aspect-ratio: 580 / 360;
+  font-size: 1em;
+}
+
+@media (max-width: 768px) {
+  .mapping-diagram {
+    font-size: 1.2em;
+  }
 }
 
 .svg-wrapper {

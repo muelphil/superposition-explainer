@@ -263,6 +263,7 @@ function onPlotMousemove(e: MouseEvent) {
         :y="hoverTooltip.ty.toFixed(1)"
         width="130" height="90"
         style="pointer-events: none"
+        class="tooltip-fo"
       >
         <HoverTooltip
           :angle="hoverTooltip.angle"
@@ -278,6 +279,7 @@ function onPlotMousemove(e: MouseEvent) {
         :x="((MARGIN_LEFT + xScale(X_END)) / 2).toFixed(1)" :y="(SVG_H - 6).toFixed(1)"
         text-anchor="middle" font-size="13" font-weight="500"
         :style="{ fill: 'var(--color-text-primary)' }"
+        class="axis-label"
       >Minimum pairwise angle α (degrees)</text>
 
       <!-- ── Y axis label ─────────────────────────────────── -->
@@ -286,6 +288,7 @@ function onPlotMousemove(e: MouseEvent) {
         text-anchor="middle" font-size="13" font-weight="500"
         :style="{ fill: 'var(--color-text-primary)' }"
         :transform="`rotate(-90, ${YAXIS_LABEL_X}, ${MARGIN_TOP + PLOT_H / 2})`"
+        class="axis-label"
       >Maximum number of vectors</text>
 
       <!-- ── Dimension legend ─────────────────────────────── -->
@@ -293,6 +296,7 @@ function onPlotMousemove(e: MouseEvent) {
         :x="LEGEND_POS_X" :y="LEGEND_POS_Y"
         :width="LEGEND_W" :height="LEGEND_H"
         style="pointer-events: none"
+        class="legend-fo"
       >
         <DimLegend
           :width="LEGEND_W"
@@ -327,5 +331,37 @@ function onPlotMousemove(e: MouseEvent) {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.axis-label {
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .axis-label {
+    font-size: 20px !important;
+  }
+
+  .legend-fo {
+    width: 135px !important;
+    height: 129px !important;
+  }
+
+  .legend-fo :deep(.dim-legend) {
+    position: relative;
+    transform-origin: top left;
+    transform: scale(1.5);
+  }
+
+  .tooltip-fo {
+    width: 195px !important;
+    height: 145px !important;
+  }
+
+  .tooltip-fo :deep(.chart-tooltip) {
+    position: relative;
+    transform-origin: top left;
+    transform: scale(1.35);
+  }
 }
 </style>

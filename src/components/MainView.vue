@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, provide } from 'vue'
-import { Settings } from 'lucide-vue-next'
-import { createAutoencoderService } from '../services/AutoencoderService'
-import { createSelectionService } from '../services/SelectionService'
+import {ref, computed, provide, onMounted, onUnmounted} from 'vue'
+import {Settings} from 'lucide-vue-next'
+import {createAutoencoderService} from '../services/AutoencoderService'
+import {createSelectionService} from '../services/SelectionService'
 import AutoencoderView from './AutoencoderView.vue'
 import EmbeddingView from './embeddingView/EmbeddingView.vue'
 import WeightView from './WeightView.vue'
@@ -28,14 +28,29 @@ const activeTab = ref<PanelTab>('training')
 const svc = autoencoderService
 
 const showSettings = ref(false)
+
+// ── Mobile detection ───────────────────────────────────────────
+const isMobile = ref(false)
+let mql: MediaQueryList | null = null
+onMounted(() => {
+  mql = window.matchMedia('(max-width: 768px)')
+  isMobile.value = mql.matches
+  mql.addEventListener('change', (e) => {
+    isMobile.value = e.matches
+  })
+})
+onUnmounted(() => {
+  mql?.removeEventListener('change', () => {
+  })
+})
 </script>
 
 <template>
   <div class="main-view">
     <header class="app-header">
-      <AppLogo />
+      <AppLogo/>
       <button class="header-icon-btn" @click="showSettings = true" title="Settings">
-        <Settings :size="16" />
+        <Settings :size="16"/>
       </button>
     </header>
 
@@ -47,7 +62,7 @@ const showSettings = ref(false)
           <!-- ── Left column: Autoencoder (65%) ─────────────── -->
           <section class="left-col">
             <h2 class="label-header">Autoencoder</h2>
-            <AutoencoderView />
+            <AutoencoderView :compact="isMobile"/>
           </section>
 
           <!-- ── Right column: Embedding + Combined panel (35%) -->
@@ -58,10 +73,9 @@ const showSettings = ref(false)
               <h2 class="label-header">Embedding Space</h2>
 
               <section class="panel embedding-panel">
-                <EmbeddingView />
+                <EmbeddingView/>
               </section>
             </div>
-
 
 
             <!-- Combined tabbed panel -->
@@ -69,11 +83,11 @@ const showSettings = ref(false)
               <!-- Tab headers — above the panel, like the Embedding Space title -->
               <div class="tab-bar">
                 <button
-                  v-for="tab in (['training', 'statistics', 'weights'] as PanelTab[])"
-                  :key="tab"
-                  class="label-header tab-btn"
-                  :class="{ active: activeTab === tab }"
-                  @click="activeTab = tab"
+                    v-for="tab in (['training', 'statistics', 'weights'] as PanelTab[])"
+                    :key="tab"
+                    class="label-header tab-btn"
+                    :class="{ active: activeTab === tab }"
+                    @click="activeTab = tab"
                 >
                   {{ tab[0].toUpperCase() + tab.slice(1) }}
                 </button>
@@ -83,20 +97,20 @@ const showSettings = ref(false)
 
                 <!-- Tab panes — keep all mounted so state is preserved -->
                 <div class="tab-pane" v-show="activeTab === 'training'">
-                  <TrainingConfigView />
+                  <TrainingConfigView/>
                 </div>
                 <div class="tab-pane tab-pane--flush" v-show="activeTab === 'statistics'">
-                  <TrainingStatsView />
+                  <TrainingStatsView/>
                 </div>
                 <div class="tab-pane tab-pane--weights" v-show="activeTab === 'weights'">
-                  <WeightView />
+                  <WeightView/>
                 </div>
 
               </div>
 
               <!-- Training footer — below the panel -->
               <div class="training-footer">
-                <TrainingActionButtons />
+                <TrainingActionButtons/>
               </div>
 
             </div>
@@ -107,17 +121,17 @@ const showSettings = ref(false)
 
       <div class="scroll-indicator">
         <span class="label">Guided Introduction</span>
-        <ChevronDown class="icon" />
+        <ChevronDown class="icon"/>
       </div>
     </main>
 
     <!-- ── Blog post ──────────────────────────────────────── -->
     <div class="blog-section">
-      <BlogPost />
+      <BlogPost/>
     </div>
 
     <!-- ── Selection debug bar ─────────────────────────────── -->
-    <SettingsModal :show="showSettings" @close="showSettings = false" />
+    <SettingsModal :show="showSettings" @close="showSettings = false"/>
   </div>
 </template>
 
@@ -130,7 +144,7 @@ const showSettings = ref(false)
 
 .app-header {
   /* position: sticky; */
-  position: absolute;
+  position: relative;
   width: 100%;
   top: 0;
   z-index: 50;
@@ -141,7 +155,7 @@ const showSettings = ref(false)
   align-items: center;
   justify-content: space-between;
 
-  padding: 1rem 1rem;
+  padding: 1rem 0.75rem;
   max-width: 1340px;
   margin: 0 auto;
   justify-self: center;
@@ -160,6 +174,7 @@ const showSettings = ref(false)
   color: var(--color-text-secondary);
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
+
 .header-icon-btn:hover {
   color: var(--color-text-primary);
   border-color: var(--color-border);
@@ -168,8 +183,7 @@ const showSettings = ref(false)
 
 .app-content {
   min-height: 100vh;
-  padding: var(--header-height) 2rem 3rem;
-  padding-bottom: 10px;
+  padding: 1rem;
   width: 100%;
   max-width: 1200px;
   box-sizing: border-box;
@@ -194,11 +208,50 @@ const showSettings = ref(false)
   align-items: flex-start;
 }
 
+@media (max-width: 768px) {
+  .app-content {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .app-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .right-col {
+    gap: 1.25rem;
+  }
+}
+
 .left-col {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   min-width: 0;
+}
+
+
+@media (max-width: 768px) {
+  .left-col {
+    gap: 0;
+  }
+
+  .ae-grid.compact {
+    margin-top: -27px;
+  }
+
+  .app-container {
+    display: block;
+  }
+
+  .app-content {
+    min-height: initial;
+  }
+
+  .scroll-indicator {
+    display: none !important;
+  }
 }
 
 .right-col {
@@ -238,6 +291,7 @@ const showSettings = ref(false)
   font-size: 12px;
   line-height: 1;
 }
+
 .scroll-indicator .icon {
   width: 16px;
   height: 16px;
@@ -246,6 +300,7 @@ const showSettings = ref(false)
 
   animation: scroll-bounce 1.6s ease-in-out infinite;
 }
+
 @keyframes scroll-bounce {
   0% {
     transform: translateY(0);
@@ -258,6 +313,18 @@ const showSettings = ref(false)
   100% {
     transform: translateY(0);
     opacity: 0.5;
+  }
+}
+
+/*
+TODO there needs to be some restriction regarding width, otherwise it will break the app
+
+*/
+
+@media (min-width: 769px) {
+  .viz-section.post-section .embedding-panel {
+    max-width: 300px;
+    width: 300px;
   }
 }
 

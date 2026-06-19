@@ -88,6 +88,12 @@ const inputDim = computed(() => svc.config.inputDim)
   height: var(--emb-static-height);
 }
 
+@media (max-width: 768px) {
+  .emb-canvas {
+    pointer-events: none;
+  }
+}
+
 
 
 /* ── Legend overlay — center bottom ─────────────────────────── */

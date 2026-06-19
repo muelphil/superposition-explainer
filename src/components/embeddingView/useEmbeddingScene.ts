@@ -34,7 +34,7 @@ export function useEmbeddingScene(
     selSvc: SelectionServiceType,
     staticMode = false,
     fullOutputOverlay = false,
-    disableZoom = false,
+    disableZoom = true,
 ) {
     // ── Three.js scene state ──────────────────────────────────────
     let renderer: THREE.WebGLRenderer | null = null

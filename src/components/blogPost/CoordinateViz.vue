@@ -191,16 +191,26 @@ const w2Axis = computed(() => axisLine(w2.value))
 
 // ── Right-angle mark ────────────────────────────────────────────────────────
 
-function rightAnglePath(foot: Vec2, axisDir: Vec2, toward: Vec2): string {
+/**
+ * Draws a right-angle marker at `foot` between the axis line (direction `axisDir`)
+ * and a perpendicular line. The `quadrant` parameter (0-3) controls the position:
+ *   bit 0 (along axis):    0 = positive direction, 1 = negative direction
+ *   bit 1 (perpendicular): 0 = CCW, 1 = CW
+ *   quadrant 0: +axis, CCW perp
+ *   quadrant 1: +axis, CW perp
+ *   quadrant 2: -axis, CCW perp
+ *   quadrant 3: -axis, CW perp
+ */
+function rightAnglePath(foot: Vec2, axisDir: Vec2, quadrant: number): string {
   const n = norm(axisDir)
   if (n < 0.001) return ''
   const ux = axisDir[0] / n, uy = axisDir[1] / n
-  // Choose perpendicular direction that points toward 'toward'
-  let px = -uy, py = ux
-  const dx = toward[0] - foot[0], dy = toward[1] - foot[1]
-  if (px * dx + py * dy < 0) { px = -px; py = -py }
+  const axisSign = (quadrant & 2) ? -1 : 1
+  const perpSign = (quadrant & 1) ? -1 : 1
+  let dx = ux * axisSign
+  const px = -uy * perpSign, py = ux * perpSign
   const sz = 0.12
-  const a: Vec2 = [foot[0] + ux * sz, foot[1] + uy * sz]
+  const a: Vec2 = [foot[0] + dx * sz, foot[1] + uy * axisSign * sz]
   const b: Vec2 = [a[0] + px * sz, a[1] + py * sz]
   const c: Vec2 = [foot[0] + px * sz, foot[1] + py * sz]
   return `M${sx(a[0])},${sy(a[1])} L${sx(b[0])},${sy(b[1])} L${sx(c[0])},${sy(c[1])}`
@@ -259,33 +269,37 @@ const dragEnabled = computed(() => isArbitrary.value && subStage.value >= 1)
 
 // ── Label positions (in SVG px) ─────────────────────────────────────────────
 
-function labelPx(v: Vec2, offX = 8, offY = -10) {
-  return { left: sx(v[0]) + offX + 'px', top: sy(v[1]) + offY + 'px' }
+function labelPct(v: Vec2, offX = 8, offY = -10) {
+  const lx = ((sx(v[0]) + offX) / SVG_W) * 100
+  const ly = ((sy(v[1]) + offY) / SVG_H) * 100
+  return { left: `${lx}%`, top: `${ly}%` }
 }
 
 const w1LabelStyle = computed(() => {
   const v = w1.value
   const angle = Math.atan2(v[1], v[0])
-  return { left: sx(v[0]) + Math.cos(angle) * 12 + 'px', top: sy(v[1]) - Math.sin(angle) * 12 - 14 + 'px' }
+  const lx = (sx(v[0]) + Math.cos(angle) * 16) / SVG_W * 100
+  const ly = (sy(v[1]) - Math.sin(angle) * 16 - 18) / SVG_H * 100
+  return { left: `${lx}%`, top: `${ly}%` }
 })
 const w2LabelStyle = computed(() => {
   const v = w2.value
   const angle = Math.atan2(v[1], v[0])
-  return { left: sx(v[0]) + Math.cos(angle) * 12 + 'px', top: sy(v[1]) - Math.sin(angle) * 12 - 14 + 'px' }
+  const lx = (sx(v[0]) + Math.cos(angle) * 16) / SVG_W * 100
+  const ly = (sy(v[1]) - Math.sin(angle) * 16 - 18) / SVG_H * 100
+  return { left: `${lx}%`, top: `${ly}%` }
 })
-const yLabelStyle = computed(() => labelPx(target.value, 10, -18))
+const yLabelStyle = computed(() => labelPct(target.value, 14, -22))
 
-// ── Drag along w₁ ───────────────────────────────────────────────────────────
+// Guide line through the base target position along w₂ — visible while dragging
+const dragGuideLine = computed(() => {
+  if (!isDragging.value || !dragEnabled.value) return null
+  return lineThrough(cfg.value.target, animW2.value)
+})
 
 const svgRef = ref<SVGSVGElement | null>(null)
 let dragging = false
 let dragStart: Vec2 = [0, 0]
-
-// Guide line through the base target position along w₁ — visible while dragging
-const dragGuideLine = computed(() => {
-  if (!isDragging.value || !dragEnabled.value) return null
-  return lineThrough(cfg.value.target, animW1.value)
-})
 
 function toMathCoords(clientX: number, clientY: number): Vec2 | null {
   if (!svgRef.value) return null
@@ -313,9 +327,9 @@ function onPointerMove(e: PointerEvent) {
   if (!dragging) return
   const m = toMathCoords(e.clientX, e.clientY)
   if (!m) return
-  // Project displacement onto w1 direction
+  // Project displacement onto w2 direction
   const delta: Vec2 = [m[0] - dragStart[0], m[1] - dragStart[1]]
-  const w = animW1.value
+  const w = animW2.value
   const t = dot(delta, w) / normSq(w)
   dragOffset.value = scale(w, t)
 }
@@ -451,7 +465,7 @@ const recoveryExpression = computed(() => {
           v-if="dragGuideLine"
           :x1="dragGuideLine.x1" :y1="dragGuideLine.y1"
           :x2="dragGuideLine.x2" :y2="dragGuideLine.y2"
-          :stroke="W1_COLOR" stroke-width="2" stroke-dasharray="8 5" opacity="0.5"
+          :stroke="W2_COLOR" stroke-width="2" stroke-dasharray="8 5" opacity="0.5"
         />
 
         <!-- ═══ Naive projection (arbitrary, sub-stage ≥ 1) ═══ -->
@@ -482,7 +496,7 @@ const recoveryExpression = computed(() => {
             :x1="ox" :y1="oy" :x2="sx(proj1[0])" :y2="sy(proj1[1])"
             :stroke="W1_COLOR" stroke-width="2.5" opacity="0.5" stroke-linecap="round"
           />
-          <path :d="rightAnglePath(proj1, w1, target)" fill="none" :stroke="W1_COLOR" stroke-width="1" />
+          <path :d="rightAnglePath(proj1, w1, 1)" fill="none" :stroke="W1_COLOR" stroke-width="1" />
           <circle :cx="sx(proj1[0])" :cy="sy(proj1[1])" r="2.5" :fill="W1_COLOR" />
           <!-- Projection onto w2 -->
           <line
@@ -494,7 +508,7 @@ const recoveryExpression = computed(() => {
             :x1="ox" :y1="oy" :x2="sx(proj2[0])" :y2="sy(proj2[1])"
             :stroke="W2_COLOR" stroke-width="2.5" opacity="0.5" stroke-linecap="round"
           />
-          <path :d="rightAnglePath(proj2, w2, target)" fill="none" :stroke="W2_COLOR" stroke-width="1" />
+          <path :d="rightAnglePath(proj2, w2, 2)" fill="none" :stroke="W2_COLOR" stroke-width="1" />
           <circle :cx="sx(proj2[0])" :cy="sy(proj2[1])" r="2.5" :fill="W2_COLOR" />
         </g>
 
@@ -524,6 +538,8 @@ const recoveryExpression = computed(() => {
           :cx="sx(target[0])" :cy="sy(target[1])" r="5.5"
           :fill="EMBEDDING_POINT_COLOR"
           :stroke="dragEnabled ? '#fff' : 'none'" :stroke-width="dragEnabled ? 1.5 : 0"
+          class="embedding-dot"
+          :class="{ 'embedding-dot--drag': dragEnabled }"
           style="pointer-events: none"
         />
       </svg>
@@ -564,6 +580,7 @@ const recoveryExpression = computed(() => {
 
 .svg-wrapper {
   position: relative;
+  font-size: 1em;
 }
 
 .coord-svg {
@@ -593,7 +610,7 @@ const recoveryExpression = computed(() => {
 .svg-label {
   position: absolute;
   color: var(--color-text-primary);
-  font-size: 0.85rem;
+  font-size: 0.85em;
   white-space: nowrap;
   transform: translate(-50%, -50%);
 }
@@ -601,7 +618,6 @@ const recoveryExpression = computed(() => {
 /* Math panel */
 .math-panel {
   background: var(--color-bg);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
   text-align: center;
@@ -613,7 +629,7 @@ const recoveryExpression = computed(() => {
 
 .recovery-display {
   color: var(--color-text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.9em;
 }
 
 /* SVG text (tick labels only) */
@@ -621,5 +637,38 @@ svg text {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   pointer-events: none;
   user-select: none;
+}
+
+@keyframes embedding-dot-pulse {
+  0%, 100% {
+    r: 5.5;
+    stroke-opacity: 1;
+  }
+  50% {
+    r: 7;
+    stroke-opacity: 0.4;
+  }
+}
+
+.embedding-dot--drag {
+  animation: embedding-dot-pulse 2s ease-in-out infinite;
+}
+
+@media (max-width: 768px) {
+  .coord-viz-container {
+    width: 100%;
+  }
+
+  .svg-wrapper {
+    font-size: 1.2em;
+  }
+
+  .gram-display :deep(.katex) {
+    font-size: 0.85em !important;
+  }
+
+  .recovery-display :deep(.katex) {
+    font-size: 0.85em !important;
+  }
 }
 </style>

@@ -18,6 +18,7 @@ import { createEmbeddingVizTaskSpecs } from './tasks/embeddingVizTasks'
 import { createDataTaskSpecs } from './tasks/dataTasks'
 import { createTrainingObjectiveTaskSpecs } from './tasks/trainingObjectiveTasks'
 import AutoencoderVisualization from './AutoencoderVisualization.vue'
+import VizSection from './VizSection.vue'
 import TaskListDisplay from './TaskListDisplay.vue'
 
 // ─── Service instances (owned here, provided to children) ─────────────────────
@@ -306,25 +307,20 @@ const { activeBlockIndex, scrollToBlock } = useScrollActiveBlock(paragraphRefs)
 useParagraphRanges(ranges, activeBlockIndex)
 </script>
 <template>
-  <!-- Single-root section: owns its own CSS grid, centered at wider width -->
-  <div class="ae-section post-section">
-    <!-- Text column -->
-    <h2 class="section-heading full-span">The Toy Autoencoder</h2>
+  <VizSection heading="The Toy Autoencoder">
+    <template #heading>
+      <h2 class="section-heading full-span">The Toy Autoencoder</h2>
+    </template>
+    <template #text>
      <div class="text-column" data-scroll-dir="down">
 
-      <!-- ═══ Block 'intro' — blank state, nothing revealed ═══ -->
-      <div
-          :ref="(el) => paragraphRefs[blockIdx('intro')] = el as HTMLElement"
-          @click="scrollToBlock($event.currentTarget)" class="text-block"
-          :class="{ 'active-block': activeBlockIndex === blockIdx('intro') }"
-      >
-        <p>
-          The clean encode/decode symmetry of an orthonormal basis — embed with
-          <katex-element expression="W" />, recover with <katex-element expression="W^T" />
-          — is the geometric intuition behind the architecture of our toy autoencoder.
-          In this section, we define the model formally.
-        </p>
-      </div>
+      <!-- Intro prose (not activatable — first activatable block is 'architecture') -->
+      <p>
+        The clean encode/decode symmetry of an orthonormal basis — embed with
+        <katex-element expression="W" />, recover with <katex-element expression="W^T" />
+        — is the geometric intuition behind the architecture of our toy autoencoder.
+        In this section, we define the model formally.
+      </p>
 
       <h3>Architecture</h3>
 
@@ -749,30 +745,17 @@ useParagraphRanges(ranges, activeBlockIndex)
         representational capacity, accepting controlled interference between every pair of
         features. This behavior has deep geometric roots, and the next section gives it a name.
       </p>
-    </div>
+      </div>
+    </template>
 
-    <!-- Visualization column (sticky) -->
-    <div class="viz-column">
+    <template #viz>
       <div ref="vizRef" class="viz-sticky">
         <AutoencoderVisualization/>
       </div>
-    </div>
-  </div>
+    </template>
+  </VizSection>
 </template>
 
 <style scoped>
-/*
- * Layout only. Shared typography and interaction styles (section-heading,
- * text-column p, active-paragraph, viz-column, viz-sticky) live in BlogPost.vue.
- */
-.ae-section {
-  max-width: calc(var(--blog-prose-width) + var(--blog-column-gap) + var(--blog-viz-width));
-  width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-  display: grid;
-  grid-template-columns: var(--blog-prose-width) var(--blog-viz-width);
-  column-gap: var(--blog-column-gap);
-  align-items: start;
-}
+/* Layout handled by VizSection wrapper. Interaction styles in BlogPost.vue. */
 </style>
