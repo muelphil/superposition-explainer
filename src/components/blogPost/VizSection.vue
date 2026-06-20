@@ -37,7 +37,7 @@ onMounted(() => {
     if (!isMobile.value) return
     const section = sectionRef.value
     if (!section || !section.contains(blockEl)) return
-    if (seenBlocks.has(blockEl)) return
+    if (seenBlocks.has(blockEl)) { pendingBlock.value = null; return }
     pendingBlock.value = blockEl
   })
 })
