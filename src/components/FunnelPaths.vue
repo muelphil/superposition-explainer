@@ -74,13 +74,13 @@ function computePaths() {
   const targetTop = vecCenterY - targetHalfH
   const targetBot = vecCenterY + targetHalfH
 
-  const segs: { d: string; c1x: number; c1y: number; c2x: number; c2y: number; startY: number; endY: number }[] = []
+  const segs: { d: string; c1x: number; c1y: number; c2x: number; c2y: number; startY: number; endY: number; startX: number }[] = []
 
   rowPositions.slice(0, count).forEach((rp, i) => {
     const t = count > 1 ? i / (count - 1) : 0.5
     const endY = targetTop + t * (targetBot - targetTop)
     const { d, c1x, c1y, c2x, c2y } = makeCubicBezierPath(rp.startX, rp.startY, vecLeft, endY)
-    segs.push({ d, c1x, c1y, c2x, c2y, startY: rp.startY, endY })
+    segs.push({ d, c1x, c1y, c2x, c2y, startY: rp.startY, endY, startX: rp.startX })
   })
 
   // SVG viewBox: auto-fit container pixel dimensions
@@ -92,7 +92,7 @@ function computePaths() {
 
   arrowPaths.value = segs.map((s, i) => ({
     d: s.d,
-    startX: s.startX || (segs[0]?.c1x ? segs[0].c1x : 0),
+    startX: s.startX,
     endX: vecLeft,
     isAccent: accentIndices.has(i),
   }))
