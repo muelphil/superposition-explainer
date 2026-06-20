@@ -137,17 +137,22 @@
     color: var(--color-text-primary);
 }
 
-.katex-display{
-    overflow-x: auto;
-    overflow-y: hidden;
+.embedding-vector .katex-display{
+    overflow: hidden !important;
 }
 
 @media (max-width: 768px) {
-  :root {
-    font-size: 18px;
-  }
+    :root {
+        font-size: 18px;
+    }
+
     .coord-viz-container .math-panel {
-        font-size:32px;
+        font-size: 32px;
+    }
+
+    .katex-display {
+        overflow-x: auto;
+        overflow-y: hidden;
     }
 }
 

@@ -11,7 +11,7 @@ export function createEmbeddingVizTaskSpecs(): AeTaskSpec[] {
   return [
     {
       id: 'hover-neuron',
-      label: 'Hover an input neuron to inspect which feature it represents',
+      label: 'Hover the input neurons and observe the embedding space to inspect which feature is represented by what direction',
       setup: (_ctx: AeTaskContext) => {
         let done = false
         return {
@@ -23,7 +23,7 @@ export function createEmbeddingVizTaskSpecs(): AeTaskSpec[] {
     },
     {
       id: 'adjust-input',
-      label: 'Adjust feature values using the sliders or input fields to explore different embeddings',
+      label: 'Adjust feature activation values using the sliders or by clicking on the value or input neuron to explore how different feature activation combinations are embedded',
       setup: (_ctx: AeTaskContext) => {
         let done = false
         return {

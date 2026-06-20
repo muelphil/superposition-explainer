@@ -3,7 +3,8 @@ import { ref, watch, onUnmounted, nextTick, type Ref } from 'vue'
 /**
  * Captures the rendered HTML from a slot container once unlocked, then
  * progressively reveals it via innerHTML, treating HTML tags as atomic units
- * and text being revealed word by word at words/sec depending on the delay inbetween.
+ * and text being revealed word by word. Uses requestAnimationFrame for smooth,
+ * efficient rendering — only one DOM update per frame.
  *
  * KaTeX elements render as rendered KaTeX markup in the slot before capture,
  * so innerHTML preserves them correctly.
@@ -16,10 +17,11 @@ export function useTextReveal(
   const visible = ref(false)
   const done = ref(false)
 
-  let timer: ReturnType<typeof setInterval> | null = null
+  let rafId: number | null = null
+  const DURATION_MS = 2000 // total reveal animation time
 
   watch([containerRef, triggered], async ([el, isTriggered]) => {
-    if (timer) { clearInterval(timer); timer = null }
+    if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null }
     revealedHtml.value = ''
     visible.value = false
     done.value = false
@@ -35,8 +37,7 @@ export function useTextReveal(
 
     visible.value = true
 
-    // Tokenize: walk the HTML string
-    // Tags are atomic, text chars are individual
+    // Tokenize: HTML tags are atomic, text is split into words
     const tokens: string[] = []
     let i = 0
     while (i < html.length) {
@@ -50,40 +51,54 @@ export function useTextReveal(
           i++
         }
       } else {
-        tokens.push(html[i])
-        i++
+        // Read text run until next tag
+        const nextTag = html.indexOf('<', i)
+        const textEnd = nextTag < 0 ? html.length : nextTag
+        let p = i
+        while (p < textEnd) {
+          // Split at whitespace boundaries
+          let wordEnd = p
+          while (wordEnd < textEnd && !/\s/.test(html[wordEnd])) wordEnd++
+          if (wordEnd > p) tokens.push(html.slice(p, wordEnd))
+          p = wordEnd
+          // Skip whitespace
+          let wsEnd = p
+          while (wsEnd < textEnd && /\s/.test(html[wsEnd])) wsEnd++
+          if (wsEnd > p) tokens.push(html.slice(p, wsEnd))
+          p = wsEnd
+        }
+        i = textEnd
       }
     }
 
     const total = tokens.length
+    // Tokens per frame so animation lasts DURATION_MS at 60fps
+    const totalFrames = Math.max(1, DURATION_MS / 16)
+    const perFrame = Math.max(1, Math.ceil(total / totalFrames))
     let idx = 0
 
     // Accumulate so far
     let buf = ''
-    const delay = 3 // 7 = ~140 chars/sec
 
-    timer = setInterval(() => {
-      if (idx >= total) {
-        clearInterval(timer!)
-        timer = null
-        done.value = true
-        return
-      }
-
-      buf += tokens[idx]
-      idx++
+    const tick = () => {
+      // Consume multiple tokens per frame
+      const end = Math.min(idx + perFrame, total)
+      for (let j = idx; j < end; j++) buf += tokens[j!]
+      idx = end
       revealedHtml.value = buf
 
       if (idx >= total) {
-        clearInterval(timer!)
-        timer = null
         done.value = true
+        return
       }
-    }, delay)
+      rafId = requestAnimationFrame(tick)
+    }
+
+    rafId = requestAnimationFrame(tick)
   })
 
   onUnmounted(() => {
-    if (timer) clearInterval(timer)
+    if (rafId !== null) cancelAnimationFrame(rafId)
   })
 
   return { revealedHtml, visible, done }

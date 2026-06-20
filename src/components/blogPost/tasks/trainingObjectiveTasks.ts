@@ -8,7 +8,8 @@ export function createTrainingObjectiveTaskSpecs(): AeTaskSpec[] {
   return [
     {
       id: 'adjust-alpha',
-      label: `Adjust the Importance ${k('\\alpha')} slider in the Training Config to change feature weighting`,
+      label: `Adjust the Importance ${k('\\alpha')} slider in the Training Configuration to change feature weighting`,
+      note: 'In the autoencoder visualization, importance of features is visualized by the size of the corresponding input and output neurons',
       setup: (_ctx: AeTaskContext) => {
         let done = false
         return {

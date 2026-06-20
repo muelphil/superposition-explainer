@@ -118,6 +118,32 @@ export function minPairwiseAngleDeg(W: number[][]): number {
 }
 
 /**
+ * Check that every pair of significant columns is approximately
+ * orthogonal (~90°) OR anti-parallel (~180°).
+ * Returns false if ANY pair falls outside both ranges.
+ */
+export function allPairsOrthoOrOpposite(W: number[][], significantMin = 0.3, angleTolerance = 5): boolean {
+  const m = W.length
+  if (m === 0) return false
+  const n = W[0].length
+  const sig: number[] = []
+  for (let j = 0; j < n; j++) {
+    let s = 0
+    for (let r = 0; r < m; r++) s += W[r][j] ** 2
+    if (Math.sqrt(s) >= significantMin) sig.push(j)
+  }
+  for (let a = 0; a < sig.length; a++) {
+    for (let b = a + 1; b < sig.length; b++) {
+      const angle = columnAngleDeg(W, sig[a], sig[b])
+      if (Math.abs(angle - 90) > angleTolerance && Math.abs(angle - 180) > angleTolerance) {
+        return false
+      }
+    }
+  }
+  return true
+}
+
+/**
  * Creates a convergence TaskHandler that listens to `training-step` events
  * and checks a condition. Once the condition holds for `stableFor` consecutive
  * checks, the task is complete and `onConverge` is called.

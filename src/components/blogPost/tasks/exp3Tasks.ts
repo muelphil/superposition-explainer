@@ -1,5 +1,5 @@
 import type { AeTaskSpec, AeTaskContext } from './aeTaskHelpers'
-import { k, countSignificantColumns, columnAngleDeg, createConvergenceHandler } from './aeTaskHelpers'
+import { k, countSignificantColumns, columnAngleDeg, allPairsOrthoOrOpposite, createConvergenceHandler } from './aeTaskHelpers'
 
 /**
  * Task specs for Experiment 3: four features in two dimensions (sparse).
@@ -19,13 +19,14 @@ export function createExp3TaskSpecs(): AeTaskSpec[] {
     },
     {
       id: 'converge',
-      label: 'Rerun the training — observe the feature directions in the embedding view',
+      label: 'Rerun the training and observe the feature directions in the embedding space',
       note: 'The experiment will automatically pause when convergence is reached.',
       dependencies: ['set-sparsity'],
       setup: (ctx: AeTaskContext) =>
         createConvergenceHandler(
           ctx.services.svc,
-          (svc) => countSignificantColumns(svc.W.value, 0.5) >= 4, // TODO this is incorrect
+          (svc) => countSignificantColumns(svc.W.value, 0.3) >= 4 &&
+                   allPairsOrthoOrOpposite(svc.W.value, 0.3, 5),
           30,
           () => ctx.services.svc.pauseTraining(),
           () => ctx.services.svc.config.sparsity >= 0.85,
@@ -33,7 +34,8 @@ export function createExp3TaskSpecs(): AeTaskSpec[] {
     },
     {
       id: 'activate-individual',
-      label: 'Activate individual features one at a time using the input sliders and observe the reconstruction',
+      label: 'Activate individual features one at a time using the input sliders or by clicking on the input neurons and observe the reconstruction',
+      note: 'Remember: the feature activation strength in input and reconstruction are represented by color intensity of the features in input and output neurons, making it easy to see how well different inputs are reconstructed.',
       dependencies: ['converge'],
       optional: true,
       setup: () => {

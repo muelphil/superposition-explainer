@@ -100,6 +100,19 @@ export interface TaskState {
   progress: { current: number; total: number } | null
 }
 
+/**
+ * Returns true if any completed task directly depends on `taskId`.
+ * Used to prevent unchecking resetable tasks once downstream work is done.
+ */
+function hasCompletedDependent(taskId: string, completedSet: Map<string, boolean>, specs: TaskSpec<any>[]): boolean {
+  for (const spec of specs) {
+    if ((spec.dependencies ?? []).includes(taskId) && completedSet.get(spec.id)) {
+      return true
+    }
+  }
+  return false
+}
+
 // ─── TaskList class ────────────────────────────────────────────────────────────
 
 /**
@@ -237,8 +250,11 @@ export class TaskList {
         }
         this._subscribeEligible()
       } else if (!nowDone && wasDone) {
-        // Resetable: became incomplete (non-resetable can't reach here due to early return)
-        this.completedSet.set(spec.id, false)
+        // Non-resetable can't reach here due to early return
+        // Resetable: became incomplete, unless a dependent task already completed (pin)
+        if (!hasCompletedDependent(spec.id, this.completedSet, this.specs)) {
+          this.completedSet.set(spec.id, false)
+        }
       }
       this._updateTaskStates()
     }
@@ -284,7 +300,7 @@ export class TaskList {
           handler.cleanup?.()
         }
         changed = true
-      } else if (!nowDone && wasDone && spec.resetable) {
+      } else if (!nowDone && wasDone && spec.resetable && !hasCompletedDependent(spec.id, this.completedSet, this.specs)) {
         this.completedSet.set(spec.id, false)
         changed = true
       }

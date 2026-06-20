@@ -101,6 +101,11 @@ function barColor(idx: number): string {
 .param-scale-chart {
   padding-bottom: 16px;
   width: 100%;
+
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 10px;
 }
 
 /* ────────────────────────────────────────── */
@@ -109,14 +114,7 @@ function barColor(idx: number): string {
 
 .param-header-row,
 .param-row {
-  display: grid;
-  grid-template-columns: 54px minmax(0, 1fr);
-  column-gap: 16px;
-  align-items: center;
-}
-
-.param-row + .param-row {
-  margin-top: 10px;
+  display: contents;
 }
 
 /* ────────────────────────────────────────── */
@@ -134,12 +132,14 @@ function barColor(idx: number): string {
 
 .param-dim-header {
   text-align: right;
+  padding-bottom: 8px;
 }
 
 .param-bar-header {
   text-align: left;
-  font-size:14px;
+  font-size: 14px;
   color: var(--color-text-secondary);
+  padding-bottom: 8px;
 }
 
 /* ────────────────────────────────────────── */
@@ -206,10 +206,9 @@ function barColor(idx: number): string {
 /* ────────────────────────────────────────── */
 
 @media (max-width: 480px) {
-  .param-header-row,
-  .param-row {
-    grid-template-columns: 90px minmax(0, 1fr);
+  .param-scale-chart {
     column-gap: 12px;
+    row-gap: 8px;
   }
 
   .param-dim,
@@ -220,13 +219,5 @@ function barColor(idx: number): string {
   .param-bar {
     height: 18px;
   }
-
-  .param-row + .param-row {
-    margin-top: 8px;
-  }
-}
-
-.param-header-row{
-  padding-bottom: 8px;
 }
 </style>

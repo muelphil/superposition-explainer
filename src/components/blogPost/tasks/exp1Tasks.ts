@@ -1,4 +1,4 @@
-import type {AeTaskSpec, AeTaskContext} from './aeTaskHelpers'
+import {AeTaskSpec, AeTaskContext, k} from './aeTaskHelpers'
 import {allColumnNormsInRange, minPairwiseAngleDeg, createConvergenceHandler} from './aeTaskHelpers'
 
 /**
@@ -10,6 +10,7 @@ export function createExp1TaskSpecs(): AeTaskSpec[] {
         {
             id: 'converge',
             label: 'Run training and wait for convergence',
+            note: 'The experiment will automatically pause when convergence is reached.',
             setup: (ctx: AeTaskContext) =>
                 createConvergenceHandler(
                     ctx.services.svc,
@@ -22,7 +23,7 @@ export function createExp1TaskSpecs(): AeTaskSpec[] {
         },
         {
             id: 'check-loss',
-            label: 'Check out the loss in the training statistics',
+            label: 'Check out the loss by navigating to the statistics panel ',
             dependencies: ['converge'],
             setup: (ctx: AeTaskContext) => ({
                 events: ['tab-changed', 'stats-chart-changed'],
@@ -33,7 +34,7 @@ export function createExp1TaskSpecs(): AeTaskSpec[] {
         },
         {
             id: 'check-angle',
-            label: 'Check the angle between the two feature direction vectors in the training statistics',
+            label: 'Check the angle between the two feature direction vectors, by navigating to the statistics panel and selecting the Min Angle statistic',
             dependencies: ['converge'],
             setup: (ctx: AeTaskContext) => ({
                 events: ['tab-changed', 'stats-chart-changed'],
@@ -44,7 +45,7 @@ export function createExp1TaskSpecs(): AeTaskSpec[] {
         },
         {
             id: 'check-norms',
-            label: 'Check the vector lengths in the weight view',
+            label: `Check the length of the feature direction vectors by navigating to the Weights panel and inspecting the ${k('||w_i||')} entries underneath the weights matrix ${k('W')}`,
             dependencies: ['converge'],
             setup: (ctx: AeTaskContext) => ({
                 events: ['tab-changed'],

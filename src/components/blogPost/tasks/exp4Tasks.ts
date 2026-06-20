@@ -19,17 +19,17 @@ export function createExp4TaskSpecs(): AeTaskSpec[] {
     },
     {
       id: 'set-sparsity',
-      label: `Set sparsity to ${k('S = 0.8')} or higher in the training config`,
+      label: `Set sparsity to ${k('S = 0.85')} or higher in the Training Configuration`,
       resetable: true,
       setup: (ctx: AeTaskContext) => ({
         events: ['sparsity-changed'],
-        check: () => ctx.services.svc.config.sparsity >= 0.8,
+        check: () => ctx.services.svc.config.sparsity >= 0.85,
       }),
     },
     {
       id: 'converge',
-      label: 'Run training and observe the feature directions in the embedding view',
-      note: 'The experiment will automatically pause when convergence is reached.',
+      label: 'Run training and observe the feature directions in the embedding space',
+      note: 'The experiment will automatically pause when convergence is reached. The desired convergent behavior may take some time to appear — consider resetting and rerunning with higher sparsity if it takes too long',
       dependencies: ['set-equal-importance', 'set-sparsity'],
       setup: (ctx: AeTaskContext) =>
         createConvergenceHandler(
@@ -37,7 +37,7 @@ export function createExp4TaskSpecs(): AeTaskSpec[] {
           (svc) =>
             minPairwiseAngleDeg(svc.W.value) >= 65 &&
             allColumnNormsInRange(svc.W.value, 0.5, 1.1),
-          30,
+          60,
           () => ctx.services.svc.pauseTraining(),
           () =>
             ctx.services.svc.config.featureDecay >= 0.99 &&
@@ -46,7 +46,7 @@ export function createExp4TaskSpecs(): AeTaskSpec[] {
     },
     {
       id: 'check-angle',
-      label: `Check the minimum angle between feature directions in the statistics view — compare to ${k('72°')}`,
+      label: `Check the minimum angle between feature directions in the statistics view. Compare the angle to ${k('\\frac{360°}{5} =72°')}`,
       dependencies: ['converge'],
       setup: (ctx: AeTaskContext) => ({
         events: ['tab-changed', 'stats-chart-changed'],

@@ -399,6 +399,8 @@ export function createAutoencoderService() {
     if (partial.learningRate !== undefined) config.learningRate = partial.learningRate
     if (partial.batchSize !== undefined) config.batchSize = partial.batchSize
     resetTraining()
+    if (partial.sparsity !== undefined) _eventBus?.emit('sparsity-changed', { value: config.sparsity })
+    if (partial.featureDecay !== undefined) _eventBus?.emit('importance-changed', { value: config.featureDecay })
   }
 
   function startTraining() {

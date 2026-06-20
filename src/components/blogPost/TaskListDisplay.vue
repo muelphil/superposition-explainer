@@ -129,7 +129,7 @@ const optionalTasks = computed(() =>
   color: var(--color-text-primary);
 }
 
-.task-blocked .task-label {
+.task-blocked .task-label, .task-blocked .task-note{
   color: var(--color-task-blocked);
 }
 
@@ -164,6 +164,23 @@ const optionalTasks = computed(() =>
 .task-progress {
   font-variant-numeric: tabular-nums;
   text-transform: none;
+}
+
+/* ── Inline resample button icon (visual reference in task text) ── */
+.inline-resample-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 2px;
+  background: transparent;
+  border: 1px solid var(--color-interactive-disabled);
+  border-radius: 50%;
+  color: var(--color-text-action);
+  vertical-align: middle;
+  pointer-events: none;
+  user-select: none;
 }
 
 </style>

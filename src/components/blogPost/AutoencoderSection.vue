@@ -277,7 +277,7 @@ const ranges: ParagraphRange[] = [
       } else {
         if (svc.config.inputDim !== 4) svc.setInputDim(4)
         if (svc.config.embeddingDim !== 2) svc.setEmbeddingDim(2)
-        svc.updateConfig({ sparsity: 0 })
+        if (id === 'interlude') svc.updateConfig({ sparsity: 0 })
       }
     },
     leave: () => { interludeTaskList.setActive(false); exp3TaskList.setActive(false); rangeStates[3] = svc.saveState() },
