@@ -321,11 +321,14 @@ TODO there needs to be some restriction regarding width, otherwise it will break
 
 */
 
-@media (min-width: 769px) {
+@media (min-width: 768px) {
   .viz-section.post-section .embedding-panel {
     max-width: 300px;
-    width: 300px;
   }
+}
+
+.ae-bottom-section.embedding-panel{
+  flex: 1 1 auto;
 }
 
 </style>

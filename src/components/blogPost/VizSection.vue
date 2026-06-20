@@ -129,6 +129,14 @@ watch(isMobile, (mobile) => {
   overflow: hidden;
 }
 
+@media (max-width: 1330px) and (min-width: 769px) {
+  .viz-section {
+    max-width: 100%;
+    grid-template-columns: minmax(0, 55%) minmax(0, 45%);
+    column-gap: 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .viz-section {
     display: block;
