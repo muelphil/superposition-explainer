@@ -274,7 +274,7 @@ function toggleInput(i: number) {
 
     <!-- Output col: weighted loss label + value -->
     <div class="sub-header-loss" data-reveal="training" style="grid-column: 12; grid-row: 2">
-      <span class="col-loss-label">Weighted Loss</span>
+      <span class="col-loss-label">Weighted<br class="mobile-lb"/>Loss</span>
       <span class="col-loss-val" :class="{ zero: !isNonZero(currentLoss) }">
         {{ currentLoss.toFixed(3) }}
       </span>
@@ -783,5 +783,20 @@ function toggleInput(i: number) {
   position: absolute;
   bottom: -2px;
   transform: translateY(100%);
+}
+
+@media (max-width: 768px) {
+  .ae-grid.compact {
+    --col-outputs: 36px;
+  }
+}
+
+.col-loss-label .mobile-lb {
+  display: none;
+}
+@media (max-width: 768px) {
+  .col-loss-label .mobile-lb {
+    display: inline;
+  }
 }
 </style>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, inject } from 'vue'
-import { Compass } from 'lucide-vue-next'
-import type { AutoencoderServiceType } from '../../services/AutoencoderService'
-import type { SelectionServiceType, SelectionTarget } from '../../services/SelectionService'
-import { useEmbeddingScene } from './useEmbeddingScene'
+import {ref, computed, inject} from 'vue'
+import {Compass} from 'lucide-vue-next'
+import type {AutoencoderServiceType} from '../../services/AutoencoderService'
+import type {SelectionServiceType, SelectionTarget} from '../../services/SelectionService'
+import {useEmbeddingScene} from './useEmbeddingScene'
 import EmbeddingLegend from './EmbeddingLegend.vue'
 
 const props = defineProps<{
@@ -15,14 +15,14 @@ const props = defineProps<{
   staticOverlayTarget?: SelectionTarget
 }>()
 
-const svc    = props.autoencoderService ?? inject<AutoencoderServiceType>('autoencoderService')!
+const svc = props.autoencoderService ?? inject<AutoencoderServiceType>('autoencoderService')!
 const selSvc = props.selectionService ?? inject<SelectionServiceType>('selectionService')!
 
-const containerRef = ref<HTMLDivElement   | null>(null)
-const canvasRef    = ref<HTMLCanvasElement | null>(null)
+const containerRef = ref<HTMLDivElement | null>(null)
+const canvasRef = ref<HTMLCanvasElement | null>(null)
 
-const { onMouseMove, onMouseLeave, onCanvasMouseDown, onCanvasClick, resetCamera, setStaticOverlay } =
-  useEmbeddingScene(canvasRef, containerRef, svc, selSvc, !!props.staticMode, !!props.fullOutputOverlay, !!props.disableZoom)
+const {onMouseMove, onMouseLeave, onCanvasMouseDown, onCanvasClick, resetCamera, setStaticOverlay} =
+    useEmbeddingScene(canvasRef, containerRef, svc, selSvc, !!props.staticMode, !!props.fullOutputOverlay, !!props.disableZoom)
 
 // Expose setStaticOverlay for parent components (e.g. InterferenceIllustration)
 defineExpose({
@@ -35,33 +35,33 @@ const inputDim = computed(() => svc.config.inputDim)
 <template>
   <div ref="containerRef" class="emb-root">
     <canvas
-      ref="canvasRef"
-      class="emb-canvas"
-      :class="{
+        ref="canvasRef"
+        class="emb-canvas"
+        :class="{
         'emb-canvas--static': staticMode,
         'emb-canvas--wide': staticMode,
       }"
-      @mousemove="onMouseMove"
-      @mouseleave="onMouseLeave"
-      @mousedown="onCanvasMouseDown"
-      @click="onCanvasClick"
+        @mousemove="onMouseMove"
+        @mouseleave="onMouseLeave"
+        @mousedown="onCanvasMouseDown"
+        @click="onCanvasClick"
     />
 
 
     <!-- Camera reset — upper right (hidden in static mode) -->
     <button
-      v-if="!staticMode"
-      class="camera-reset-btn"
-      title="Reset camera"
-      @click="resetCamera"
+        v-if="!staticMode"
+        class="camera-reset-btn"
+        title="Reset camera"
+        @click="resetCamera"
     >
-      <Compass :size="14" />
+      <Compass :size="14"/>
     </button>
 
     <!-- Legend — center bottom overlay -->
     <div class="legend-overlay">
       <div class="legend-pill">
-        <EmbeddingLegend :inputDim="inputDim" />
+        <EmbeddingLegend :inputDim="inputDim"/>
       </div>
     </div>
   </div>
@@ -79,21 +79,19 @@ const inputDim = computed(() => svc.config.inputDim)
   cursor: grab;
   border-radius: inherit;
 }
-.emb-canvas:active { cursor: grabbing; }
+
+.emb-canvas:active {
+  cursor: grabbing;
+}
+
 .emb-canvas--static {
   cursor: default;
 }
+
 .emb-canvas--wide {
   aspect-ratio: auto;
   height: var(--emb-static-height);
 }
-
-@media (max-width: 768px) {
-  .emb-canvas {
-    pointer-events: none;
-  }
-}
-
 
 
 /* ── Legend overlay — center bottom ─────────────────────────── */
@@ -137,7 +135,31 @@ const inputDim = computed(() => svc.config.inputDim)
   transition: color 0.15s;
   z-index: 2;
 }
+
 .camera-reset-btn:hover {
   color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+  .emb-canvas {
+    pointer-events: none;
+  }
+
+  .legend-overlay {
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0.65rem !important;
+    justify-content: left !important;
+  }
+
+  .legend-overlay .legend-pill {
+    border-radius: var(--radius-lg) !important;
+    padding: 0.35rem 0.5rem !important;
+    align-self: center !important;
+  }
+
+  .legend-text {
+    font-size: 1rem;
+  }
 }
 </style>

@@ -74,4 +74,21 @@ function onLeave()          { selSvc.clearHover() }
   font-size: 0.72rem;
   color: var(--color-text-label);
 }
+
+@media (max-width: 768px) {
+  .emb-legend {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .legend-item:not(:last-child) {
+    padding-right: 0;
+    padding-bottom: 0.1rem;
+  }
+
+  .legend-text :deep(.katex) {
+    font-size: 0.85rem;
+  }
+}
 </style>

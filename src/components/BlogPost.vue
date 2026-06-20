@@ -155,7 +155,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
           <EmbeddingSuperpositionIllustration></EmbeddingSuperpositionIllustration>
           <figcaption>
             A model with a few thousand embedding dimensions (e.g. 4096) must represent hundreds
-            of thousands of potentially features that may interact and trigger knowledge.
+            of thousands of potential features that may interact and trigger knowledge.
             The enormous feature space must be squeezed into a narrow bottleneck.
           </figcaption>
         </figure>
