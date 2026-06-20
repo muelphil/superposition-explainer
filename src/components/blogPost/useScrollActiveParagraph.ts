@@ -87,11 +87,11 @@ export function useScrollActiveBlock(
 
         window.addEventListener('scroll', () => {
             const y = window.scrollY
-            const parent = blockRefs.value[0]?.closest('.text-column') as HTMLElement
+            const firstBlock = blockRefs.value.find(el => el !== null)
+            const parent = firstBlock?.closest('.text-column') as HTMLElement
             if (parent) {
                 if (y > prevY) dirClass(parent, 'down')
                 else if (y < prevY) dirClass(parent, 'up')
-                else dirClass(parent, 'down')
                 prevY = y
                 updateActive()
             }
