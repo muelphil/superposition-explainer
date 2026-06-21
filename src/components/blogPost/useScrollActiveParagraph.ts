@@ -107,6 +107,9 @@ export function useScrollActiveBlock(
 
     /** Scroll the given text-block so its vertical center aligns with the viewport focal point. */
     function scrollToBlock(el: HTMLElement) {
+        // Ignore clicks on the currently active block
+        const idxInRefs = blockRefs.value.indexOf(el)
+        if (idxInRefs === activeBlockIndex.value) return
         const viewportFocal = window.innerHeight * 0.4
         const rect = el.getBoundingClientRect()
         const elCenter = rect.top + rect.height / 2

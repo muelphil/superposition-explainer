@@ -101,12 +101,17 @@ function computePaths() {
   if (segs.length >= 2) {
     const top = segs[0]
     const bot = segs[segs.length - 1]
+    const maxStartX = Math.max(top.startX, bot.startX)
     funnelFillPath.value = [
-      `M ${top.startX.toFixed(1)} ${top.startY.toFixed(1)}`,
+      `M ${maxStartX.toFixed(1)} ${top.startY.toFixed(1)}`,
+      `L ${top.startX.toFixed(1)} ${top.startY.toFixed(1)}`,
       `C ${top.c1x.toFixed(1)} ${top.c1y.toFixed(1)}, ${top.c2x.toFixed(1)} ${top.c2y.toFixed(1)}, ${vecLeft.toFixed(1)} ${top.endY.toFixed(1)}`,
+      `L ${vecLeft.toFixed(1)} ${bot.endY.toFixed(1)}`,
       `C ${bot.c2x.toFixed(1)} ${bot.endY.toFixed(1)}, ${bot.c1x.toFixed(1)} ${bot.startY.toFixed(1)}, ${bot.startX.toFixed(1)} ${bot.startY.toFixed(1)}`,
+      `L ${maxStartX.toFixed(1)} ${bot.startY.toFixed(1)}`,
       'Z',
     ].join(' ')
+
   } else {
     funnelFillPath.value = ''
   }
@@ -137,10 +142,10 @@ onUnmounted(() => observer?.disconnect())
     <svg ref="svgRef" class="funnel-svg">
       <defs>
         <linearGradient id="funnelGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="transparent" />
-          <stop offset="40%" stop-color="#d9d9d9" stop-opacity="0.2" />
-          <stop offset="60%" stop-color="#d9d9d9" stop-opacity="0.2" />
-          <stop offset="100%" stop-color="transparent" />
+          <stop offset="0%" stop-color="#d9d9d9" stop-opacity="0" />
+          <stop offset="3%" stop-color="#d9d9d9" stop-opacity="0.2" />
+          <stop offset="97%" stop-color="#d9d9d9" stop-opacity="0.2" />
+          <stop offset="100%" stop-color="#d9d9d9" stop-opacity="0" />
         </linearGradient>
 
         <!-- Big arrowhead for accent lines -->

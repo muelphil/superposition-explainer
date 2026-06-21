@@ -23,7 +23,7 @@ export function createEmbeddingVizTaskSpecs(): AeTaskSpec[] {
     },
     {
       id: 'adjust-input',
-      label: 'Adjust feature activation values using the sliders or by clicking on the value or input neuron to explore how different feature activation combinations are embedded',
+      label: 'Adjust the feature activations to explore how different combinations are embedded. Toggle values between 0 and 1 by clicking on the input neurons or activation values, or use the sliders for finer control',
       setup: (_ctx: AeTaskContext) => {
         let done = false
         return {

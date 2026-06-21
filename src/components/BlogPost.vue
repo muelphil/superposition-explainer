@@ -13,11 +13,11 @@ import ParamScaleChart from './ParamScaleChart.vue'
 
       <!-- ── Header ───────────────────────────────────────────── -->
       <header class="post-header post-section">
-<!--        <div class="post-meta">-->
-<!--          <span class="post-date">April 2, 2025</span>-->
-<!--          <span class="post-separator">·</span>-->
-<!--          <span class="post-read-time">8 min read</span>-->
-<!--        </div>-->
+        <!--        <div class="post-meta">-->
+        <!--          <span class="post-date">April 2, 2025</span>-->
+        <!--          <span class="post-separator">·</span>-->
+        <!--          <span class="post-read-time">8 min read</span>-->
+        <!--        </div>-->
 
         <h1 class="post-title">
           Superposition in Neural Networks: A Visual Exploration
@@ -46,10 +46,10 @@ import ParamScaleChart from './ParamScaleChart.vue'
           phenomenon that may explain how neural network embeddings represent far more features than their
           dimensionality would naively allow. Guided by the experimental framework of Anthropic's
           <em>Toy Models of Superposition</em> (Elhage et al., 2022), we build from geometric foundations
-          to a toy autoencoder and guide the reader through progressive experiments. Rather than presenting
-          superposition as a predefined concept, the article lets readers discover it through hands-on
-          interaction with the accompanying visualizations, and then formally names and contextualizes the
-          phenomenon.
+          to an interactive autoencoder and guide the reader through progressive experiments. Rather than introducing
+          superposition as a predefined concept, the article encourages readers to discover it through hands-on
+          experimentation. The phenomenon is then formally named and connected to broader ideas in representation
+          learning.
         </p>
 
         <h2>Embeddings, Features, and the Dimensional Bottleneck</h2>
@@ -73,38 +73,43 @@ import ParamScaleChart from './ParamScaleChart.vue'
           Crucially, an embedding vector is not simply "meaning compressed into numbers." Different
           <strong>directions</strong> in the embedding space may correspond to different features of the
           input, and the component along each direction indicates how strongly that feature is present.
-          This geometric picture — features as directions, activations as magnitudes along those
-          directions — is foundational to the analysis that follows, and will be developed formally in the
-          next section.
+          This geometric view of embeddings, where features correspond to directions and feature activations correspond
+          to the magnitudes along these directions, forms the basis for exploring how information can be organized in
+          learned representations.
         </p>
 
         <h3>Why embedding dimension matters</h3>
 
         <p>
-          The internal vectors of a neural network have a <strong>fixed dimensionality</strong> — a hard
+          The internal vectors of a neural network have a <strong>fixed dimensionality</strong>, which is a hard
           architectural constraint. In transformer models, this is called the <strong>embedding
-          dimension</strong> or <strong>model dimension</strong> <katex-element expression="d_{\text{model}}" />, and it determines how many coordinates are
+          dimension</strong> or <strong>model dimension</strong>
+          <katex-element expression="d_{\text{model}}"/>
+          , and it determines how many coordinates are
           available at each layer to store and process information. Increasing the embedding dimension is
           expensive: in dense transformer architectures, a large fraction of the parameters reside in
           matrices whose size scales roughly with the <strong>square</strong> of the embedding dimension.
           Doubling the width therefore increases parameter count by roughly a factor of four in the
-          dominant layers — and with it memory, training cost, and inference cost.
+          dominant layers, and with it memory, training cost, and inference cost.
         </p>
 
         <figure class="post-figure">
-          <ParamScaleChart />
+          <ParamScaleChart/>
           <figcaption>
             Parameter count for a GPT-style dense decoder transformer (L = 96 layers, V = 50,257
             vocabulary, context window 2,048) as a function of embedding dimension
-            <katex-element expression="d_{\text{model}}" />. The dominant term
-            <katex-element expression="\sim 12 L \cdot d_{\text{model}}^2" /> means that doubling
+            <katex-element expression="d_{\text{model}}"/>
+            . The dominant term
+            <katex-element expression="\sim 12 L \cdot d_{\text{model}}^2"/>
+            means that doubling
             the embedding dimension roughly quadruples the parameter count.
           </figcaption>
         </figure>
 
         <p>
-          Modern large language models typically use embedding dimensions in the range of roughly
-          <strong>3,072 to 12,288</strong>. These are large vector spaces by human standards, but still far
+          Modern large language models typically use embedding vectors in the range of several thousand dimensions,
+          often roughly between <strong>3,072 to 12,288</strong> for publicly known transformer architectures. These are
+          large vector spaces by human standards, but still far
           smaller than the number of concepts a model may need to represent. In practice, embedding
           dimension is not a free resource: model designers cannot simply keep adding dimensions for every
           property the model might need to represent.
@@ -117,8 +122,8 @@ import ParamScaleChart from './ParamScaleChart.vue'
         <p>
           In mechanistic interpretability research, a <strong>feature</strong> refers to a direction or
           pattern inside a model's internal activations that corresponds to a recognizable property of the
-          input. Some features are relatively concrete, such as "it is something in plural," "this is
-          about a person," or "this is in past tense." Others may be abstract, distributed, or difficult
+          input. Some features may be relatively concrete, such as <em>"it is something in plural," "this is
+          about a person,"</em> or <em>"this is in past tense."</em> Others may be abstract, distributed, or difficult
           to name. Importantly, a feature is <strong>not necessarily a single neuron</strong> — in modern
           neural networks, many features appear to be represented as directions in activation space rather
           than being stored cleanly in one coordinate.
@@ -130,25 +135,24 @@ import ParamScaleChart from './ParamScaleChart.vue'
           can identify directions that correlate with meaningful concepts, but we do not have a complete
           list of the "true features" inside a large language model, nor do we know that the model's
           internal decomposition aligns perfectly with human categories. Significant research effort has
-          gone into uncovering interpretable features inside trained models; projects such as
-          <a href="https://www.neuronpedia.org/" target="_blank" rel="noopener">Neuronpedia</a> catalog
-          discovered features for a small set of models and make them searchable, illustrating both the
+          gone into uncovering interpretable features inside trained models;
+          the <a href="https://www.neuronpedia.org/" target="_blank" rel="noopener">Neuronpedia</a> project
+          (Lin, 2023) catalogs discovered features for a small set of models and makes them searchable, illustrating
+          both the
           progress made and the sheer scale of the problem.
         </p>
 
         <h3>The mismatch</h3>
 
         <p>
-          The number of potentially useful features is vast — and fundamentally combinatorial. Consider
-          just the English lexicon: the Oxford English Dictionary lists over <strong>170,000 words in
-          current use</strong>, giving a sense of scale for how many distinct concepts exist even in a
-          single domain. But features are not merely a flat list — they are fundamentally
-          <strong>combinatorial</strong>. Properties like "is_plural," "refers_to_food," or
-          "negative_sentiment" combine freely, and each combination constitutes a distinct feature. This
-          means the space of potentially useful features grows combinatorially with the number of
-          underlying properties, and at any given point many features are likely active simultaneously —
-          far exceeding what any fixed number of embedding dimensions could accommodate with one axis per
-          feature.
+          The number of potentially useful features is vast. Consider just the English lexicon: the
+          Oxford English Dictionary lists over <strong>170,000 words in current use</strong>, giving a sense
+          of scale for how many distinct concepts exist even in a single domain. But features are not
+          limited to individual words or explicit categories. Properties like
+          <em>"is_plural," "refers_to_food,"</em> or <em>"negative_sentiment"</em> can be relevant across
+          many different contexts, and many such features may be active simultaneously. This creates a
+          challenge for any fixed-dimensional representation: assigning one dedicated dimension to each
+          feature would quickly exceed the available space.
         </p>
 
         <figure class="post-figure">
@@ -165,24 +169,23 @@ import ParamScaleChart from './ParamScaleChart.vue'
           potentially useful features, how can it do so? Empirically, large language models exhibit
           surprisingly rich behavior, suggesting that their internal representations do more than assign
           one feature to one axis. This article aims to provide an understanding of how models might deal
-          with this mismatch. Rather than analyzing a full-scale language model — where architecture
-          complexity and training data make it nearly impossible to isolate any single effect — we use a
-          small, controlled model that lets us study the compression problem in isolation.
+          with this mismatch. Rather than analyzing a full-scale language model, where architectural complexity and
+          training data make it nearly impossible to isolate any single effect, we use a small, controlled model that
+          lets us study the compression problem in isolation.
         </p>
 
         <h2>A Toy Model for Exploring the Mismatch</h2>
 
         <p>
           We study this problem using the experimental setup described in Anthropic's <em>Toy Models of
-          Superposition</em> (2022), built around an <strong>autoencoder</strong> — a simple neural
-          network trained to reconstruct its input. The input first passes through a smaller
-          <strong>embedding layer</strong> whose dimension is lower than that of the input, and the model
-          then attempts to reconstruct the original input from this compressed embedding. Because the
-          embedding dimension is smaller than the input dimension, the model cannot simply copy the data
-          through — it is forced to learn how to compress many features into fewer dimensions, exactly the
-          pressure we want to study. This gives us a controlled setting to explore how learned
-          representations deal with the mismatch between features and available dimensions. The formal
-          architecture, loss function, and training details are introduced in a later section.
+          Superposition</em> (Elhage et al., 2022), built around an autoencoder, a simple neural network trained to reconstruct its
+          input. The input first passes through a smaller embedding layer whose dimension is lower than that of the
+          input, and the model then attempts to reconstruct the original input from this compressed embedding. Because
+          the embedding dimension is smaller than the input dimension, the model cannot simply copy the data through the
+          network. It is forced to learn how to compress many features into fewer dimensions, exactly the pressure we
+          want to study. This gives us a controlled setting to explore how learned representations deal with the
+          mismatch between features and available dimensions. The formal architecture, loss function, and training
+          details are introduced in a later section.
         </p>
 
         <h2>What Comes Next: The Geometric Foundations</h2>
@@ -197,10 +200,10 @@ import ParamScaleChart from './ParamScaleChart.vue'
       </div>
 
       <!-- ── Mathematical Fundamentals — viz on right ──────────── -->
-      <BasesSection />
+      <BasesSection/>
 
       <!-- ── Autoencoder — viz on right ────────────────────────── -->
-      <AutoencoderSection />
+      <AutoencoderSection/>
 
       <!-- ── Section 5: Superposition ──────────────────────────── -->
       <div class="post-section text-section">
@@ -210,19 +213,20 @@ import ParamScaleChart from './ParamScaleChart.vue'
 
         <p>
           In Experiment 3, the model exploited the non-negativity of feature activations together
-          with sparsity to place features in opposite directions — doubling its capacity without
+          with sparsity to place features in opposite directions. This doubled its capacity without
           introducing interference between orthogonal pairs. In Experiment 4, the model went
           further: it packed five features into two dimensions at angles of
-          <katex-element expression="72^\circ" />, where <strong>every pair of features genuinely
+          <katex-element expression="72^\circ"/>
+          , where <strong>every pair of features genuinely
           interferes</strong>. No pair is orthogonal. The model accepted cross-talk between all
           feature directions in exchange for representing more features than the embedding space
           can accommodate without overlap.
         </p>
 
         <p>
-          This behavior — encoding more features than there are embedding dimensions by
+          This behavior of encoding more features than there are embedding dimensions by
           distributing feature directions at non-orthogonal angles, accepting interference as a
-          cost — is called <strong>superposition</strong>.
+          cost, is called <strong>superposition</strong>.
         </p>
 
         <h3>The tradeoff</h3>
@@ -231,7 +235,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
           Superposition is fundamentally a tradeoff between <strong>feature capacity</strong> and
           <strong>reconstruction fidelity</strong>. When the number of features is less than or
           equal to the embedding dimension, the model can assign each feature its own orthogonal
-          direction — no interference, no reconstruction error. When there are more features than
+          direction, resulting in no interference and no reconstruction error. When there are more features than
           dimensions, every additional represented feature introduces cross-talk. Whether the
           tradeoff is worthwhile depends on a feature's importance, the degree of sparsity (which
           determines how rarely interference actually manifests), and how far apart the feature
@@ -241,7 +245,9 @@ import ParamScaleChart from './ParamScaleChart.vue'
         <h3>How bias and ReLU compensate</h3>
 
         <p>
-          The bias <katex-element expression="b" /> and the ReLU activation — whose significance
+          The bias
+          <katex-element expression="b"/>
+          and the ReLU activation — whose significance
           we deferred in the model definition — play a concrete role in making superposition work.
         </p>
 
@@ -253,7 +259,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
         </p>
 
         <figure class="post-figure">
-          <InterferenceIllustration />
+          <InterferenceIllustration/>
           <figcaption>
             With one active feature, the projection of the embedding onto each other feature
             direction produces a nonzero interference term. The learned bias cancels this expected
@@ -262,73 +268,113 @@ import ParamScaleChart from './ParamScaleChart.vue'
         </figure>
 
         <p>
-          Assume only feature <katex-element expression="f_1" /> is active. The projection of the
-          embedding onto each other feature direction <katex-element expression="w_j" /> produces a
-          nonzero interference term proportional to the alignment between
-          <katex-element expression="w_j" /> and <katex-element expression="w_1" />. With all
-          feature directions of length 1, this interference is directly visible as the projection
-          of each other feature direction onto <katex-element expression="f_1" />. More precisely,
-          for an inactive feature <katex-element expression="f_j" />, the raw decoder output before
-          ReLU is
-          <katex-element expression="(W^Ty + b)_j = \sum_{k \neq j} (w_j \cdot w_k) \, x_k + b_j" />
-          — pure interference from active features, offset by the bias. The model learns
-          <katex-element expression="b_j" /> to approximately cancel the expected interference:
-          <katex-element expression="b_j \approx -\sum_{k \neq j} (w_j \cdot w_k) \cdot \mathbb{E}[x_k]" />.
-          When the residual interference after bias correction is negative, ReLU clamps it to zero
-          — correctly indicating that the feature is not present.
+          The illustration shows a typical superposition solution. The five feature directions are
+          arranged symmetrically, and we assume that only feature
+          <katex-element expression="f_1"/>
+          is active with activation
+          <katex-element expression="x_1 = 1"/>
+          . Ideally, the decoder would reconstruct a strong activation for
+          <katex-element expression="f_1"/>
+          and zero for all other features. However, because the feature directions are not orthogonal,
+          the embedding inevitably projects onto the other directions as well. This is the interference
+          introduced by superposition.
         </p>
 
         <p>
-          This is why non-negative feature activations matter: with strictly non-negative ground
-          truth, any negative decoder output is necessarily an error, and ReLU can safely discard
-          it. Together, bias and ReLU act as a denoising mechanism — bias shifts the interference
-          below zero, and ReLU eliminates it.
+          The bias and ReLU work together to manage this interference. In the figure, the shaded region
+          marks the range that ReLU will clamp to zero after the bias has been applied. The learned bias
+          shifts all decoder outputs downward, reducing the spurious activations caused by interference.
+          As a result, most of the interference from inactive features falls into the shaded region and
+          is removed by ReLU.
+        </p>
+
+        <p>
+          This correction is not perfect. Notice that part of the active feature direction
+          <katex-element expression="w_1"/>
+          also lies inside the shaded region. That portion is lost when ReLU is applied, reducing the
+          reconstructed activation of the true feature. At the same time, some of the neighboring feature
+          directions remain outside the shaded region, meaning that a small amount of interference
+          survives. The model therefore cannot eliminate all error. Instead, it learns a compromise that
+          balances two competing objectives: preserving the signal of active features while suppressing
+          false activations caused by interference.
+        </p>
+
+        <p>
+          This is why both the bias and the ReLU activation are essential in the superposition regime.
+          Superposition creates interference between features, and the bias-ReLU combination provides a
+          mechanism for selectively discarding much of that interference. The learned bias determines
+          where the cutoff lies, and ReLU removes everything below it. Together, they allow the model to
+          represent more features than dimensions while keeping reconstruction error manageable.
         </p>
 
         <h3>Scaling: it is exponential</h3>
 
         <p>
-          In two dimensions, we observed 5 features packed at <katex-element expression="72^\circ" />
-          minimum separation — <katex-element expression="2.5\times" /> the number of embedding
-          dimensions. How does this scale with dimensionality?
+          In two dimensions, we observed 5 features packed at
+          <katex-element expression="72^\circ"/>
+          minimum separation, which amounts to
+          <katex-element expression="2.5\times"/>
+          the number of embedding
+          dimensions. But how does this scale with dimensionality?
         </p>
 
         <p>
-          The number of nearly-orthogonal directions that can coexist in a
-          <katex-element expression="d" />-dimensional space grows <strong>exponentially</strong>
-          with <katex-element expression="d" />.
+          The exiting news: the number of nearly-orthogonal directions that can coexist in a
+          <katex-element expression="d"/>
+          -dimensional space grows <strong>exponentially</strong>
+          with
+          <katex-element expression="d"/>
+          .
         </p>
 
         <p>
-          This is a well-studied problem in combinatorial geometry known as <strong>spherical
-          codes</strong>: given <katex-element expression="d" /> dimensions, how many unit vectors
+          This is supported by a well-studied problem in combinatorial geometry known as <strong>spherical
+          codes</strong>: given
+          <katex-element expression="d"/>
+          dimensions, how many unit vectors
           can be placed such that every pairwise angle exceeds some threshold
-          <katex-element expression="\theta_{\min}" />? At
-          <katex-element expression="\theta_{\min} = 90^\circ" />, the answer is exactly
-          <katex-element expression="2d" /> (the positive and negative direction along each axis).
+          <katex-element expression="\theta_{\min}"/>
+          ? At
+          <katex-element expression="\theta_{\min} = 90^\circ"/>
+          , the answer is exactly
+          <katex-element expression="2d"/>
+          (the positive and negative direction along each axis).
           But as the angle threshold is relaxed even slightly below
-          <katex-element expression="90^\circ" />, the achievable count rises dramatically.
+          <katex-element expression="90^\circ"/>
+          , the achievable count rises dramatically.
         </p>
 
         <figure class="post-figure">
-          <SphericalCodesChart />
+          <SphericalCodesChart/>
           <figcaption>
             Maximum number of unit vectors that can be simultaneously placed in a
-            <katex-element expression="d" />-dimensional space such that every pair subtends an
-            angle of at least <katex-element expression="\alpha" /> degrees. As the angle threshold
-            decreases below <katex-element expression="90^\circ" />, the achievable count rises in
+            <katex-element expression="d"/>
+            -dimensional space such that every pair subtends an
+            angle of at least
+            <katex-element expression="\alpha"/>
+            degrees. As the angle threshold
+            decreases below
+            <katex-element expression="90^\circ"/>
+            , the achievable count rises in
             discrete steps, with higher-dimensional spaces accommodating substantially more vectors.
           </figcaption>
         </figure>
 
         <p>
-          Concrete examples from optimal spherical code tables
-          (<a href="https://spherical-codes.org/" target="_blank" rel="noopener">spherical-codes.org</a>):
-          in <katex-element expression="d = 3" /> with a minimum angle of
-          <katex-element expression="63^\circ" />, up to <strong>12 unit vectors</strong> fit
-          (<katex-element expression="\sim 4\times" /> the dimension). In
-          <katex-element expression="d = 15" /> with the same threshold, up to <strong>990 unit
-          vectors</strong> fit (<katex-element expression="\sim 66\times" /> the dimension).
+          Concrete examples from optimal spherical code tables (Cohn, 2024):
+          in
+          <katex-element expression="d = 3"/>
+          with a minimum angle of
+          <katex-element expression="63^\circ"/>
+          , up to <strong>12 unit vectors</strong> fit
+          (
+          <katex-element expression="4\times"/>
+          the dimension). In
+          <katex-element expression="d = 15"/>
+          with the same threshold, up to <strong>990 unit
+          vectors</strong> fit (
+          <katex-element expression="66\times"/>
+          the dimension).
         </p>
 
         <p>
@@ -337,24 +383,34 @@ import ParamScaleChart from './ParamScaleChart.vue'
         </p>
 
         <p>
-          A striking demonstration comes from 3Blue1Brown
-          (<a href="https://youtu.be/9-Jl0dxWQs8?si=1JIOc0Yfg0T_H5iJ&t=1025" target="_blank" rel="noopener"><em>How might LLMs store facts</em>, Chapter 7</a>):
-          it is possible to place <strong>10,000 vectors in just 100 dimensions</strong> while all
-          pairwise angles remain between <katex-element expression="89^\circ" /> and
-          <katex-element expression="91^\circ" /> — virtually orthogonal, despite outnumbering the
-          dimensions by a factor of 100.
+          A striking demonstration comes from
+          <a href="https://youtu.be/9-Jl0dxWQs8?si=1JIOc0Yfg0T_H5iJ&t=1025" target="_blank" rel="noopener"><em>How might LLMs store facts</em> by Grant Sanderson (Chapter 7)</a>.
+          In the video, he constructs 10,000 vectors in a 100-dimensional space and uses an algorithm
+          to iteratively adjust their directions, gradually increasing their separation. The result is
+          remarkable: the pairwise angles between all 10,000 vectors remain between
+          <katex-element expression="89^\circ"/>
+          and
+          <katex-element expression="91^\circ"/>
+          , making them virtually orthogonal despite outnumbering the available dimensions by a factor
+          of 100.
         </p>
 
         <p>
           This near-orthogonality in high dimensions is a consequence of the <strong>concentration
           of measure</strong>, a fundamental property of high-dimensional geometry. A precise
           version is given by the <strong>Johnson–Lindenstrauss lemma</strong>: any set of
-          <katex-element expression="n" /> points can be projected into
-          <katex-element expression="d = O(\log n / \varepsilon^2)" /> dimensions while preserving
-          all pairwise distances within <katex-element expression="(1 \pm \varepsilon)" />.
+          <katex-element expression="n"/>
+          points can be projected into
+          <katex-element expression="d = O(\log n / \varepsilon^2)"/>
+          dimensions while preserving
+          all pairwise distances within
+          <katex-element expression="(1 \pm \varepsilon)"/>
+          .
           Inverting this, the number of vectors that can be placed nearly orthogonally in
-          <katex-element expression="d" /> dimensions grows exponentially with
-          <katex-element expression="d" />: even a modest increase in dimensionality permits a
+          <katex-element expression="d"/>
+          dimensions grows exponentially with
+          <katex-element expression="d"/>
+          : even a modest increase in dimensionality permits a
           dramatically larger number of nearly-orthogonal directions.
         </p>
 
@@ -362,8 +418,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
 
         <p>
           Superposition is one contributing explanation for how language models with embedding
-          dimensions of a few thousand could represent a vastly larger number of features —
-          potentially millions — with each pair of feature directions remaining nearly orthogonal.
+          dimensions of a few thousand could represent a vastly larger number, potentially millions, of features with each pair of feature directions remaining nearly orthogonal.
           The interference between any two features stays proportional to the cosine of their angle
           (close to zero), and with the sparsity of real-world features, the expected cost of this
           interference remains manageable.
@@ -376,11 +431,14 @@ import ParamScaleChart from './ParamScaleChart.vue'
 
         <ol>
           <li><strong>Features are sparse</strong> — most are inactive at any given time, so
-          interference rarely manifests.</li>
+            interference rarely manifests.
+          </li>
           <li><strong>High-dimensional geometry is exponentially permissive</strong> — it allows
-          vastly more nearly-orthogonal directions than the dimension count would suggest.</li>
+            vastly more nearly-orthogonal directions than the dimension count would suggest.
+          </li>
           <li><strong>Nonlinearities suppress residual interference</strong> — bias and ReLU
-          discard small cross-talk.</li>
+            mitigate cross-talk.
+          </li>
         </ol>
 
         <p>
@@ -420,16 +478,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
         </p>
 
         <p>
-          Finally, the toy model studied in this article isolates the superposition phenomenon under
-          controlled conditions, but it differs from real neural networks in important ways: it uses
-          a linear encoder (no nonlinearity until the decoder), relies on synthetic data with known
-          ground-truth features, employs tied weights, and studies only a single layer. Real networks
-          exhibit superposition in more complex forms — across multiple layers, with nonlinear
-          encoding, and over natural data distributions where features themselves are not predefined.
-          Nevertheless, the core geometric intuition — that high-dimensional spaces permit far more
-          nearly-orthogonal directions than their dimension count suggests, and that sparse
-          activations make the resulting interference tolerable — transfers directly to the
-          large-scale setting.
+          Finally, the toy model studied in this article isolates the superposition phenomenon under controlled conditions, but it differs from real neural networks in important ways: it uses a linear encoder (no nonlinearity until the decoder), relies on synthetic data with known ground-truth features, employs tied weights, and studies only a single layer. Real networks exhibit superposition in more complex forms across multiple layers, with nonlinear encoding, and over natural data distributions where features themselves are not predefined. Nevertheless, the core geometric intuition remains: high-dimensional spaces permit far more nearly-orthogonal directions than their dimension count suggests, and sparse activations make the resulting interference tolerable. This intuition transfers directly to the large-scale setting.
         </p>
       </div>
 
@@ -447,8 +496,13 @@ import ParamScaleChart from './ParamScaleChart.vue'
           space of features within embedding vectors of fixed and limited dimensionality. The
           mathematical foundations established that representing features as directions in embedding
           space naturally leads to the framework of the weight matrix
-          <katex-element expression="W" />, its transpose <katex-element expression="W^T" /> for
-          recovery, and the Gram matrix <katex-element expression="W^TW" /> as a measure of
+          <katex-element expression="W"/>
+          , its transpose
+          <katex-element expression="W^T"/>
+          for
+          recovery, and the Gram matrix
+          <katex-element expression="W^TW"/>
+          as a measure of
           interference between feature directions. When features outnumber dimensions, perfect
           orthogonality is impossible, and some interference becomes unavoidable.
         </p>
@@ -459,22 +513,26 @@ import ParamScaleChart from './ParamScaleChart.vue'
         </p>
 
         <ul>
-          <li>With sufficient dimensions, the model learns an orthonormal basis — one direction per
-          feature, zero interference.</li>
+          <li>With sufficient dimensions, the model learns an orthonormal basis, using one direction per
+            feature, resulting in zero interference.
+          </li>
           <li>Under a dimensional bottleneck with dense features, the model sacrifices low-importance
-          features entirely rather than accept constant interference.</li>
+            features entirely rather than accept constant interference.
+          </li>
           <li>With sparse features, the model exploits opposite directions to double its capacity
-          without introducing cross-talk between orthogonal pairs.</li>
-          <li>With further pressure, the model distributes feature directions at non-orthogonal
-          angles, accepting genuine interference in exchange for representing more features — the
-          hallmark of superposition.</li>
+            without introducing cross-talk between orthogonal pairs.
+          </li>
+          <li>Introducing more features than double the dimensionality, the model distributes feature directions at non-orthogonal
+            angles, accepting genuine interference in exchange for representing more features — the
+            hallmark of superposition.
+          </li>
         </ul>
 
         <p>
           Superposition is a powerful representational strategy that leverages sparsity and the
           exponential capacity of high-dimensional geometry. It is also a fundamental obstacle for
           interpretability: when features overlap in activation space, understanding what a model
-          internally represents requires tools — such as sparse autoencoders — to disentangle them.
+          internally represents requires tools, such as sparse autoencoders, to disentangle them.
         </p>
 
         <p>
@@ -483,9 +541,8 @@ import ParamScaleChart from './ParamScaleChart.vue'
           superposition in more complex forms, and active research continues to develop both
           theoretical understanding and practical tools for working with superposed representations.
           For further reading, we recommend the original <em>Toy Models of Superposition</em>
-          paper (Elhage et al., 2022), the <em>Towards Monosemanticity</em> work on sparse
-          autoencoders (Bricken et al., 2023), and the growing body of work in the VISxAI community
-          on making these phenomena accessible through interactive explanation.
+          paper (Elhage et al., 2022) and the <em>Towards Monosemanticity</em> work on sparse
+          autoencoders (Bricken et al., 2023).
         </p>
       </div>
 
@@ -503,7 +560,8 @@ import ParamScaleChart from './ParamScaleChart.vue'
             Bricken, T., Templeton, A., Batson, J., Chen, B., et al. (2023).
             <em>Towards Monosemanticity: Decomposing Language Models With Dictionary Learning.</em>
             Transformer Circuits Thread.
-            <a href="https://transformer-circuits.pub/2023/monosemantic-features/index.html" target="_blank" rel="noopener">transformer-circuits.pub</a>
+            <a href="https://transformer-circuits.pub/2023/monosemantic-features/index.html" target="_blank"
+               rel="noopener">transformer-circuits.pub</a>
           </li>
           <li>
             Olah, C., Cammarata, N., Schubert, L., Goh, G., Petrov, M., &amp; Carter, S. (2020).
@@ -521,13 +579,16 @@ import ParamScaleChart from './ParamScaleChart.vue'
           </li>
           <li>
             Cohn, H. (2024). <em>Table of Spherical Codes.</em> Dataset. MIT DSpace.
-            <a href="https://hdl.handle.net/1721.1/153543" target="_blank" rel="noopener">hdl.handle.net/1721.1/153543</a>.
+            <a href="https://hdl.handle.net/1721.1/153543" target="_blank"
+               rel="noopener">hdl.handle.net/1721.1/153543</a>.
             See also:
             <a href="https://spherical-codes.org/" target="_blank" rel="noopener">spherical-codes.org</a>
           </li>
           <li>
-            Neuronpedia.
-            <a href="https://www.neuronpedia.org/" target="_blank" rel="noopener">neuronpedia.org</a>
+            Lin, J. (2023).
+            <a href="https://www.neuronpedia.org/" target="_blank" rel="noopener">Neuronpedia: Interactive Reference and
+              Tooling for Analyzing Neural Networks</a>.
+            https://www.neuronpedia.org
           </li>
         </ul>
       </div>
@@ -620,6 +681,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
   font-style: italic;
   color: var(--color-text-strong);
 }
+
 .post-body :deep(blockquote p) {
   margin: 0;
 }
@@ -778,11 +840,12 @@ $spotlight-opacity: 0.45;
 .blog-post .text-column .text-block p {
   margin: 0 0 1em;
 }
+
 .blog-post .text-column .text-block p:last-child {
   margin-bottom: 0;
 }
 
- /* ══ Underline Accent (direction-aware) ═══════════════════════ */
+/* ══ Underline Accent (direction-aware) ═══════════════════════ */
 /* Growing uses .active-block::after origin (grows from that edge).
    Shrinking uses .text-block::after origin (shrinks toward that edge).
 
@@ -813,9 +876,11 @@ $spotlight-opacity: 0.45;
 .blog-post .text-column:has(.active-block) .text-block:not(.active-block) {
   opacity: $spotlight-opacity;
 }
+
 .blog-post .text-column .text-block:not(.active-block) {
   cursor: pointer;
 }
+
 .blog-post .text-column .text-block:not(.active-block):hover {
   background-color: var(--color-bg-subtle);
 }
@@ -825,6 +890,7 @@ $spotlight-opacity: 0.45;
   opacity: $spotlight-opacity;
   transition: opacity 0.3s ease-out;
 }
+
 .blog-post .post-body > * {
   transition: opacity 0.3s ease-out;
 }
@@ -833,6 +899,7 @@ $spotlight-opacity: 0.45;
 .blog-post .text-column[data-scroll-dir="down"] .text-block::after {
   transform-origin: bottom;
 }
+
 .blog-post .text-column[data-scroll-dir="up"] .text-block::after {
   transform-origin: top;
 }
@@ -841,6 +908,7 @@ $spotlight-opacity: 0.45;
 .blog-post .text-column[data-scroll-dir="down"] .active-block::after {
   transform-origin: top;
 }
+
 .blog-post .text-column[data-scroll-dir="up"] .active-block::after {
   transform-origin: bottom;
 }
@@ -861,6 +929,7 @@ $spotlight-opacity: 0.45;
 .blog-post .text-section p .katex {
   font-size: 1em;
 }
+
 .blog-post .viz-column {
   min-width: 0;
   align-self: start;
