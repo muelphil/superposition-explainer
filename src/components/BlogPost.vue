@@ -5,6 +5,7 @@ import SphericalCodesChart from './blogPost/SphericalCodesChart.vue'
 import InterferenceIllustration from './blogPost/InterferenceIllustration.vue'
 import EmbeddingSuperpositionIllustration from "./EmbeddingSuperpositionIllustration.vue";
 import ParamScaleChart from './ParamScaleChart.vue'
+import References from './References.vue'
 </script>
 
 <template>
@@ -45,7 +46,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
           This article is an interactive explorable explanation of <em>superposition</em> — a geometric
           phenomenon that may explain how neural network embeddings represent far more features than their
           dimensionality would naively allow. Guided by the experimental framework of Anthropic's
-          <em>Toy Models of Superposition</em> (Elhage et al., 2022), we build from geometric foundations
+          <em>Toy Models of Superposition</em> (<a href="#Elhage2022">Elhage et al., 2022</a>), we build from geometric foundations
           to an interactive autoencoder and guide the reader through progressive experiments. Rather than introducing
           superposition as a predefined concept, the article encourages readers to discover it through hands-on
           experimentation. The phenomenon is then formally named and connected to broader ideas in representation
@@ -137,7 +138,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
           internal decomposition aligns perfectly with human categories. Significant research effort has
           gone into uncovering interpretable features inside trained models;
           the <a href="https://www.neuronpedia.org/" target="_blank" rel="noopener">Neuronpedia</a> project
-          (Lin, 2023) catalogs discovered features for a small set of models and makes them searchable, illustrating
+          (<a href="#Lin2023">Lin, 2023</a>) catalogs discovered features for a small set of models and makes them searchable, illustrating
           both the
           progress made and the sheer scale of the problem.
         </p>
@@ -178,7 +179,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
 
         <p>
           We study this problem using the experimental setup described in Anthropic's <em>Toy Models of
-          Superposition</em> (Elhage et al., 2022), built around an autoencoder, a simple neural network trained to reconstruct its
+          Superposition</em> (<a href="#Elhage2022">Elhage et al., 2022</a>), built around an autoencoder, a simple neural network trained to reconstruct its
           input. The input first passes through a smaller embedding layer whose dimension is lower than that of the
           input, and the model then attempts to reconstruct the original input from this compressed embedding. Because
           the embedding dimension is smaller than the input dimension, the model cannot simply copy the data through the
@@ -254,7 +255,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
         <p>
           In the superposition regime, you will notice that the feature direction vectors are all
           roughly of unit length and the learned bias is approximately equal across features. Under
-          these assumptions — normalized feature directions and uniform bias — we can visualize why
+          the assumptions of normalized feature directions and uniform bias, we can visualize why
           the model chose this particular bias value.
         </p>
 
@@ -361,7 +362,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
         </figure>
 
         <p>
-          Concrete examples from optimal spherical code tables (Cohn, 2024):
+          Concrete examples from optimal spherical code tables (<a href="#Cohn2024">Cohn, 2024</a>):
           in
           <katex-element expression="d = 3"/>
           with a minimum angle of
@@ -387,7 +388,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
           <a href="https://youtu.be/9-Jl0dxWQs8?si=1JIOc0Yfg0T_H5iJ&t=1025" target="_blank" rel="noopener"><em>How might LLMs store facts</em> by Grant Sanderson (Chapter 7)</a>.
           In the video, he constructs 10,000 vectors in a 100-dimensional space and uses an algorithm
           to iteratively adjust their directions, gradually increasing their separation. The result is
-          remarkable: the pairwise angles between all 10,000 vectors remain between
+          remarkable: the pairwise angles between all 10,000 vectors range between
           <katex-element expression="89^\circ"/>
           and
           <katex-element expression="91^\circ"/>
@@ -398,7 +399,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
         <p>
           This near-orthogonality in high dimensions is a consequence of the <strong>concentration
           of measure</strong>, a fundamental property of high-dimensional geometry. A precise
-          version is given by the <strong>Johnson–Lindenstrauss lemma</strong>: any set of
+          version is given by the <strong>Johnson–Lindenstrauss lemma</strong> (<a href="#Johnson1984">Johnson &amp; Lindenstrauss, 1984</a>): any set of
           <katex-element expression="n"/>
           points can be projected into
           <katex-element expression="d = O(\log n / \varepsilon^2)"/>
@@ -455,14 +456,14 @@ import ParamScaleChart from './ParamScaleChart.vue'
         <p>
           Superposition also provides a geometric explanation for <strong>polysemanticity</strong> —
           the widely observed phenomenon that individual neurons in neural networks respond to
-          multiple, seemingly unrelated concepts (Olah et al., 2020). If features are stored in
+          multiple, seemingly unrelated concepts (<a href="#Olah2020">Olah et al., 2020</a>). If features are stored in
           superposition, a single neuron's activation is a mixture of projections from many
           overlapping feature directions, so it naturally activates for multiple unrelated inputs.
         </p>
 
         <p>
           <strong>Sparse autoencoders</strong> (SAEs) have emerged as a practical tool for
-          recovering individual features from superposed representations (Bricken et al., 2023).
+          recovering individual features from superposed representations (<a href="#Bricken2023">Bricken et al., 2023</a>).
           Unlike the toy autoencoder studied here, SAEs project into a <em>higher</em>-dimensional
           hidden layer that is trained to be sparse — only a small number of hidden units activate
           for any given input. This sparsity in the hidden representation encourages each unit to
@@ -473,7 +474,7 @@ import ParamScaleChart from './ParamScaleChart.vue'
           It is worth noting that superposition is not the only mechanism by which neural networks
           achieve rich internal representations. Other contributing factors include
           <strong>computation in superposition</strong>, where networks perform operations directly
-          on superposed representations without first disentangling them (Elhage et al., 2022), and
+          on superposed representations without first disentangling them (<a href="#Elhage2022">Elhage et al., 2022</a>), and
           nonlinear feature interactions that go beyond the linear directional model assumed here.
         </p>
 
@@ -541,63 +542,19 @@ import ParamScaleChart from './ParamScaleChart.vue'
           superposition in more complex forms, and active research continues to develop both
           theoretical understanding and practical tools for working with superposed representations.
           For further reading, we recommend the original <em>Toy Models of Superposition</em>
-          paper (Elhage et al., 2022) and the <em>Towards Monosemanticity</em> work on sparse
-          autoencoders (Bricken et al., 2023).
+          paper (<a href="#Elhage2022">Elhage et al., 2022</a>) and the <em>Towards Monosemanticity</em> work on sparse
+          autoencoders (<a href="#Bricken2023">Bricken et al., 2023</a>).
         </p>
       </div>
 
       <!-- ── Section 7: References ─────────────────────────────── -->
-      <div class="post-section text-section">
-        <h2>References</h2>
-
-        <ul class="references-list">
-          <li>
-            Elhage, N., Hume, T., Olsson, C., Schiefer, N., et al. (2022).
-            <em>Toy Models of Superposition.</em> Transformer Circuits Thread.
-            <a href="https://transformer-circuits.pub/2022/toy_model/index.html" target="_blank" rel="noopener">transformer-circuits.pub</a>
-          </li>
-          <li>
-            Bricken, T., Templeton, A., Batson, J., Chen, B., et al. (2023).
-            <em>Towards Monosemanticity: Decomposing Language Models With Dictionary Learning.</em>
-            Transformer Circuits Thread.
-            <a href="https://transformer-circuits.pub/2023/monosemantic-features/index.html" target="_blank"
-               rel="noopener">transformer-circuits.pub</a>
-          </li>
-          <li>
-            Olah, C., Cammarata, N., Schubert, L., Goh, G., Petrov, M., &amp; Carter, S. (2020).
-            <em>Zoom In: An Introduction to Circuits.</em> Distill.
-            <a href="https://distill.pub/2020/circuits/zoom-in/" target="_blank" rel="noopener">distill.pub</a>
-          </li>
-          <li>
-            Johnson, W. B., &amp; Lindenstrauss, J. (1984). Extensions of Lipschitz mappings into a
-            Hilbert space. <em>Contemporary Mathematics</em>, 26, 189–206.
-          </li>
-          <li>
-            3Blue1Brown. (2024). <em>How might LLMs store facts | Chapter 7, Deep Learning.</em>
-            YouTube.
-            <a href="https://youtu.be/9-Jl0dxWQs8" target="_blank" rel="noopener">youtube.com</a>
-          </li>
-          <li>
-            Cohn, H. (2024). <em>Table of Spherical Codes.</em> Dataset. MIT DSpace.
-            <a href="https://hdl.handle.net/1721.1/153543" target="_blank"
-               rel="noopener">hdl.handle.net/1721.1/153543</a>.
-            See also:
-            <a href="https://spherical-codes.org/" target="_blank" rel="noopener">spherical-codes.org</a>
-          </li>
-          <li>
-            Lin, J. (2023).
-            <a href="https://www.neuronpedia.org/" target="_blank" rel="noopener">Neuronpedia: Interactive Reference and
-              Tooling for Analyzing Neural Networks</a>.
-            https://www.neuronpedia.org
-          </li>
-        </ul>
-      </div>
+      <References />
 
     </div>
   </article>
 </template>
 
-<style scoped>
+<style>
 /* ── Blog article ──────────────────────────────────────────────── */
 .blog-post {
   color: var(--color-text-primary);
@@ -705,18 +662,6 @@ import ParamScaleChart from './ParamScaleChart.vue'
   text-decoration: underline;
 }
 
-.post-body :deep(.references-list) {
-  list-style: none;
-  padding-left: 0;
-}
-
-.post-body :deep(.references-list li) {
-  margin-bottom: 1rem;
-  padding-left: 1.5rem;
-  text-indent: -1.5rem;
-  font-size: 0.92rem;
-  line-height: 1.6;
-}
 
 /* ── Header internals ──────────────────────────────────────────── */
 .post-meta {

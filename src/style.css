@@ -196,6 +196,27 @@ button {
     transition: border-color 0.15s, background-color 0.15s, color 0.15s;
 }
 
+a {
+    color: var(--color-interactive);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+a:hover {
+    color: var(--color-interactive-hover);
+    text-decoration: underline;
+}
+
+#Elhage2022:target,
+#Bricken2023:target,
+#Olah2020:target,
+#Johnson1984:target,
+#Sanderson2024:target,
+#Cohn2024:target,
+#Lin2023:target {
+    font-weight: 600;
+}
+
 button:hover {
     border-color: var(--color-interactive);
     background-color: var(--color-bg);
