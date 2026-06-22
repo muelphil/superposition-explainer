@@ -3,6 +3,7 @@ import { ref, watch, provide, onUnmounted } from 'vue'
 import { createBasesService, type MappingStage, type CoordinateStage } from '../../services/BasesService'
 import { useScrollActiveBlock } from './useScrollActiveParagraph'
 import { useParagraphRanges, type ParagraphRange } from './useParagraphRanges'
+
 import { TaskList, TaskEventBus, TASK_EVENT_BUS_KEY } from './taskSystem'
 import BasesVisualization from './BasesVisualization.vue'
 import VizSection from './VizSection.vue'
@@ -129,7 +130,7 @@ useParagraphRanges(ranges, activeBlockIndex)
     </template>
     <template #text>
     <!-- Text column -->
-     <div class="text-column" data-scroll-dir="down">
+      <div class="text-column">
 
       <!-- Block 'feature-space': Intro + feature space concept -->
       <p>

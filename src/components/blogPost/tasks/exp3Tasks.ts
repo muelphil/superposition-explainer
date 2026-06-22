@@ -51,7 +51,7 @@ export function createExp3TaskSpecs(): AeTaskSpec[] {
     },
     {
       id: 'activate-opposite',
-      label: 'Set all inputs to zero, then increase two features with opposite directions to 1.0 — observe the embedding and error',
+      label: 'Set all inputs to zero, then increase two features with opposite directions to 1.0 — observe the resulting embedding and reconstruction error at the output layer',
       dependencies: ['converge'],
       optional: true,
       setup: (ctx: AeTaskContext) => ({

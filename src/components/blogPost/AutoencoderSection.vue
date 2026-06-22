@@ -13,6 +13,7 @@ import {createVizService, VIZ_SERVICE_KEY, type RevealStage} from '../../service
 import {revealUpTo, applyPulse, clearAllPulse} from '../../utils/revealPulse'
 import {useScrollActiveBlock} from './useScrollActiveParagraph'
 import {useParagraphRanges, type ParagraphRange} from './useParagraphRanges'
+
 import {type AeConstraintSpec, AE_VIEW_CONSTRAINTS_KEY, deriveConstraints} from './aeStepTypes'
 import {TaskList, TaskEventBus, TASK_EVENT_BUS_KEY} from './taskSystem'
 import {createExp1TaskSpecs} from './tasks/exp1Tasks'
@@ -383,7 +384,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <h2 class="section-heading full-span">The Toy Autoencoder</h2>
     </template>
     <template #text>
-      <div class="text-column" data-scroll-dir="down">
+      <div class="text-column">
 
         <!-- Intro prose (not activatable — first activatable block is 'architecture') -->
         <p>
@@ -795,8 +796,7 @@ useParagraphRanges(ranges, activeBlockIndex)
         >
 
           <p>
-            In real neural networks, not all features are active at the same time. Consider the
-            vast space of possible features: <em>is_plural</em>, <em>is_question</em>,
+            In real neural networks, not all features are active at the same time. Consider the vast space of possible features that a language model might need to represent: <em>is_plural</em>, <em>is_question</em>,
             <em>refers_to_Einstein</em>, <em>is_about_cooking</em>. For any given input, only a
             small fraction of all potentially useful features will be relevant. Most features are
             inactive most of the time, a property that is called <strong>sparsity</strong>.

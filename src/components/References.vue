@@ -25,7 +25,8 @@
       </li>
       <li id="Johnson1984">
         Johnson, W. B., &amp; Lindenstrauss, J. (1984). Extensions of Lipschitz mappings into a
-        Hilbert space. <em>Contemporary Mathematics</em>, 26, 189–206.
+        Hilbert space. <em>Contemporary Mathematics</em>, 26, 189–206. See also:
+        <a href="https://en.wikipedia.org/wiki/Johnson%E2%80%93Lindenstrauss_lemma" target="_blank" rel="noopener">Wikipedia: Johnson–Lindenstrauss lemma</a>.
       </li>
       <li id="Cohn2024">
         Cohn, H. (2024). <em>Table of Spherical Codes.</em> Dataset. MIT DSpace.

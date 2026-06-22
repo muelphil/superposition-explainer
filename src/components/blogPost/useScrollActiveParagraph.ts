@@ -12,9 +12,7 @@ import { emitActiveBlockSeen } from './activeBlockBus'
  * (i.e. before the first block or after the last block), so that the section
  * is inactive before the user scrolls into it and after they leave it.
  *
- * Also sets a CSS class on the nearest .text-column parent to indicate scroll
- * direction (scroll-down | scroll-up), so variant 4's animation can animate in
- * the matching direction.
+ * Scroll direction tracking has been moved to useScrollDirection.ts (singleton).
  *
  * Non-activatable content should simply omit a ref — blockRefs must be a
  * contiguous, dense array of only the activatable elements.
@@ -24,7 +22,6 @@ export function useScrollActiveBlock(
 ): { activeBlockIndex: Ref<number>, scrollToBlock: Function } {
     const activeBlockIndex = ref(-1)
     let observer: IntersectionObserver | null = null
-    let prevY = 0
 
     watch(activeBlockIndex, (idx) => {
         if (idx >= 0) {
@@ -34,12 +31,6 @@ export function useScrollActiveBlock(
             }
         }
     })
-
-    const dirClass = (parent: HTMLElement | null, direction: 'down' | 'up') => {
-        if (!parent) return
-        const el = parent.closest('[data-scroll-dir]')
-        if (el) el.setAttribute('data-scroll-dir', direction)
-    }
 
     function updateActive() {
         const els = blockRefs.value
@@ -83,19 +74,7 @@ export function useScrollActiveBlock(
             if (el) observer!.observe(el)
         })
 
-        prevY = window.scrollY
-
-        window.addEventListener('scroll', () => {
-            const y = window.scrollY
-            const firstBlock = blockRefs.value.find(el => el !== null)
-            const parent = firstBlock?.closest('.text-column') as HTMLElement
-            if (parent) {
-                if (y > prevY) dirClass(parent, 'down')
-                else if (y < prevY) dirClass(parent, 'up')
-                prevY = y
-                updateActive()
-            }
-        }, {passive: true})
+        window.addEventListener('scroll', updateActive, {passive: true})
 
         updateActive()
     })

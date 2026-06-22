@@ -405,8 +405,7 @@ import References from './References.vue'
           <katex-element expression="d = O(\log n / \varepsilon^2)"/>
           dimensions while preserving
           all pairwise distances within
-          <katex-element expression="(1 \pm \varepsilon)"/>
-          .
+          <katex-element expression="(1 \pm \varepsilon)."/>
           Inverting this, the number of vectors that can be placed nearly orthogonally in
           <katex-element expression="d"/>
           dimensions grows exponentially with
@@ -418,8 +417,7 @@ import References from './References.vue'
         <h3>What this means for neural networks</h3>
 
         <p>
-          Superposition is one contributing explanation for how language models with embedding
-          dimensions of a few thousand could represent a vastly larger number, potentially millions, of features with each pair of feature directions remaining nearly orthogonal.
+          Superposition is one contributing explanation for how language models (or any other overparameterized model) with embedding dimensions of a few thousand could represent a vastly larger number, potentially millions, of features with each pair of feature directions remaining nearly orthogonal.
           The interference between any two features stays proportional to the cosine of their angle
           (close to zero), and with the sparsity of real-world features, the expected cost of this
           interference remains manageable.
@@ -485,7 +483,7 @@ import References from './References.vue'
 
       <!-- ── Section 6: Recap ──────────────────────────────────── -->
       <div class="post-section text-section">
-        <h2>Recap</h2>
+        <h2>Recap to fortify what this article studied</h2>
 
         <p>
           This article traced a path from the dimensional bottleneck in neural network embeddings
@@ -841,20 +839,20 @@ $spotlight-opacity: 0.45;
 }
 
 /* Shrink direction (non-active state) */
-.blog-post .text-column[data-scroll-dir="down"] .text-block::after {
+body[data-scroll-dir="down"] .blog-post .text-block::after {
   transform-origin: bottom;
 }
 
-.blog-post .text-column[data-scroll-dir="up"] .text-block::after {
+body[data-scroll-dir="up"] .blog-post .text-block::after {
   transform-origin: top;
 }
 
 /* Grow direction (active state) — must match specificity of shrink selectors */
-.blog-post .text-column[data-scroll-dir="down"] .active-block::after {
+body[data-scroll-dir="down"] .blog-post .active-block::after {
   transform-origin: top;
 }
 
-.blog-post .text-column[data-scroll-dir="up"] .active-block::after {
+body[data-scroll-dir="up"] .blog-post .active-block::after {
   transform-origin: bottom;
 }
 

@@ -3,6 +3,9 @@ import './style.css'
 import 'katex/dist/katex.min.css'
 import App from './App.vue'
 import Vue3Katex from 'vue3-katex'
+import { initScrollDirection } from './components/blogPost/useScrollDirection'
+
+initScrollDirection()
 
 createApp(App)
   .use(Vue3Katex, { katexOptions: { throwOnError: false } })
