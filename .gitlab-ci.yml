@@ -6,7 +6,7 @@ pages:
     - npm install
     - npm run build
     - rm -rf public
-    - mv dist public
+    - mv docs public
   artifacts:
     paths:
       - public/*
