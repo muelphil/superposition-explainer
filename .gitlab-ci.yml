@@ -1,12 +1,9 @@
 image: node:20
 
 pages:
+  # The folder that contains the files to be exposed at the Page URL
+  publish: docs
   stage: deploy
   script:
     - npm install
     - npm run build
-    - rm -rf public
-    - mv docs public
-  artifacts:
-    paths:
-      - public/*
