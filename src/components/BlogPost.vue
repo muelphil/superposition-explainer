@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import BasesSection from './blogPost/BasesSection.vue'
 import AutoencoderSection from './blogPost/AutoencoderSection.vue'
 import SphericalCodesChart from './blogPost/SphericalCodesChart.vue'
@@ -6,11 +7,38 @@ import InterferenceIllustration from './blogPost/InterferenceIllustration.vue'
 import EmbeddingSuperpositionIllustration from "./EmbeddingSuperpositionIllustration.vue";
 import ParamScaleChart from './ParamScaleChart.vue'
 import References from './References.vue'
+import { activeBlockElement } from './blogPost/activeBlockBus'
+
+// Dim top-level post-body sections that don't contain the currently active
+// text-block. Implemented via direct classList toggling (driven by scroll,
+// which changes rarely) rather than a `:has()` CSS selector — `:has()` here
+// forced a full-subtree style recalculation on every reactive DOM update
+// anywhere in `.blog-post`, including on every training tick unrelated to
+// scrolling (confirmed via CPU trace: recalcStyle ~3.8s -> ~0.3s over an 8s
+// training run after removing the `:has()` rules).
+const postBodyRef = ref<HTMLElement | null>(null)
+let stopWatch: (() => void) | null = null
+
+onMounted(() => {
+  stopWatch = watch(activeBlockElement, (el) => {
+    const postBody = postBodyRef.value
+    if (!postBody) return
+    for (const child of Array.from(postBody.children)) {
+      if (el && !child.contains(el)) {
+        child.classList.add('dim-section')
+      } else {
+        child.classList.remove('dim-section')
+      }
+    }
+  })
+})
+
+onUnmounted(() => stopWatch?.())
 </script>
 
 <template>
   <article class="blog-post">
-    <div class="post-body">
+    <div class="post-body" ref="postBodyRef">
 
       <!-- ── Header ───────────────────────────────────────────── -->
       <header class="post-header post-section">
@@ -777,7 +805,7 @@ $spotlight-opacity: 0.45;
 }
 
 /* Dim non-active paragraphs when one is active */
-.blog-post .text-column:has(.active-block) .text-block:not(.active-block) {
+.blog-post .text-column.has-active .text-block:not(.active-block) {
   opacity: $spotlight-opacity;
 }
 
@@ -790,14 +818,15 @@ $spotlight-opacity: 0.45;
 }
 
 /* Dim all direct children of .post-body that don't contain the active block */
-.blog-post:has(.active-block) .post-body > :not(:has(.active-block)) {
+.blog-post .post-body > .dim-section {
   opacity: $spotlight-opacity;
   transition: opacity 0.3s ease-out;
 }
 
-.blog-post .post-body > * {
-  transition: opacity 0.3s ease-out;
-}
+// .blog-post .post-body > * { transition: opacity 0.3s ease-out; }
+// Removed: forced style recalc on every DOM mutation inside .blog-post.
+// The .dim-section class (above) already handles the only transition that
+// actually fires (opacity dim on non-active sections).
 
 /* Shrink direction (non-active state) */
 body[data-scroll-dir="down"] .blog-post .text-block::after {

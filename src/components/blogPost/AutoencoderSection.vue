@@ -384,7 +384,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       <h2 class="section-heading full-span">The Toy Autoencoder</h2>
     </template>
     <template #text>
-      <div class="text-column">
+      <div class="text-column" :class="{ 'has-active': activeBlockIndex >= 0 }">
 
         <!-- Intro prose (not activatable — first activatable block is 'architecture') -->
         <p>

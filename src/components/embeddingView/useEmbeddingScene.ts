@@ -65,6 +65,14 @@ export function useEmbeddingScene(
     let mouseIsDown = false
 
     let ro: ResizeObserver | null = null
+    let io: IntersectionObserver | null = null
+    // Render loop is gated on viewport visibility — without this, every mounted
+    // EmbeddingView (main view + each blog section's own + static illustrations)
+    // keeps rendering via rAF forever, even fully scrolled off-screen. With
+    // several instances alive at once this starves the main thread and delays
+    // unrelated setTimeout-scheduled work (e.g. training ticks) elsewhere on
+    // the page.
+    let isVisible = true
 
     // ── SceneCtx (passed to overlay manager) ─────────────────────
     function getCtx(): SceneCtx | null {
@@ -544,6 +552,7 @@ export function useEmbeddingScene(
 
     // ── Render loop ───────────────────────────────────────────────
     function renderLoop() {
+        if (!isVisible) return  // paused; IntersectionObserver restarts it once visible again
         rafId = requestAnimationFrame(renderLoop)
         if (!renderer || !scene || !camera) return
         controls?.update()
@@ -663,12 +672,20 @@ export function useEmbeddingScene(
         init()
         ro = new ResizeObserver(onResize)
         if (containerRef.value) ro.observe(containerRef.value)
+        io = new IntersectionObserver((entries) => {
+            const nowVisible = entries[entries.length - 1]?.isIntersecting ?? true
+            const wasVisible = isVisible
+            isVisible = nowVisible
+            if (nowVisible && !wasVisible) renderLoop()  // resume the paused rAF chain
+        }, {threshold: 0})
+        if (containerRef.value) io.observe(containerRef.value)
         window.addEventListener('mouseup', onCanvasMouseUp)
     })
 
     onUnmounted(() => {
         teardown()
         ro?.disconnect()
+        io?.disconnect()
         window.removeEventListener('mouseup', onCanvasMouseUp)
     })
 

@@ -130,7 +130,7 @@ useParagraphRanges(ranges, activeBlockIndex)
     </template>
     <template #text>
     <!-- Text column -->
-      <div class="text-column">
+      <div class="text-column" :class="{ 'has-active': activeBlockIndex >= 0 }">
 
       <!-- Block 'feature-space': Intro + feature space concept -->
       <p>

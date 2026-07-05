@@ -1,5 +1,5 @@
 import {ref, onMounted, onUnmounted, watch, type Ref} from 'vue'
-import { emitActiveBlockSeen } from './activeBlockBus'
+import { emitActiveBlockSeen, clearActiveBlock } from './activeBlockBus'
 
 /**
  * Tracks which text-block element is closest to the vertical center of the
@@ -29,6 +29,8 @@ export function useScrollActiveBlock(
             if (el) {
                 emitActiveBlockSeen(el)
             }
+        } else {
+            clearActiveBlock()
         }
     })
 

@@ -17,7 +17,7 @@ export function createExp1TaskSpecs(): AeTaskSpec[] {
                     (svc) =>
                         allColumnNormsInRange(svc.W.value, 0.999, 1.001) &&
                         Math.abs(minPairwiseAngleDeg(svc.W.value) - 90) < 0.01,
-                    20,
+                    30,
                     () => ctx.services.svc.pauseTraining(),
                 ),
         },

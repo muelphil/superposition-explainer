@@ -37,7 +37,7 @@ export function createExp4TaskSpecs(): AeTaskSpec[] {
           (svc) =>
             minPairwiseAngleDeg(svc.W.value) >= 65 &&
             allColumnNormsInRange(svc.W.value, 0.5, 1.1),
-          60,
+          30,
           () => ctx.services.svc.pauseTraining(),
           () =>
             ctx.services.svc.config.featureDecay >= 0.99 &&
