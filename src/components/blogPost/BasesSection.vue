@@ -288,7 +288,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       </div>
 
       <!-- ── The 2D Example ───────────────────────────────────── -->
-      <h3>The 2D Example</h3>
+      <h3>The 2D example</h3>
 
       <p>
         To build this intuition concretely, we walk through three progressively structured
@@ -330,7 +330,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       </p>
 
       <!-- ── Arbitrary Basis ──────────────────────────────────── -->
-      <h3>Arbitrary Basis</h3>
+      <h3>Arbitrary basis</h3>
 
       <div
           :ref="(el) => blockRefs[blockIdx('arbitrary-vectors')] = el as HTMLElement"
@@ -467,7 +467,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       </div>
 
       <!-- ── Orthogonal Basis ─────────────────────────────────── -->
-      <h3>Orthogonal Basis</h3>
+      <h3>Orthogonal basis</h3>
 
       <div
           :ref="(el) => blockRefs[blockIdx('orthogonal-basis')] = el as HTMLElement"
@@ -532,7 +532,7 @@ useParagraphRanges(ranges, activeBlockIndex)
       </div>
 
       <!-- ── Orthonormal Basis ────────────────────────────────── -->
-       <h3>Orthonormal Basis</h3>
+        <h3>Orthonormal basis</h3>
 
        <div
            :ref="(el) => blockRefs[blockIdx('orthonormal-basis')] = el as HTMLElement"

@@ -32,8 +32,6 @@ import References from './References.vue'
         <div class="post-authors">
           <span class="author-name">Philip Müller</span>
           <span class="author-separator">·</span>
-          <span class="author-name">TODO</span>
-          <span class="author-separator">·</span>
           <span class="author-name">Peter Steinbach</span>
         </div>
       </header>
@@ -46,7 +44,8 @@ import References from './References.vue'
           This article is an interactive explorable explanation of <em>superposition</em> — a geometric
           phenomenon that may explain how neural network embeddings represent far more features than their
           dimensionality would naively allow. Guided by the experimental framework of Anthropic's
-          <em>Toy Models of Superposition</em> (<a href="#Elhage2022">Elhage et al., 2022</a>), we build from geometric foundations
+          <em>Toy Models of Superposition</em> (<a href="#Elhage2022">Elhage et al., 2022</a>), we build from geometric
+          foundations
           to an interactive autoencoder and guide the reader through progressive experiments. Rather than introducing
           superposition as a predefined concept, the article encourages readers to discover it through hands-on
           experimentation. The phenomenon is then formally named and connected to broader ideas in representation
@@ -138,7 +137,8 @@ import References from './References.vue'
           internal decomposition aligns perfectly with human categories. Significant research effort has
           gone into uncovering interpretable features inside trained models;
           the <a href="https://www.neuronpedia.org/" target="_blank" rel="noopener">Neuronpedia</a> project
-          (<a href="#Lin2023">Lin, 2023</a>) catalogs discovered features for a small set of models and makes them searchable, illustrating
+          (<a href="#Lin2023">Lin, 2023</a>) catalogs discovered features for a small set of models and makes them
+          searchable, illustrating
           both the
           progress made and the sheer scale of the problem.
         </p>
@@ -179,7 +179,8 @@ import References from './References.vue'
 
         <p>
           We study this problem using the experimental setup described in Anthropic's <em>Toy Models of
-          Superposition</em> (<a href="#Elhage2022">Elhage et al., 2022</a>), built around an autoencoder, a simple neural network trained to reconstruct its
+          Superposition</em> (<a href="#Elhage2022">Elhage et al., 2022</a>), built around an autoencoder, a simple
+          neural network trained to reconstruct its
           input. The input first passes through a smaller embedding layer whose dimension is lower than that of the
           input, and the model then attempts to reconstruct the original input from this compressed embedding. Because
           the embedding dimension is smaller than the input dimension, the model cannot simply copy the data through the
@@ -213,16 +214,25 @@ import References from './References.vue'
         <h3>What you observed</h3>
 
         <p>
-          In Experiment 3, the model exploited the non-negativity of feature activations together
-          with sparsity to place features in opposite directions. This doubled its capacity without
-          introducing interference between orthogonal pairs. In Experiment 4, the model went
-          further: it packed five features into two dimensions at angles of
-          <katex-element expression="72^\circ"/>
-          , where <strong>every pair of features genuinely
-          interferes</strong>. No pair is orthogonal. The model accepted cross-talk between all
-          feature directions in exchange for representing more features than the embedding space
-          can accommodate without overlap.
+          Through the interactive experiments, you observed how the model navigates the
+          dimensional bottleneck:
         </p>
+
+        <ul>
+          <li>With sufficient dimensions, the model learns an orthonormal basis, using one direction per
+            feature and zero interference.
+          </li>
+          <li>Under a dimensional bottleneck with dense features, the model sacrifices low-importance
+            features entirely rather than accept constant cross-talk.
+          </li>
+          <li>With sparse features, the model exploits opposite directions to double its capacity
+            without introducing interference between orthogonal pairs.
+          </li>
+          <li>With more features than double the dimensionality, the model distributes feature directions
+            at non-orthogonal angles, accepting genuine interference in exchange for representing
+            more features.
+          </li>
+        </ul>
 
         <p>
           This behavior of encoding more features than there are embedding dimensions by
@@ -357,12 +367,13 @@ import References from './References.vue'
             decreases below
             <katex-element expression="90^\circ"/>
             , the achievable count rises in
-            discrete steps, with higher-dimensional spaces accommodating substantially more vectors.
+             discrete steps, with higher-dimensional spaces accommodating substantially more vectors.
+             Data from optimal spherical code bounds (<a href="#Cohn2024">Cohn, 2024</a>).
           </figcaption>
         </figure>
 
         <p>
-          Concrete examples from optimal spherical code tables (<a href="#Cohn2024">Cohn, 2024</a>):
+          Concrete examples from spherical code tables (<a href="#Cohn2024">Cohn, 2024</a>):
           in
           <katex-element expression="d = 3"/>
           with a minimum angle of
@@ -385,7 +396,8 @@ import References from './References.vue'
 
         <p>
           A striking demonstration comes from
-          <a href="https://youtu.be/9-Jl0dxWQs8?si=1JIOc0Yfg0T_H5iJ&t=1025" target="_blank" rel="noopener"><em>How might LLMs store facts</em> by Grant Sanderson (Chapter 7)</a>.
+          <a href="https://youtu.be/9-Jl0dxWQs8?si=1JIOc0Yfg0T_H5iJ&t=1025" target="_blank" rel="noopener"><em>How might
+            LLMs store facts</em> by Grant Sanderson (Chapter 7)</a>.
           In the video, he constructs 10,000 vectors in a 100-dimensional space and uses an algorithm
           to iteratively adjust their directions, gradually increasing their separation. The result is
           remarkable: the pairwise angles between all 10,000 vectors range between
@@ -399,7 +411,8 @@ import References from './References.vue'
         <p>
           This near-orthogonality in high dimensions is a consequence of the <strong>concentration
           of measure</strong>, a fundamental property of high-dimensional geometry. A precise
-          version is given by the <strong>Johnson–Lindenstrauss lemma</strong> (<a href="#Johnson1984">Johnson &amp; Lindenstrauss, 1984</a>): any set of
+          version is given by the <strong>Johnson–Lindenstrauss lemma</strong> (<a href="#Johnson1984">Johnson &amp;
+          Lindenstrauss, 1984</a>): any set of
           <katex-element expression="n"/>
           points can be projected into
           <katex-element expression="d = O(\log n / \varepsilon^2)"/>
@@ -417,7 +430,9 @@ import References from './References.vue'
         <h3>What this means for neural networks</h3>
 
         <p>
-          Superposition is one contributing explanation for how language models (or any other overparameterized model) with embedding dimensions of a few thousand could represent a vastly larger number, potentially millions, of features with each pair of feature directions remaining nearly orthogonal.
+          Superposition is one contributing explanation for how language models (or any other overparameterized model)
+          with embedding dimensions of a few thousand could represent a vastly larger number, potentially millions, of
+          features with each pair of feature directions remaining nearly orthogonal.
           The interference between any two features stays proportional to the cosine of their angle
           (close to zero), and with the sparsity of real-world features, the expected cost of this
           interference remains manageable.
@@ -461,7 +476,8 @@ import References from './References.vue'
 
         <p>
           <strong>Sparse autoencoders</strong> (SAEs) have emerged as a practical tool for
-          recovering individual features from superposed representations (<a href="#Bricken2023">Bricken et al., 2023</a>).
+          recovering individual features from superposed representations (<a href="#Bricken2023">Bricken et al.,
+          2023</a>).
           Unlike the toy autoencoder studied here, SAEs project into a <em>higher</em>-dimensional
           hidden layer that is trained to be sparse — only a small number of hidden units activate
           for any given input. This sparsity in the hidden representation encourages each unit to
@@ -469,84 +485,28 @@ import References from './References.vue'
         </p>
 
         <p>
-          It is worth noting that superposition is not the only mechanism by which neural networks
-          achieve rich internal representations. Other contributing factors include
-          <strong>computation in superposition</strong>, where networks perform operations directly
-          on superposed representations without first disentangling them (<a href="#Elhage2022">Elhage et al., 2022</a>), and
-          nonlinear feature interactions that go beyond the linear directional model assumed here.
-        </p>
-
-        <p>
-          Finally, the toy model studied in this article isolates the superposition phenomenon under controlled conditions, but it differs from real neural networks in important ways: it uses a linear encoder (no nonlinearity until the decoder), relies on synthetic data with known ground-truth features, employs tied weights, and studies only a single layer. Real networks exhibit superposition in more complex forms across multiple layers, with nonlinear encoding, and over natural data distributions where features themselves are not predefined. Nevertheless, the core geometric intuition remains: high-dimensional spaces permit far more nearly-orthogonal directions than their dimension count suggests, and sparse activations make the resulting interference tolerable. This intuition transfers directly to the large-scale setting.
-        </p>
-      </div>
-
-      <!-- ── Section 6: Recap ──────────────────────────────────── -->
-      <div class="post-section text-section">
-        <h2>Recap to fortify what this article studied</h2>
-
-        <p>
-          This article traced a path from the dimensional bottleneck in neural network embeddings
-          to the geometric phenomenon of superposition.
-        </p>
-
-        <p>
-          We began with the observation that neural networks must represent a vast, combinatorial
-          space of features within embedding vectors of fixed and limited dimensionality. The
-          mathematical foundations established that representing features as directions in embedding
-          space naturally leads to the framework of the weight matrix
-          <katex-element expression="W"/>
-          , its transpose
-          <katex-element expression="W^T"/>
-          for
-          recovery, and the Gram matrix
-          <katex-element expression="W^TW"/>
-          as a measure of
-          interference between feature directions. When features outnumber dimensions, perfect
-          orthogonality is impossible, and some interference becomes unavoidable.
-        </p>
-
-        <p>
-          The toy autoencoder provided a controlled setting to study how a model navigates this
-          constraint. Through progressive experiments, we observed that:
-        </p>
-
-        <ul>
-          <li>With sufficient dimensions, the model learns an orthonormal basis, using one direction per
-            feature, resulting in zero interference.
-          </li>
-          <li>Under a dimensional bottleneck with dense features, the model sacrifices low-importance
-            features entirely rather than accept constant interference.
-          </li>
-          <li>With sparse features, the model exploits opposite directions to double its capacity
-            without introducing cross-talk between orthogonal pairs.
-          </li>
-          <li>Introducing more features than double the dimensionality, the model distributes feature directions at non-orthogonal
-            angles, accepting genuine interference in exchange for representing more features — the
-            hallmark of superposition.
-          </li>
-        </ul>
-
-        <p>
-          Superposition is a powerful representational strategy that leverages sparsity and the
-          exponential capacity of high-dimensional geometry. It is also a fundamental obstacle for
-          interpretability: when features overlap in activation space, understanding what a model
-          internally represents requires tools, such as sparse autoencoders, to disentangle them.
-        </p>
-
-        <p>
-          The toy model studied here operates under simplifying assumptions: a linear encoder,
-          synthetic data, tied weights, and a single layer. Real neural networks exhibit
-          superposition in more complex forms, and active research continues to develop both
-          theoretical understanding and practical tools for working with superposed representations.
-          For further reading, we recommend the original <em>Toy Models of Superposition</em>
-          paper (<a href="#Elhage2022">Elhage et al., 2022</a>) and the <em>Towards Monosemanticity</em> work on sparse
+          The toy model studied here isolates superposition under simplifying assumptions: a linear
+          encoder, synthetic data, tied weights, and a single layer. Real networks exhibit
+          superposition in more complex forms. Nevertheless, the core geometric intuition
+          transfers: high-dimensional spaces permit far more nearly-orthogonal directions than their
+          dimension count suggests, and sparse activations make the resulting interference tolerable.
+          For deeper exploration, we refer to the original <em>Toy Models of Superposition</em>
+          (<a href="#Elhage2022">Elhage et al., 2022</a>) and the <em>Towards Monosemanticity</em> work on sparse
           autoencoders (<a href="#Bricken2023">Bricken et al., 2023</a>).
         </p>
       </div>
 
+      <!-- ── Acknowledgements ──────────────────────────────────── -->
+      <div class="post-section text-section acknowlegements">
+        <h2>Acknowledgements</h2>
+        <p>
+          This work was conducted at the Helmholtz-Zentrum Dresden-Rossendorf (HZDR), whose support in the form of
+          institutional resources and dedicated research time made it possible.
+        </p>
+      </div>
+
       <!-- ── Section 7: References ─────────────────────────────── -->
-      <References />
+      <References/>
 
     </div>
   </article>
@@ -566,6 +526,7 @@ import References from './References.vue'
   font-size: 1rem;
   line-height: 1.75;
   color: var(--color-text-primary);
+  gap: 48px;
 }
 
 /* Every section is horizontally centered within the page */
@@ -588,46 +549,46 @@ import References from './References.vue'
 }
 
 /* ── Prose ─────────────────────────────────────────────────────── */
-.post-body :deep(p) {
+.post-body p {
   margin: 0 0 1.5rem;
 }
 
-.post-body :deep(h2) {
-  font-size: 1.25rem;
-  font-weight: 700;
+.post-body h2 {
   letter-spacing: -0.01em;
-  margin: 2.5rem 0 0.75rem;
+}
+
+.post-body h2:not(:first-child) {
+  margin-top: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.post-body h3 {
+  letter-spacing: -0.01em;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
   color: var(--color-text-primary);
 }
 
-.post-body :deep(h3) {
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 2rem 0 0.5rem;
-  color: var(--color-text-primary);
-}
-
-.post-body :deep(figure.post-figure) {
-  margin: 1.5rem 0 2rem;
+.post-body figure.post-figure {
+  margin: 3em 0;
   text-align: center;
 }
 
-.post-body :deep(figure.post-figure img) {
+.post-body figure.post-figure img {
   max-width: 100%;
   height: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
 }
 
-.post-body :deep(figure.post-figure figcaption) {
+.post-body figure.post-figure figcaption {
   margin-top: 0.5rem;
   font-size: 0.85rem;
   color: var(--color-text-label);
   line-height: 1.5;
 }
 
-.post-body :deep(blockquote) {
+.post-body blockquote {
   margin: 1.5rem 0;
   padding: 0.75rem 1rem;
   border-left: 3px solid var(--color-interactive);
@@ -637,26 +598,26 @@ import References from './References.vue'
   color: var(--color-text-strong);
 }
 
-.post-body :deep(blockquote p) {
+.post-body blockquote p {
   margin: 0;
 }
 
-.post-body :deep(ol),
-.post-body :deep(ul) {
+.post-body ol,
+.post-body ul {
   margin: 0 0 1.5rem;
   padding-left: 1.5rem;
 }
 
-.post-body :deep(li) {
+.post-body li {
   margin-bottom: 0.5rem;
 }
 
-.post-body :deep(a) {
+.post-body a {
   color: var(--color-interactive);
   text-decoration: none;
 }
 
-.post-body :deep(a:hover) {
+.post-body a:hover {
   text-decoration: underline;
 }
 
@@ -705,7 +666,7 @@ import References from './References.vue'
 }
 
 .author-separator {
-  color: var(--color-border);
+  color: var(--color-text-label);
 }
 
 @media (max-width: 768px) {
@@ -755,10 +716,10 @@ $spotlight-opacity: 0.45;
 
 /* Section headings inside viz sections */
 .blog-post .section-heading {
-  font-size: 1.25rem;
-  font-weight: 700;
+  //font-size: 1.25rem;
+  //font-weight: 700;
   letter-spacing: -0.01em;
-  margin: 0 0 0.75rem;
+  margin-bottom: 0.5rem;
   color: var(--color-text-primary);
 }
 
@@ -881,5 +842,10 @@ body[data-scroll-dir="up"] .blog-post .active-block::after {
 .blog-post .viz-sticky {
   overflow: hidden;
 }
+
+.text-section.acknowlegements h2 {
+  margin-top: 2.5rem;
+}
+
 
 </style>
