@@ -1,4 +1,6 @@
 /* ─── CSS Custom Properties (all colors defined here) ─── */
+
+/* ═══════════════ LIGHT THEME (default) ═══════════════ */
 :root {
     /* Typography */
     font-family: var(--font-family-text);
@@ -12,51 +14,50 @@
 
     /* Background */
     --color-bg: #ffffff;
-    --color-bg-secondary: #f9fafb; /* gray-50 */
-    --color-bg-stub: #e5e7eb; /* gray-200, for placeholder views */
+    --color-bg-secondary: #f9fafb;
+    --color-bg-stub: #e5e7eb;
 
     /* Text */
-    --color-text-primary: #374151; /* gray-700 */
-    --color-text-secondary: #777f90; /* gray-400 */
-    --color-text-tertiary: #aeafbe;;; /* gray-400 */
-    --color-text-label: #6b7280; /* gray-500 */
-    --color-text-title: #9ca3af; /* gray-400 */
+    --color-text-primary: #374151;
+    --color-text-secondary: #777f90;
+    --color-text-tertiary: #aeafbe;
+    --color-text-label: #6b7280;
+    --color-text-title: #9ca3af;
 
     /* Neuron / weight colors */
-    --color-positive: #fb923c; /* orange-400 */
-    --color-positive-light: #fed7aa; /* orange-200 */
-    --color-positive-strong: #ea580c; /* orange-600 */
-    --color-negative: #60a5fa; /* blue-400 */
-    --color-negative-light: #bfdbfe; /* blue-200 */
-    --color-negative-strong: #2563eb; /* blue-600 */
+    --color-positive: #fb923c;
+    --color-positive-light: #fed7aa;
+    --color-positive-strong: #ea580c;
+    --color-negative: #60a5fa;
+    --color-negative-light: #bfdbfe;
+    --color-negative-strong: #2563eb;
     --color-neuron-zero: #ffffff;
 
     /* Error */
-    --color-error: #ef4444; /* red-500 */
-    --color-error-light: #fee2e2; /* red-100 */
+    --color-error: #ef4444;
+    --color-error-light: #fee2e2;
 
     /* Interactive */
-    --color-interactive: #6592df; /* blue-500 */
-    --color-interactive-hover: #3b73d0; /* blue-600 */
-    --color-interactive-disabled: #d1d5db; /* gray-300 */
+    --color-interactive: #6592df;
+    --color-interactive-hover: #3b73d0;
+    --color-interactive-disabled: #d1d5db;
 
     /* Borders */
-    --color-border: #e5e7eb; /* gray-200 */
+    --color-border: #e5e7eb;
     --color-border-focus: #3a63a7;
 
     /* Neuron add/remove buttons */
-    --color-add-btn: #22c55e; /* green-500 */
-    --color-remove-btn: #ef4444; /* red-500 */
+    --color-add-btn: #22c55e;
+    --color-remove-btn: #ef4444;
 
     /* Monospace font stack */
     --font-family-text: 'IBM Plex Sans', system-ui, sans-serif;
     --font-family-mono: 'IBM Plex Mono', 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
     --font-family-label: 'Space Grotesk', 'IBM Plex Sans Condensed', 'IBM Plex Sans', system-ui, sans-serif;
-    /*--font-family-number: initial; !* 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Courier New', monospace; *!*/
     --font-family-number: 'IBM Plex Mono', 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
 
     /* Selection / focus highlight */
-    --color-selection: #6366f1; /* indigo-500 */
+    --color-selection: #6366f1;
     --color-selection-glow: rgba(99, 102, 241, 0.40);
     --color-selection-ring: rgba(99, 102, 241, 0.25);
 
@@ -65,32 +66,31 @@
 
     /* Task list */
     --color-task-bg: #fafbfc;
-    --color-task-border: #e5e7eb; /* gray-200 */
-    --color-task-checkbox-border: #9ca3af; /* gray-400 */
-    --color-task-check-bg: #22c55e; /* green-500 */
-    --color-task-blocked: #d1d5db; /* gray-300 */
-    --color-task-insight-bg: #eff6ff; /* blue-50 */
-    --color-task-insight-border: #bfdbfe; /* blue-200 */
+    --color-task-border: #e5e7eb;
+    --color-task-checkbox-border: #9ca3af;
+    --color-task-check-bg: #22c55e;
+    --color-task-blocked: #d1d5db;
+    --color-task-insight-bg: #eff6ff;
+    --color-task-insight-border: #bfdbfe;
 
     /* Background tones */
-    --color-bg-subtle: #f1f5f9; /* slate-100 */
-    --color-bg-hover: #e2e8f0; /* slate-200 */
-    --color-bg-activation: #dbeafe; /* blue-100 */
+    --color-bg-subtle: #f1f5f9;
+    --color-bg-hover: #e2e8f0;
+    --color-bg-activation: #dbeafe;
     --color-bg-emb-title: rgba(255, 255, 255, 0.50);
 
     /* Extra text tones */
-    --color-text-strong: #334155; /* slate-700 */
-    --color-text-action: #64748b; /* slate-500 */
-    --color-text-action-hover: #475569; /* slate-600 */
+    --color-text-strong: #334155;
+    --color-text-action: #64748b;
+    --color-text-action-hover: #475569;
 
     /* Chart */
     --color-chart-grid: #f0f0f0;
 
     /* Neuron / input controls */
     --color-neuron-border: #b5b5b5;
-    /*--color-neuron-border:  #bcc5d3;*/
-    --color-slider-track: #cbd5e1; /* slate-300 */
-    --color-thumb-default: #94a3b8; /* slate-400 */
+    --color-slider-track: #cbd5e1;
+    --color-thumb-default: #94a3b8;
     --color-thumb-border: rgba(0, 0, 0, 0.15);
 
     /* Overlays / modals */
@@ -103,12 +103,12 @@
     --shadow-ring-subtle: 0 0 0 2px rgba(0, 0, 0, 0.05);
     --shadow-neuron-drop: rgba(34, 34, 34, 0.13);
 
-    /* Debug bar (dark overlay) */
+    /* Debug bar */
     --color-debug-bg: rgba(15, 23, 42, 0.88);
     --color-debug-border: rgba(255, 255, 255, 0.08);
-    --color-debug-text: #94a3b8; /* slate-400 */
-    --color-debug-highlight: #e2e8f0; /* slate-200 */
-    --color-debug-coords: #7dd3fc; /* sky-300 */
+    --color-debug-text: #94a3b8;
+    --color-debug-highlight: #e2e8f0;
+    --color-debug-coords: #7dd3fc;
     --color-debug-btn-bg: rgba(255, 255, 255, 0.06);
     --color-debug-btn-border: rgba(255, 255, 255, 0.10);
     --color-debug-btn-hover: rgba(255, 255, 255, 0.12);
@@ -129,12 +129,127 @@
     --emb-static-height: 378px;
 
     /* Blog layout */
-    --blog-prose-width: 680px; /* ideal single-column prose width */
-    --blog-viz-width: 600px; /* fixed visualization column width */
-    --blog-column-gap: 3rem; /* gap between text and viz columns */
+    --blog-prose-width: 680px;
+    --blog-viz-width: 600px;
+    --blog-column-gap: 3rem;
 
     background-color: var(--color-bg);
     color: var(--color-text-primary);
+}
+
+/* ═══════════════ DARK THEME (override) ═══════════════ */
+:root[data-theme="dark"] {
+    --color-bg: #13151c;
+    --color-bg-secondary: #161923;
+    --color-bg-stub: #2a2d3a;
+
+    --color-text-primary: #e2e4eb;
+    --color-text-secondary: #9ca3b4;
+    --color-text-tertiary: #6b7280;
+    --color-text-label: #8b95a8;
+    --color-text-title: #6b7280;
+
+    --color-positive-light: #7c3a10;
+    --color-positive-strong: #fbbf24;
+    --color-negative-light: #1a365d;
+    --color-negative-strong: #93c5fd;
+    --color-neuron-zero: #1e2030;
+
+    --color-error: #f87171;
+    --color-error-light: #3b1515;
+
+    --color-interactive: #6b9aef;
+    --color-interactive-hover: #5a85d6;
+    --color-interactive-disabled: #374151;
+
+    --color-border: #2a2e3d;
+    --color-border-focus: #5a85d6;
+
+    --color-add-btn: #4ade80;
+    --color-remove-btn: #f87171;
+
+    --color-selection: #818cf8;
+    --color-selection-glow: rgba(129, 140, 248, 0.40);
+    --color-selection-ring: rgba(129, 140, 248, 0.25);
+
+    --color-active-paragraph-bg: rgba(99, 130, 246, 0.12);
+
+    --color-task-bg: #161923;
+    --color-task-border: #2a2e3d;
+    --color-task-checkbox-border: #4b5563;
+    --color-task-blocked: #374151;
+    --color-task-insight-bg: #111a2b;
+    --color-task-insight-border: #1e3a5f;
+
+    --color-bg-subtle: #1c1f2e;
+    --color-bg-hover: #262a3a;
+    --color-bg-activation: #1a2240;
+    --color-bg-emb-title: rgba(15, 17, 23, 0.60);
+
+    --color-text-strong: #cdd3de;
+    --color-text-action: #7a8599;
+    --color-text-action-hover: #9ca3b4;
+
+    --color-chart-grid: #1e2235;
+
+    --color-neuron-border: #4b5068;
+    --color-slider-track: #2a2e3d;
+    --color-thumb-default: #4b5563;
+    --color-thumb-border: rgba(255, 255, 255, 0.12);
+
+    --color-modal-overlay: rgba(0, 0, 0, 0.65);
+    --color-label-text-shadow: rgba(0, 0, 0, 0.80);
+
+    --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-popup: 0 2px 12px rgba(0, 0, 0, 0.45);
+    --shadow-ring-subtle: 0 0 0 2px rgba(255, 255, 255, 0.06);
+    --shadow-neuron-drop: rgba(0, 0, 0, 0.4);
+
+    --color-debug-bg: rgba(15, 17, 23, 0.92);
+    --color-debug-border: rgba(255, 255, 255, 0.06);
+    --color-debug-text: #6b7280;
+    --color-debug-highlight: #9ca3b4;
+    --color-debug-coords: #38bdf8;
+    --color-debug-btn-bg: rgba(255, 255, 255, 0.04);
+    --color-debug-btn-border: rgba(255, 255, 255, 0.08);
+    --color-debug-btn-hover: rgba(255, 255, 255, 0.12);
+
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.30), 0 2px 4px -2px rgba(0, 0, 0, 0.20);
+
+    /* Dark-mode specific UI overrides */
+    --button-bg: var(--color-bg-subtle);
+    --button-hover-bg: var(--color-bg-hover);
+    --button-disabled-bg: var(--color-bg-subtle);
+}
+
+/* Dark-mode button overrides (CSS vars not enough for all selectors) */
+:root[data-theme="dark"] button:not(.train-btn) {
+}
+
+:root[data-theme="dark"] button:not(.train-btn):hover {
+    border-color: var(--color-interactive);
+    background-color: var(--color-bg-hover);
+    color: var(--color-text-primary);
+}
+
+:root[data-theme="dark"] button:not(.train-btn):disabled {
+    color: var(--color-interactive-disabled);
+    cursor: not-allowed;
+    border-color: var(--color-border);
+    background-color: var(--color-bg-subtle);
+}
+
+/* Dark-mode: fix SVG/component colors that use hardcoded light values */
+:root[data-theme="dark"] .feature-pill {
+    color: white;
+}
+
+:root[data-theme="dark"] .viz-panel {
+    background-color: var(--color-bg) !important;
+}
+
+:root[data-theme="dark"] .viz-panel[data-viz-panel-inner] {
+    background: var(--color-bg);
 }
 
 .embedding-vector .katex-display{
@@ -180,6 +295,10 @@ svg {
 h1, h2, h3, h4, h5, h6 {
     margin: 0;
     font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.katex {
     color: var(--color-text-primary);
 }
 
@@ -343,7 +462,7 @@ figcaption {
 /* Tab button: inherits .label-header typography, resets button defaults */
 .tab-btn {
     color: var(--color-text-tertiary);
-    background: none;
+    background: none !important;
     border: none;
     border-radius: 0;
     padding: 0;

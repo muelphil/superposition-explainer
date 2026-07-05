@@ -1,8 +1,9 @@
 import * as THREE from 'three'
 import type { SceneCtx, SceneOverlay } from '../types'
-import { ARROW_SHAFT_RADIUS, ERROR_LINE_COLOR, ERROR_LINE_OPACITY,
+import { ARROW_SHAFT_RADIUS, ERROR_LINE_COLOR_LIGHT, ERROR_LINE_COLOR_DARK, ERROR_LINE_OPACITY,
   ERROR_LINE_RENDER_ORDER, ERROR_DASH_SIZE, ERROR_GAP_SIZE } from '../constants'
 import { DashedCylinders } from '../sceneHelpers'
+import { isDark } from '../../../services/SettingsService'
 
 /**
  * Red dashed line from origin to the bias threshold point.
@@ -15,14 +16,15 @@ import { DashedCylinders } from '../sceneHelpers'
 export class BiasErrorLineOverlay implements SceneOverlay {
   private ctx!: SceneCtx
   private dashes!: DashedCylinders
+  private mat!: THREE.MeshBasicMaterial
   private readonly _biasPos = new THREE.Vector3()
 
   constructor(private readonly featureIdx: number) {}
 
   build(ctx: SceneCtx) {
     this.ctx = ctx
-    const mat = new THREE.MeshBasicMaterial({
-      color: ERROR_LINE_COLOR,
+    this.mat = new THREE.MeshBasicMaterial({
+      color: isDark.value ? ERROR_LINE_COLOR_DARK : ERROR_LINE_COLOR_LIGHT,
       transparent: true,
       opacity: ERROR_LINE_OPACITY,
       depthTest: false,
@@ -31,18 +33,22 @@ export class BiasErrorLineOverlay implements SceneOverlay {
       ARROW_SHAFT_RADIUS,
       ERROR_DASH_SIZE,
       ERROR_GAP_SIZE,
-      mat,
+      this.mat,
       ERROR_LINE_RENDER_ORDER,
     )
     ctx.scene.add(this.dashes.group)
     this.update()
   }
 
-  tick() { this.update() }
+  tick() {
+    this.mat.color.setHex(isDark.value ? ERROR_LINE_COLOR_DARK : ERROR_LINE_COLOR_LIGHT)
+    this.update()
+  }
 
   dispose() {
     this.ctx.scene.remove(this.dashes.group)
     this.dashes.dispose()
+    this.mat.dispose()
   }
 
   private update() {

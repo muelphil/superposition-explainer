@@ -182,7 +182,7 @@ onUnmounted(() => {
 }
 
 .app-content {
-  min-height: 100vh;
+  min-height: calc(100vh - 72px);
   padding: 1rem;
   width: 100%;
   max-width: 1200px;

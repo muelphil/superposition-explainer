@@ -832,6 +832,7 @@ body[data-scroll-dir="up"] .blog-post .active-block::after {
 .blog-post .text-column p .katex,
 .blog-post .text-section p .katex {
   font-size: 1em;
+  color: var(--color-text-primary);
 }
 
 .blog-post .viz-column {

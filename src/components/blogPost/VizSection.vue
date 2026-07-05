@@ -225,7 +225,7 @@ watch(isMobile, (mobile) => {
     box-shadow: 0 0 0 0px var(--color-interactive), var(--shadow-card);
   }
   50% {
-    background: #dbeafe;
+    background:var(--color-bg-activation);
     box-shadow: 0 0 0 2px var(--color-interactive), var(--shadow-card);
   }
 }

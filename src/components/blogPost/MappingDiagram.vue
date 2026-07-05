@@ -99,4 +99,43 @@ const stageClasses = computed(() => {
 }
 
 .stage-gram-matrix .svg-wrapper :deep(#g-gram-matrix) { opacity: 1; }
+
+/* ── Dark mode overrides for inline SVG colors ──────────────────────────────── */
+:root[data-theme="dark"] .svg-wrapper :deep(#circle-f),
+:root[data-theme="dark"] .svg-wrapper :deep(#circle-h) {
+  fill: #2a2e3d !important;
+  stroke: #4b5068 !important;
+}
+
+:root[data-theme="dark"] .svg-wrapper :deep(#text1),
+:root[data-theme="dark"] .svg-wrapper :deep(#text20) {
+  fill: #8b95a8 !important;
+}
+
+:root[data-theme="dark"] .svg-wrapper :deep([id^="dot-"]) {
+  fill: #e2e4eb !important;
+}
+
+:root[data-theme="dark"] .svg-wrapper :deep(#arrow-w),
+:root[data-theme="dark"] .svg-wrapper :deep(#arrow-wt) {
+  stroke: #9ca3b4 !important;
+}
+
+:root[data-theme="dark"] .svg-wrapper :deep(#arrowhead-w),
+:root[data-theme="dark"] .svg-wrapper :deep(#arrowhead-wt) {
+  fill: #9ca3b4 !important;
+}
+
+:root[data-theme="dark"] .svg-wrapper :deep(text) {
+  fill: #e2e4eb !important;
+}
+
+:root[data-theme="dark"] .svg-wrapper :deep(g[stroke-width]) {
+  /* MathJax path groups use fill="currentColor" — override color */
+  color: #e2e4eb !important;
+}
+
+:root[data-theme="dark"] .svg-wrapper :deep(text tspan) {
+  fill: #e2e4eb !important;
+}
 </style>

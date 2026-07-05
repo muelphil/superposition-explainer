@@ -47,6 +47,7 @@ defineProps<{
   border-color: var(--color-task-blocked);
 }
 
+
 .check-mark {
   display: flex;
   align-items: center;

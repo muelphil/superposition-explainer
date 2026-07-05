@@ -8,7 +8,7 @@ import {VIZ_SERVICE_KEY} from '../services/VizService'
 import {AE_VIEW_CONSTRAINTS_KEY} from './blogPost/aeStepTypes'
 import {TASK_EVENT_BUS_KEY} from './blogPost/taskSystem'
 import {neuronColorRgb, neuronBorderColorRgb, neuronFeatureBgRgb, neuronFeatureBorderRgb} from '../utils/featureColor'
-import {useFeatureColorsForIO} from '../services/SettingsService'
+import {useFeatureColorsForIO, isDark, dimNeuronsOnHover} from '../services/SettingsService'
 import InputValue from './InputValue.vue'
 import ActivationIcons from './ActivationIcons.vue'
 import ConnectionsSvg from './autoencoderView/ConnectionsSvg.vue'
@@ -68,15 +68,14 @@ const dataRowStart = 3
 const dataRowEnd = computed(() => n.value + 3)
 
 // ─── Color helpers ────────────────────────────────────────────────────────────
-/** Neutral (white) background and gray border for embedding neurons when feature colors are on. */
-const NEUTRAL_BG = 'rgb(255,255,255)'
-const NEUTRAL_BORDER = 'rgb(156,163,175)'
-
+/** Neutral background and border for embedding neurons when feature colors are on. */
 function embNeuronBg(v: number): string {
-  return useFeatureColorsForIO.value ? NEUTRAL_BG : neuronColorRgb(v)
+  if (useFeatureColorsForIO.value) return isDark.value ? 'rgb(22,25,35)' : 'rgb(255,255,255)'
+  return neuronColorRgb(v)
 }
 function embNeuronBorder(v: number): string {
-  return useFeatureColorsForIO.value ? NEUTRAL_BORDER : neuronBorderColorRgb(v)
+  if (useFeatureColorsForIO.value) return isDark.value ? 'rgb(62,67,88)' : 'rgb(156,163,175)'
+  return neuronBorderColorRgb(v)
 }
 
 /** Scale so that neuron AREA ∝ importance (area = π r² → r ∝ √imp → scale ∝ √imp) */
@@ -207,7 +206,7 @@ function toggleInput(i: number) {
       class="ae-grid"
       :class="{ compact: props.compact, 'ae-grid--reveal-mode': vizSvc != null }"
       ref="containerRef"
-      :style="{ gridTemplateRows }"
+      :style="{ gridTemplateRows, '--dim-opacity': dimNeuronsOnHover ? null : 1 }"
   >
     <!-- SVG weight connections — child component handles paths, masks, resize observer -->
     <ConnectionsSvg
@@ -274,7 +273,7 @@ function toggleInput(i: number) {
 
     <!-- Output col: weighted loss label + value -->
     <div class="sub-header-loss" data-reveal="training" style="grid-column: 12; grid-row: 2">
-      <span class="col-loss-label">Weighted<br class="mobile-lb"/>Loss</span>
+      <span class="col-loss-label">Weighted<br/>Loss</span>
       <span class="col-loss-val" :class="{ zero: !isNonZero(currentLoss) }">
         {{ currentLoss.toFixed(3) }}
       </span>
@@ -484,22 +483,23 @@ function toggleInput(i: number) {
 }
 
 /* ── Highlight / dim ──────────────────────────────────────── */
+/* --dim-opacity: 1 means "no dim" (setting off), unset/0.5 means dim active. */
 .dimmed{
-  opacity: 0.5;
+  opacity: var(--dim-opacity, 0.5);
 }
 
 .neuron-wrap.half-dimmed {
-  opacity: 0.5;
+  opacity: var(--dim-opacity, 0.5);
 }
 
 .neuron.half-dimmed {
-  opacity: 0.5;
+  opacity: var(--dim-opacity, 0.5);
 }
 
 :deep(.input-value.half-dimmed),
 .cell-hover-zone.half-dimmed,
 .output-value.half-dimmed {
-  opacity: 0.5;
+  opacity: var(--dim-opacity, 0);
 }
 
 .neuron-wrap,
@@ -570,7 +570,6 @@ function toggleInput(i: number) {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
   /*removed transform 0.2s as this causes update problems for the weight svg backdrop*/
   flex-shrink: 0;
   position: relative;

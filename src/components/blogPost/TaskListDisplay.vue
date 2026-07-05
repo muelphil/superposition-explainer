@@ -129,7 +129,7 @@ const optionalTasks = computed(() =>
   color: var(--color-text-primary);
 }
 
-.task-blocked .task-label, .task-blocked .task-note{
+.task-blocked .task-label, .task-blocked .task-note, .task-blocked .katex{
   color: var(--color-task-blocked);
 }
 

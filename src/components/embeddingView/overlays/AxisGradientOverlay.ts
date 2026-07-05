@@ -39,11 +39,14 @@ const fragmentShader = /* glsl */ `
     float range = ${AXIS_LEN.toFixed(1)};
     float s = clamp(w / range, -1.0, 1.0);
 
+    // Positive side: white → orange at axis extent
+    // Negative side: white → blue at axis extent
     vec3 col = s < 0.0
       ? mix(vec3(1.0), uColorNeg, -s)
       : mix(vec3(1.0), uColorPos,  s);
-
-    gl_FragColor = vec4(col, uOpacity);
+    // Opacity: 0 at zero (white center), max at axis extents (colored edges)
+    float a = abs(s) * uOpacity;
+    gl_FragColor = vec4(col, a);
   }
 `
 

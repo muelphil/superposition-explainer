@@ -1,8 +1,9 @@
 import * as THREE from 'three'
 import type { SceneCtx, SceneOverlay } from '../types'
 import { DashedCylinders } from '../sceneHelpers'
-import { ERROR_LINE_COLOR, ERROR_LINE_OPACITY, ERROR_LINE_RENDER_ORDER,
+import { ERROR_LINE_COLOR_LIGHT, ERROR_LINE_COLOR_DARK, ERROR_LINE_OPACITY, ERROR_LINE_RENDER_ORDER,
   ERROR_DASH_SIZE, ERROR_GAP_SIZE, ARROW_SHAFT_RADIUS } from '../constants'
+import { isDark } from '../../../services/SettingsService'
 
 /**
  * Red dashed cylinders from each interfering vector's tip to its perpendicular
@@ -19,6 +20,7 @@ import { ERROR_LINE_COLOR, ERROR_LINE_OPACITY, ERROR_LINE_RENDER_ORDER,
 export class InterferenceLinesOverlay implements SceneOverlay {
   private ctx!: SceneCtx
   private dashedLines: (DashedCylinders | null)[] = []
+  private mat!: THREE.MeshBasicMaterial
 
   private readonly _proj = new THREE.Vector3()
   private readonly _from = new THREE.Vector3()
@@ -30,8 +32,8 @@ export class InterferenceLinesOverlay implements SceneOverlay {
     this.ctx = ctx
 
     const n = ctx.svc.config.inputDim
-    const mat = new THREE.MeshBasicMaterial({
-      color:       ERROR_LINE_COLOR,
+    this.mat = new THREE.MeshBasicMaterial({
+      color:       isDark.value ? ERROR_LINE_COLOR_DARK : ERROR_LINE_COLOR_LIGHT,
       transparent: true,
       opacity:     ERROR_LINE_OPACITY,
       depthTest:   false,
@@ -42,7 +44,7 @@ export class InterferenceLinesOverlay implements SceneOverlay {
         this.dashedLines.push(null)
         continue
       }
-      const dc = new DashedCylinders(ARROW_SHAFT_RADIUS, ERROR_DASH_SIZE, ERROR_GAP_SIZE, mat, ERROR_LINE_RENDER_ORDER)
+      const dc = new DashedCylinders(ARROW_SHAFT_RADIUS, ERROR_DASH_SIZE, ERROR_GAP_SIZE, this.mat, ERROR_LINE_RENDER_ORDER)
       dc.group.visible = false
       ctx.scene.add(dc.group)
       this.dashedLines.push(dc)
@@ -51,7 +53,10 @@ export class InterferenceLinesOverlay implements SceneOverlay {
     this.update()
   }
 
-  tick() { this.update() }
+  tick() {
+    this.mat.color.setHex(isDark.value ? ERROR_LINE_COLOR_DARK : ERROR_LINE_COLOR_LIGHT)
+    this.update()
+  }
 
   dispose() {
     for (let j = 0; j < this.dashedLines.length; j++) {
@@ -60,6 +65,7 @@ export class InterferenceLinesOverlay implements SceneOverlay {
       this.dashedLines[j]!.dispose()
     }
     this.dashedLines = []
+    this.mat.dispose()
   }
 
   private update() {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { featureColor } from '../utils/featureColor'
+import { isDark } from '../services/SettingsService'
 import { FEATURE_NAMES } from '../data/featureNames'
 
 const props = withDefaults(defineProps<{
@@ -18,6 +19,12 @@ function pillColor(): string {
   const rgb = featureColor(Math.round(t * 99), 100)
   const channels = rgb.slice(4, -1).split(',').map(Number)
   const lerp = 0.3 + Math.random() * 0.2
+  if (isDark.value) {
+    const r = Math.round(channels[0] * 0.6)
+    const g = Math.round(channels[1] * 0.6)
+    const b = Math.round(channels[2] * 0.6)
+    return `rgb(${r},${g},${b})`
+  }
   const r = Math.round(channels[0] + (255 - channels[0]) * lerp)
   const g = Math.round(channels[1] + (255 - channels[1]) * lerp)
   const b = Math.round(channels[2] + (255 - channels[2]) * lerp)

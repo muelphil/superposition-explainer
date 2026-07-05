@@ -33,12 +33,14 @@ const oy = sy(0)
 // ── Style constants (matching EmbeddingView) ────────────────────────────────
 
 const AXIS_COLOR = '#d1d5db'
-const AXIS_OPACITY = 0.55
+
 const W1_COLOR = featureColor(0, 2)
 const W2_COLOR = featureColor(1, 2)
-const GRID_OPACITY = 0.18  // skewed grid lines — adjust here for visibility
-const LABEL_COLOR = '#374151'  // grey-700, --color-text-primary
+
+const LABEL_COLOR = '#374151'
 const NAIVE_COLOR = '#ef4444'
+const AXIS_OPACITY = 0.55
+const GRID_OPACITY = 0.4
 
 // ── Vec2 tweening ───────────────────────────────────────────────────────────
 
@@ -652,6 +654,7 @@ svg text {
 
 .embedding-dot--drag {
   animation: embedding-dot-pulse 2s ease-in-out infinite;
+  stroke: none;
 }
 
 @media (max-width: 768px) {
