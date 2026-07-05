@@ -126,7 +126,7 @@ function featureVecLength(c: number): number {
 
     <!-- ══ Weight matrix W ══════════════════════════════════════ -->
     <div class="matrix-section">
-      <div class="matrix-title" v-katex="titleW" />
+      <div class="matrix-title"><span class="matrix-title-text">Weights</span> <span v-katex="titleW" /></div>
 
       <div class="matrix-layout">
         <!-- Column headers -->
@@ -204,7 +204,7 @@ function featureVecLength(c: number): number {
 
     <!-- ══ Bias vector b ════════════════════════════════════════ -->
     <div class="matrix-section">
-      <div class="matrix-title" v-katex="titleB" />
+      <div class="matrix-title"><span class="matrix-title-text">Biases</span> <span v-katex="titleB" /></div>
 
       <div class="matrix-layout">
         <div class="matrix-body-row">
@@ -272,8 +272,15 @@ function featureVecLength(c: number): number {
 }
 
 .matrix-title {
-  padding-left: 2.1rem; /* aligns above the cells, past corner + bracket */
   line-height: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35em;
+}
+
+.matrix-title-text {
+  font-size: 0.85rem;
+  color: var(--color-text-primary);
 }
 
 .matrix-title :deep(.katex) {

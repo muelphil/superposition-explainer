@@ -35,7 +35,7 @@ export function createExp2TaskSpecs(): AeTaskSpec[] {
                            Math.abs(svc.b.value[3] - 0.798) < 0.04
             return importantOk && collapsedOk && angle >= 89 && angle <= 91 && biasOk
           },
-          30,
+          50,
           () => ctx.services.svc.pauseTraining(),
           () => ctx.services.svc.config.featureDecay <= 0.805,
         ),

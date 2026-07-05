@@ -27,7 +27,7 @@ export function createExp3TaskSpecs(): AeTaskSpec[] {
           ctx.services.svc,
           (svc) => countSignificantColumns(svc.W.value, 0.3) >= 4 &&
                    allPairsOrthoOrOpposite(svc.W.value, 0.3, 5),
-          30,
+          50,
           () => ctx.services.svc.pauseTraining(),
           () => ctx.services.svc.config.sparsity >= 0.85,
         ),
