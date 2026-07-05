@@ -1,8 +1,9 @@
 import * as THREE from 'three'
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import type { SceneCtx, SceneOverlay } from '../types'
-import { BIAS_LABEL_COLOR } from '../constants'
+import { BIAS_LABEL_COLOR_LIGHT, BIAS_LABEL_COLOR_DARK } from '../constants'
 import { createLatexElement } from '../../../utils/latex'
+import { isDark } from '../../../services/SettingsService'
 
 const LABEL_OFFSET = 0.12
 const LABEL_FONT_SIZE = '0.92rem'
@@ -17,6 +18,7 @@ const LABEL_FONT_SIZE = '0.92rem'
 export class BiasLabelOverlay implements SceneOverlay {
   private ctx!: SceneCtx
   private label!: CSS2DObject
+  private labelEl!: HTMLElement
   private readonly _biasPos = new THREE.Vector3()
 
   constructor(
@@ -27,18 +29,23 @@ export class BiasLabelOverlay implements SceneOverlay {
   build(ctx: SceneCtx) {
     this.ctx = ctx
     const formula = this.showIndex ? `b_{${this.featureIdx + 1}}` : 'b'
+    const dark = isDark.value
     const el = createLatexElement(formula, {
-      color: BIAS_LABEL_COLOR,
+      color: dark ? BIAS_LABEL_COLOR_DARK : BIAS_LABEL_COLOR_LIGHT,
       fontSize: LABEL_FONT_SIZE,
       pointerEvents: 'none',
       userSelect: 'none',
     })
+    this.labelEl = el
     this.label = new CSS2DObject(el)
     ctx.scene.add(this.label)
     this.update()
   }
 
-  tick() { this.update() }
+  tick() {
+    this.labelEl.style.color = isDark.value ? BIAS_LABEL_COLOR_DARK : BIAS_LABEL_COLOR_LIGHT
+    this.update()
+  }
 
   dispose() {
     this.ctx.scene.remove(this.label)

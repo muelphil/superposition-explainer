@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import type { SceneCtx, SceneOverlay } from '../types'
-import { ORIGIN_RADIUS, BIAS_DOT_COLOR } from '../constants'
+import { ORIGIN_RADIUS, BIAS_DOT_COLOR_LIGHT, BIAS_DOT_COLOR_DARK } from '../constants'
+import { isDark } from '../../../services/SettingsService'
 
 const DOT_SEGMENTS = 12
 
@@ -22,7 +23,7 @@ export class BiasDotOverlay implements SceneOverlay {
   build(ctx: SceneCtx) {
     this.ctx = ctx
     this.dotMat = new THREE.MeshBasicMaterial({
-      color: BIAS_DOT_COLOR,
+      color: isDark.value ? BIAS_DOT_COLOR_DARK : BIAS_DOT_COLOR_LIGHT,
       transparent: true,
       opacity: 1,
       depthTest: false,
@@ -36,7 +37,10 @@ export class BiasDotOverlay implements SceneOverlay {
     this.update()
   }
 
-  tick() { this.update() }
+  tick() {
+    this.dotMat.color.setHex(isDark.value ? BIAS_DOT_COLOR_DARK : BIAS_DOT_COLOR_LIGHT)
+    this.update()
+  }
 
   dispose() {
     this.ctx.scene.remove(this.dot)

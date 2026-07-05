@@ -4,9 +4,12 @@ import type { SceneCtx, SceneOverlay } from '../types'
 import { setCylinderEnds } from '../sceneHelpers'
 import { createLatexElement } from '../../../utils/latex'
 import {
-  RELU_REGION_COLOR, RELU_LABEL_COLOR, RELU_LABEL_BORDER_COLOR, RELU_LABEL_BG,
-  RELU_DISC_OPAQUE, RELU_DISC_TRANSPARENT,
+  RELU_REGION_COLOR_LIGHT, RELU_REGION_COLOR_DARK,
+  RELU_LABEL_COLOR_LIGHT, RELU_LABEL_COLOR_DARK,
+  RELU_LABEL_BORDER_COLOR_LIGHT, RELU_LABEL_BORDER_COLOR_DARK,
+  RELU_LABEL_BG_LIGHT, RELU_LABEL_BG_DARK,
 } from '../constants'
+import { isDark } from '../../../services/SettingsService'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const REGION_OPACITY_2D = 0.7
@@ -21,10 +24,13 @@ const DISC_SEGMENTS   = 48            // number of segments for the disc circle
 
 // ── Radial fade texture for 3D disc (opaque center → transparent edge) ───────
 
-let _fadeTexture: THREE.CanvasTexture | null = null
+let _fadeTextureLight: THREE.CanvasTexture | null = null
+let _fadeTextureDark: THREE.CanvasTexture | null = null
 
 function getFadeTexture(): THREE.CanvasTexture {
-  if (_fadeTexture) return _fadeTexture
+  const textures = isDark.value ? _fadeTextureDark : _fadeTextureLight
+  const cache = isDark.value ? '_fadeTextureDark' : '_fadeTextureLight'
+  if (textures) return textures
   const size = 256
   const canvas = document.createElement('canvas')
   canvas.width = size
@@ -32,13 +38,17 @@ function getFadeTexture(): THREE.CanvasTexture {
   const ctx = canvas.getContext('2d')!
   const half = size / 2
   const grad = ctx.createRadialGradient(half, half, 0, half, half, half)
-  grad.addColorStop(0,    RELU_DISC_OPAQUE)
-  grad.addColorStop(0.8,  RELU_DISC_OPAQUE)   // stay opaque through most of disc
-  grad.addColorStop(1,    RELU_DISC_TRANSPARENT)   // fade to transparent at edge
+  const discOpaque = isDark.value ? 'rgba(30,32,48,1)' : 'rgba(255,255,255,1)'
+  const discTransparent = isDark.value ? 'rgba(30,32,48,0)' : 'rgba(255,255,255,0)'
+  grad.addColorStop(0,    discOpaque)
+  grad.addColorStop(0.8,  discOpaque)
+  grad.addColorStop(1,    discTransparent)
   ctx.fillStyle = grad
   ctx.fillRect(0, 0, size, size)
-  _fadeTexture = new THREE.CanvasTexture(canvas)
-  return _fadeTexture
+  const tex = new THREE.CanvasTexture(canvas)
+  if (cache === '_fadeTextureLight') _fadeTextureLight = tex
+  else (_fadeTextureDark = tex)
+  return tex
 }
 
 // ── Overlay class ─────────────────────────────────────────────────────────────
@@ -77,11 +87,16 @@ export class ReluRegionOverlay implements SceneOverlay {
 
   build(ctx: SceneCtx) {
     this.ctx = ctx
+    const dark = isDark.value
+    const regionColor = dark ? RELU_REGION_COLOR_DARK : RELU_REGION_COLOR_LIGHT
+    const labelColor = dark ? RELU_LABEL_COLOR_DARK : RELU_LABEL_COLOR_LIGHT
+    const labelBorderColor = dark ? RELU_LABEL_BORDER_COLOR_DARK : RELU_LABEL_BORDER_COLOR_LIGHT
+    const labelBg = dark ? RELU_LABEL_BG_DARK : RELU_LABEL_BG_LIGHT
     const is3D = ctx.svc.config.embeddingDim >= 3
 
     // ── Inactive-region surface ────────────────────────────────
     this.regionMat = new THREE.MeshBasicMaterial({
-      color:       RELU_REGION_COLOR,
+      color:       regionColor,
       opacity:     is3D ? REGION_OPACITY_3D : REGION_OPACITY_2D,
       transparent: true,
       depthTest:   false,
@@ -97,7 +112,7 @@ export class ReluRegionOverlay implements SceneOverlay {
 
     // ── Perpendicular surface (thin cylinder) ──────────────────
     this.surfaceMat = new THREE.MeshBasicMaterial({
-      color:       RELU_REGION_COLOR,
+      color:       regionColor,
       opacity:     SURFACE_OPACITY,
       transparent: true,
       depthTest:   false,
@@ -111,14 +126,14 @@ export class ReluRegionOverlay implements SceneOverlay {
     // Wrap in a container so CSS2DRenderer controls the outer transform
     // while we rotate the inner element independently.
     const inner = createLatexElement('\\text{Masked by ReLU}', {
-      color: RELU_LABEL_COLOR,
+      color: labelColor,
       fontSize: '0.68rem',
       pointerEvents: 'none',
       userSelect: 'none',
-      border: `1px solid ${RELU_LABEL_BORDER_COLOR}`,
+      border: `1px solid ${labelBorderColor}`,
       borderRadius: '3px',
       padding: '1px 5px',
-      background: RELU_LABEL_BG,
+      background: labelBg,
     })
     const wrapper = document.createElement('div')
     wrapper.style.pointerEvents = 'none'

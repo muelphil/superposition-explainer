@@ -9,7 +9,6 @@ export const CAMERA_DAMPING  = 0.07
 // ── Axes ─────────────────────────────────────────────────────
 export const AXIS_LEN            = 1.3
 export const AXIS_LABEL_PERP     = 0.3
-export const AXIS_COLOR          = 0xd1d5db   // slate-300
 export const AXIS_OPACITY        = 0.55
 export const AXIS_TICK_OPACITY   = 0.4
 export const AXIS_TICK_SIZE      = 0.05
@@ -41,22 +40,48 @@ export const VEC_HIT_EXTRA        = 0.12
 
 // ── Hover dimming ────────────────────────────────────────────
 export const DIM_COLOR_HEX = 0xadadad
+export const DIM_COLOR_HEX_DARK = 0x3a3f52
 export const DIM_OPACITY   = 0.35
 
-// ── Colors (Three.js / CSS2D — cannot use CSS custom properties) ─────────────
-export const AXIS_LABEL_COLOR_DEFAULT   = '#6b7280'   // grey-500 (≈ --color-text-label)
-export const AXIS_LABEL_COLOR_HIGHLIGHT = '#1f2937'   // grey-900
-export const AXIS_HIGHLIGHT_COLOR       = 0x374151    // grey-700 (≈ --color-text-primary)
-export const BIAS_DOT_COLOR             = 0x4b5563    // grey-600
-export const BIAS_LABEL_COLOR           = '#6b7280'   // grey-500 (≈ --color-text-label)
-export const RELU_REGION_COLOR          = 0x9ca3af    // grey-400 (≈ --color-text-secondary)
-export const RELU_LABEL_COLOR           = '#9ca3af'   // grey-400
-export const RELU_LABEL_BORDER_COLOR    = '#d1d5db'   // grey-300 (≈ --color-interactive-disabled)
-export const RELU_LABEL_BG              = 'rgba(255,255,255,0.85)'
-export const RELU_DISC_OPAQUE           = 'rgba(255,255,255,1)'   // canvas gradient: opaque white
-export const RELU_DISC_TRANSPARENT      = 'rgba(255,255,255,0)'   // canvas gradient: transparent edge
-export const ERROR_LINE_COLOR           = 0xff0000                 // bright red for interference / error
-export const ERROR_DASH_SIZE            = 0.02                     // error/interference dash length
-export const ERROR_GAP_SIZE             = 0.02                     // error/interference gap length
-export const ERROR_LINE_OPACITY         = 0.8                      // error/interference line opacity
-export const ERROR_LINE_RENDER_ORDER    = 3                        // error/interference line render order
+// ── Light theme colors (Three.js / CSS2D — cannot use CSS custom properties) ──
+export const AXIS_COLOR_LIGHT          = 0xd1d5db
+export const AXIS_LABEL_COLOR_DEFAULT_LIGHT   = '#6b7280'
+export const AXIS_LABEL_COLOR_HIGHLIGHT_LIGHT = '#1f2937'
+export const AXIS_HIGHLIGHT_COLOR_LIGHT       = 0x374151
+export const BIAS_DOT_COLOR_LIGHT             = 0x4b5563
+export const BIAS_LABEL_COLOR_LIGHT           = '#6b7280'
+export const RELU_REGION_COLOR_LIGHT          = 0x9ca3af
+export const RELU_LABEL_COLOR_LIGHT           = '#9ca3af'
+export const RELU_LABEL_BORDER_COLOR_LIGHT    = '#d1d5db'
+export const RELU_LABEL_BG_LIGHT              = 'rgba(255,255,255,0.85)'
+export const RELU_DISC_OPAQUE_LIGHT           = 'rgba(255,255,255,1)'
+export const RELU_DISC_TRANSPARENT_LIGHT      = 'rgba(255,255,255,0)'
+export const ERROR_LINE_COLOR_LIGHT           = 0xef4444
+export const DROP_LINE_COLOR_LIGHT            = 0xd1d5db
+export const INPUT_DIR_DOT_COLOR_LIGHT        = 0x6b7280
+
+// ── Dark theme overrides ──────────────────────────────────────
+export const AXIS_COLOR_DARK          = 0x4b5070
+export const AXIS_LABEL_COLOR_DEFAULT_DARK   = '#8b95a8'
+export const AXIS_LABEL_COLOR_HIGHLIGHT_DARK = '#e2e4eb'
+export const AXIS_HIGHLIGHT_COLOR_DARK       = 0xd1d5e0
+export const BIAS_DOT_COLOR_DARK             = 0xffffff
+export const BIAS_LABEL_COLOR_DARK           = '#8b95a8'
+export const RELU_REGION_COLOR_DARK          = 0x4b5563
+export const RELU_LABEL_COLOR_DARK           = '#8b95a8'
+export const RELU_LABEL_BORDER_COLOR_DARK    = '#373d52'
+export const RELU_LABEL_BG_DARK              = 'rgba(15,17,23,0.88)'
+export const RELU_DISC_OPAQUE_DARK           = 'rgba(30,32,48,1)'
+export const RELU_DISC_TRANSPARENT_DARK      = 'rgba(30,32,48,0)'
+export const ERROR_LINE_COLOR_DARK           = 0xff0000
+export const DROP_LINE_COLOR_DARK            = 0x4b5070
+export const INPUT_DIR_DOT_COLOR_DARK        = 0x8b95a8
+
+// ── Error line geometry (theme-independent) ───────────────────
+export const ERROR_DASH_SIZE            = 0.02
+export const ERROR_GAP_SIZE             = 0.02
+export const ERROR_LINE_OPACITY         = 0.8
+export const ERROR_LINE_RENDER_ORDER    = 3
+
+// ── Backward compat: default = light variant ──────────────────
+export const AXIS_LABEL_COLOR_DEFAULT   = AXIS_LABEL_COLOR_DEFAULT_LIGHT

@@ -1,14 +1,14 @@
 import * as THREE from 'three'
 import type { SceneCtx, SceneOverlay } from '../types'
 import { featureColorRGB } from '../../../utils/featureColor'
+import { INPUT_DIR_DOT_COLOR_LIGHT, INPUT_DIR_DOT_COLOR_DARK } from '../constants'
+import { isDark } from '../../../services/SettingsService'
 
 const LINE_OPACITY = 0.5
 const DASH_SIZE    = 0.04
 const GAP_SIZE     = 0.04
 const LINE_WIDTH   = 3
-const EXTENT       = 20         // long enough to always cover visible area
-
-const DOT_COLOR    = 0x6b7280   // grey-500
+const EXTENT       = 20
 const DOT_RADIUS   = 0.028
 const DOT_SEGMENTS = 10
 
@@ -35,7 +35,6 @@ export class InputDirectionOverlay implements SceneOverlay {
   build(ctx: SceneCtx) {
     this.ctx = ctx
 
-    // ── Dashed line (colored to match the feature vector) ─────
     const [cr, cg, cb] = featureColorRGB(this.featureIdx, ctx.svc.config.inputDim)
     const featureColor = new THREE.Color(cr, cg, cb)
 
@@ -55,8 +54,9 @@ export class InputDirectionOverlay implements SceneOverlay {
     this.line.renderOrder = -1
     ctx.scene.add(this.line)
 
-    // ── Anchor dot ─────────────────────────────────────────────
-    this.dotMat = new THREE.MeshBasicMaterial({ color: DOT_COLOR })
+    this.dotMat = new THREE.MeshBasicMaterial({
+      color: isDark.value ? INPUT_DIR_DOT_COLOR_DARK : INPUT_DIR_DOT_COLOR_LIGHT,
+    })
     this.dot = new THREE.Mesh(
       new THREE.SphereGeometry(DOT_RADIUS, DOT_SEGMENTS, DOT_SEGMENTS),
       this.dotMat,
@@ -68,6 +68,7 @@ export class InputDirectionOverlay implements SceneOverlay {
   }
 
   tick() {
+    this.dotMat.color.setHex(isDark.value ? INPUT_DIR_DOT_COLOR_DARK : INPUT_DIR_DOT_COLOR_LIGHT)
     this.update()
   }
 

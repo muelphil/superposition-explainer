@@ -1,12 +1,12 @@
 import * as THREE from 'three'
 import type { SceneCtx, SceneOverlay } from '../types'
-import { AXIS_DIRECTIONS } from '../constants'
+import { AXIS_DIRECTIONS, DROP_LINE_COLOR_LIGHT, DROP_LINE_COLOR_DARK } from '../constants'
 import { DashedCylinders } from '../sceneHelpers'
+import { isDark } from '../../../services/SettingsService'
 
 const RADIUS    = 0.008
 const DASH_SIZE = 0.04
 const GAP_SIZE  = 0.04
-const COLOR     = 0xd1d5db   // light grey
 const OPACITY   = 0.6
 
 /**
@@ -35,7 +35,7 @@ export class DropLineOverlay implements SceneOverlay {
     this.ctx = ctx
 
     this.mat = new THREE.MeshBasicMaterial({
-      color:       COLOR,
+      color:       isDark.value ? DROP_LINE_COLOR_DARK : DROP_LINE_COLOR_LIGHT,
       transparent: true,
       opacity:     OPACITY,
       depthTest:   false,
@@ -46,7 +46,10 @@ export class DropLineOverlay implements SceneOverlay {
     this.update()
   }
 
-  tick() { this.update() }
+  tick() {
+    this.mat.color.setHex(isDark.value ? DROP_LINE_COLOR_DARK : DROP_LINE_COLOR_LIGHT)
+    this.update()
+  }
 
   dispose() {
     this.ctx.scene.remove(this.dashed.group)

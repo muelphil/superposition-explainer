@@ -46,10 +46,6 @@
 </template>
 
 <style scoped>
-.references-section h2 {
-  margin-bottom: 1rem;
-  margin-top:2.5rem;
-}
 
 .references-list {
   list-style: none;

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, computed } from 'vue'
+import { isDark } from '../services/SettingsService'
 
 const svgRef = ref<SVGSVGElement | null>(null)
 const containerRef = ref<HTMLDivElement | null>(null)
@@ -8,6 +9,16 @@ const featuresElRef = ref<HTMLDivElement | null>(null)
 
 const arrowPaths = ref<{ d: string; startX: number; endX: number; isAccent: boolean }[]>([])
 const funnelFillPath = ref('')
+
+// Theme-aware SVG gradient colors
+const funnelGradColor = computed(() => isDark.value ? '#9ca3af' : '#d9d9d9')
+const funnelGradOpacity = computed(() => isDark.value ? 0.06 : 0.2)
+const accentFromColor = computed(() => isDark.value ? '#6b7280' : '#ccc')
+const accentMidColor = computed(() => isDark.value ? '#9ca3b4' : '#888')
+const accentToColor = computed(() => isDark.value ? '#d1d5db' : '#555')
+const dimLineColor = computed(() => isDark.value ? '#6b7280' : '#b0b0b0')
+const arrowHeadFill = computed(() => isDark.value ? '#9ca3b4' : '#888')
+const arrowHeadFillSmall = computed(() => isDark.value ? '#6b7280' : '#b0b0b0')
 
 // How many pixels the line stays horizontal on the outgoing (feature) side
 // and the ingoing (vector) side before/after curving.
@@ -142,10 +153,10 @@ onUnmounted(() => observer?.disconnect())
     <svg ref="svgRef" class="funnel-svg">
       <defs>
         <linearGradient id="funnelGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#d9d9d9" stop-opacity="0" />
-          <stop offset="3%" stop-color="#d9d9d9" stop-opacity="0.2" />
-          <stop offset="97%" stop-color="#d9d9d9" stop-opacity="0.2" />
-          <stop offset="100%" stop-color="#d9d9d9" stop-opacity="0" />
+          <stop offset="0%" :stop-color="funnelGradColor" stop-opacity="0" />
+          <stop offset="3%" :stop-color="funnelGradColor" :stop-opacity="funnelGradOpacity" />
+          <stop offset="97%" :stop-color="funnelGradColor" :stop-opacity="funnelGradOpacity" />
+          <stop offset="100%" :stop-color="funnelGradColor" stop-opacity="0" />
         </linearGradient>
 
         <!-- Big arrowhead for accent lines -->
@@ -158,7 +169,7 @@ onUnmounted(() => observer?.disconnect())
           markerHeight="6"
           orient="auto"
         >
-          <path d="M0,0 L12,4 L0,8 Z" fill="#888" />
+          <path d="M0,0 L12,4 L0,8 Z" :fill="arrowHeadFill" />
         </marker>
 
         <!-- Small arrowhead for non-accent lines -->
@@ -171,21 +182,21 @@ onUnmounted(() => observer?.disconnect())
           markerHeight="4"
           orient="auto"
         >
-          <path d="M0,0 L8,3 L0,6 Z" fill="#b0b0b0" />
+          <path d="M0,0 L8,3 L0,6 Z" :fill="arrowHeadFillSmall" />
         </marker>
 
         <!-- Per-path gradient for accent lines: fade from light left to dark right -->
         <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#ccc" stop-opacity="0.5" />
-          <stop offset="60%" stop-color="#888" stop-opacity="0.8" />
-          <stop offset="100%" stop-color="#555" stop-opacity="1" />
+          <stop offset="0%" :stop-color="accentFromColor" stop-opacity="0.5" />
+          <stop offset="60%" :stop-color="accentMidColor" stop-opacity="0.8" />
+          <stop offset="100%" :stop-color="accentToColor" stop-opacity="1" />
         </linearGradient>
 
         <!-- Non-accent lines: fade to transparent in last 5% near vector (right end) -->
         <linearGradient id="dimFadeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#b0b0b0" stop-opacity="1" />
-          <stop offset="95%" stop-color="#b0b0b0" stop-opacity="1" />
-          <stop offset="100%" stop-color="#b0b0b0" stop-opacity="0" />
+          <stop offset="0%" :stop-color="dimLineColor" stop-opacity="1" />
+          <stop offset="95%" :stop-color="dimLineColor" stop-opacity="1" />
+          <stop offset="100%" :stop-color="dimLineColor" stop-opacity="0" />
         </linearGradient>
       </defs>
 

@@ -189,7 +189,7 @@ function fmtLR(lr: number) {
 .cfg-select:disabled { opacity: 0.4; cursor: not-allowed; }
 .cfg-select:focus { border-color: var(--color-interactive); }
 
-.advanced-toggle {
+button.advanced-toggle {
   font-family: var(--font-family-label);
   color: var(--color-text-tertiary);
   text-transform: uppercase;
@@ -198,7 +198,7 @@ function fmtLR(lr: number) {
   gap: 0.3rem;
   font-size: 0.75rem;
   font-weight: 500;
-  background: none;
+  background: none !important;
   border: none;
   padding: 0;
   cursor: pointer;

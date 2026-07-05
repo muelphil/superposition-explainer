@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
-import { X } from 'lucide-vue-next'
-import { showEmbeddingPoint, useFeatureColorsForIO } from '../services/SettingsService'
+import { X, Moon, Sun, Monitor } from 'lucide-vue-next'
+import { showEmbeddingPoint, useFeatureColorsForIO, dimNeuronsOnHover, themeMode } from '../services/SettingsService'
 
 defineProps<{ show: boolean }>()
 const emit = defineEmits<{ close: [] }>()
@@ -24,6 +24,53 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         </div>
 
         <div class="modal-body">
+          <div class="setting-group">
+            <span class="setting-group-label">Appearance</span>
+            <div class="theme-toggle-group">
+              <label class="theme-radio-label" :class="{ active: themeMode === 'light' }" for="theme-light">
+                <input
+                  id="theme-light"
+                  type="radio"
+                  name="theme-mode"
+                  value="light"
+                  :checked="themeMode === 'light'"
+                  @change="themeMode = 'light'"
+                  class="theme-radio"
+                />
+                <Sun :size="14" class="theme-icon" />
+                Light
+              </label>
+              <label class="theme-radio-label" :class="{ active: themeMode === 'dark' }" for="theme-dark">
+                <input
+                  id="theme-dark"
+                  type="radio"
+                  name="theme-mode"
+                  value="dark"
+                  :checked="themeMode === 'dark'"
+                  @change="themeMode = 'dark'"
+                  class="theme-radio"
+                />
+                <Moon :size="14" class="theme-icon" />
+                Dark
+              </label>
+              <label class="theme-radio-label" :class="{ active: themeMode === 'system' }" for="theme-system">
+                <input
+                  id="theme-system"
+                  type="radio"
+                  name="theme-mode"
+                  value="system"
+                  :checked="themeMode === 'system'"
+                  @change="themeMode = 'system'"
+                  class="theme-radio"
+                />
+                <Monitor :size="14" class="theme-icon" />
+                System
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-divider"></div>
+
           <div class="setting-row">
             <label class="setting-label" for="setting-emb-point">
               Show input point in Embedding Space
@@ -46,6 +93,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               class="setting-toggle"
               :checked="useFeatureColorsForIO"
               @change="useFeatureColorsForIO = ($event.target as HTMLInputElement).checked"
+            />
+          </div>
+          <div class="setting-row">
+            <label class="setting-label" for="setting-dim-neurons">
+              Dim other neurons on hover
+            </label>
+            <input
+              id="setting-dim-neurons"
+              type="checkbox"
+              class="setting-toggle"
+              :checked="dimNeuronsOnHover"
+              @change="dimNeuronsOnHover = ($event.target as HTMLInputElement).checked"
             />
           </div>
         </div>
@@ -108,6 +167,71 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
 .modal-body {
   padding: 0.75rem 1rem;
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.setting-group-label {
+  font-family: var(--font-family-label);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+}
+
+.theme-toggle-group {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.theme-radio-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+  padding: 0.4rem 0.5rem;
+  background: var(--color-bg-secondary);
+  transition: background 0.15s, color 0.15s;
+  border-right: 1px solid var(--color-border);
+}
+
+.theme-radio-label:last-child {
+  border-right: none;
+}
+
+.theme-radio-label.active {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+}
+
+.theme-radio-label:hover:not(.active) {
+  background: var(--color-bg-hover);
+}
+
+.theme-radio {
+  display: none;
+}
+
+.theme-icon {
+  flex-shrink: 0;
+}
+
+.setting-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 0.5rem 0;
 }
 
 .setting-row {

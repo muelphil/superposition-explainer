@@ -1,6 +1,7 @@
 // ── Weight / neuron interpolation RGB endpoints ────────────────────────────────
-// These define the white → color interpolation used for weight cells, bias icons,
+// These define the white/dark → color interpolation used for weight cells, bias icons,
 // and neuron circle backgrounds.  Extracted here so all components share one source.
+import { isDark } from '../services/SettingsService'
 
 /** orange-500 = #f97316 — endpoint for positive weight/bias cell backgrounds */
 export const VAL_POSITIVE_RGB: readonly [number, number, number] = [249, 115, 22]
@@ -11,74 +12,95 @@ export const NEURON_POSITIVE_RGB: readonly [number, number, number] = [255, 146,
 /** blue-400 (B fixed at 255) — endpoint for negative neuron circle backgrounds */
 export const NEURON_NEGATIVE_RGB: readonly [number, number, number] = [96, 165, 255]
 
-/** Linear interpolation from white to a target rgb at t ∈ [0,1]. */
-function lerpWhite(t: number, [r1, g1, b1]: readonly [number, number, number]): string {
-  return `rgb(${Math.round(255 + (r1 - 255) * t)},${Math.round(255 + (g1 - 255) * t)},${Math.round(255 + (b1 - 255) * t)})`
+/** White base for light theme */
+const WHITE_BASE: readonly [number, number, number] = [255, 255, 255]
+/** Dark base for dark theme (#1e2030) */
+const DARK_BASE: readonly [number, number, number] = [30, 32, 48]
+
+/** Linear interpolation from base to a target rgb at t ∈ [0,1]. */
+function lerpBase(t: number, base: readonly [number, number, number], [r1, g1, b1]: readonly [number, number, number]): string {
+  const [r0, g0, b0] = base
+  return `rgb(${Math.round(r0 + (r1 - r0) * t)},${Math.round(g0 + (g1 - g0) * t)},${Math.round(b0 + (b1 - b0) * t)})`
 }
 
 /**
  * Background color for a weight or bias cell.
- * v ∈ [−1, 1]: 0 → white, +1 → orange-500, −1 → blue-500.
+ * v ∈ [−1, 1]: 0 → base (white/dark), +1 → orange-500, −1 → blue-500.
  */
 export function valColorRgb(v: number): string {
   const t = Math.max(-1, Math.min(1, v))
-  return t >= 0 ? lerpWhite(t, VAL_POSITIVE_RGB) : lerpWhite(-t, VAL_NEGATIVE_RGB)
+  const base = isDark.value ? DARK_BASE : WHITE_BASE
+  return t >= 0 ? lerpBase(t, base, VAL_POSITIVE_RGB) : lerpBase(-t, base, VAL_NEGATIVE_RGB)
 }
 
 /**
  * Background color for a neuron circle.
- * v ≥ 0 → white → orange-400; v < 0 → white → blue-400.
+ * v ≥ 0 → base → orange-400; v < 0 → base → blue-400.
  * Scaled so |v| = 2 → full saturation.
  */
 export function neuronColorRgb(v: number): string {
   const t = Math.abs(Math.max(-2, Math.min(2, v))) / 2
-  return v >= 0 ? lerpWhite(t, NEURON_POSITIVE_RGB) : lerpWhite(t, NEURON_NEGATIVE_RGB)
+  const base = isDark.value ? DARK_BASE : WHITE_BASE
+  return v >= 0 ? lerpBase(t, base, NEURON_POSITIVE_RGB) : lerpBase(t, base, NEURON_NEGATIVE_RGB)
 }
 
 // ── Neuron border colors ───────────────────────────────────────────────────────
-/** Dark orange endpoint for positive neuron borders (#ea580c orange-600) */
-export const BORDER_POSITIVE_RGB: readonly [number, number, number] = [234, 88, 12]
-/** Dark blue endpoint for negative neuron borders (#2563eb blue-600) */
-export const BORDER_NEGATIVE_RGB: readonly [number, number, number] = [37, 99, 235]
-/** Neutral border color at zero (#9ca3af gray-400 = --color-text-secondary) */
-const BORDER_ZERO_RGB: readonly [number, number, number] = [156, 163, 175]
+/** Bright orange endpoint for positive neuron borders (#ea580c) */
+const BORDER_POSITIVE_RGB_LIGHT: readonly [number, number, number] = [234, 88, 12]
+/** Bright blue endpoint for negative neuron borders (#2563eb) */
+const BORDER_NEGATIVE_RGB_LIGHT: readonly [number, number, number] = [37, 99, 235]
+/** Neutral border at zero for light theme */
+const BORDER_ZERO_RGB_LIGHT: readonly [number, number, number] = [156, 163, 175]
+
+/** Orange endpoint for positive neuron borders dark (#fb923c) */
+const BORDER_POSITIVE_RGB_DARK: readonly [number, number, number] = [251, 146, 60]
+/** Blue endpoint for negative neuron borders dark (#60a5fa) */
+const BORDER_NEGATIVE_RGB_DARK: readonly [number, number, number] = [96, 165, 250]
+/** Neutral border at zero for dark theme */
+const BORDER_ZERO_RGB_DARK: readonly [number, number, number] = [75, 80, 104]
 
 /**
  * Border color for a standard neuron circle.
- * v ≥ 0 → text-secondary → dark-orange-600; v < 0 → text-secondary → dark-blue-600.
+ * v ≥ 0 → text-secondary → orange; v < 0 → text-secondary → blue.
  * Scaled so |v| = 2 → full saturation.
  */
 export function neuronBorderColorRgb(v: number): string {
   const t = Math.abs(Math.max(-2, Math.min(2, v))) / 2
-  const [r0, g0, b0] = BORDER_ZERO_RGB
-  const [r1, g1, b1] = v >= 0 ? BORDER_POSITIVE_RGB : BORDER_NEGATIVE_RGB
+  const dark = isDark.value
+  const [r0, g0, b0] = dark ? BORDER_ZERO_RGB_DARK : BORDER_ZERO_RGB_LIGHT
+  const pos = dark ? BORDER_POSITIVE_RGB_DARK : BORDER_POSITIVE_RGB_LIGHT
+  const neg = dark ? BORDER_NEGATIVE_RGB_DARK : BORDER_NEGATIVE_RGB_LIGHT
+  const [r1, g1, b1] = v >= 0 ? pos : neg
   return `rgb(${Math.round(r0 + (r1 - r0) * t)},${Math.round(g0 + (g1 - g0) * t)},${Math.round(b0 + (b1 - b0) * t)})`
 }
 
 // ── Feature-mode IO neuron colors ──────────────────────────────────────────────
-/** Neutral border at zero for feature-mode (#374151 = --color-text-secondary) */
-const FEATURE_BORDER_ZERO_RGB: readonly [number, number, number] = [156, 163, 175]
+/** Neutral border at zero for feature-mode, light */
+const FEATURE_BORDER_ZERO_RGB_LIGHT: readonly [number, number, number] = [156, 163, 175]
+/** Neutral border at zero for feature-mode, dark */
+const FEATURE_BORDER_ZERO_RGB_DARK: readonly [number, number, number] = [75, 80, 104]
 
 /**
- * Background for feature-colored IO neurons: white → feature color.
+ * Background for feature-colored IO neurons: base → feature color.
  * v ≥ 0; scaled so v = 2 → full saturation.
  */
 export function neuronFeatureBgRgb(v: number, featureIdx: number, numFeatures: number): string {
   const t = Math.min(1, Math.abs(v) / 2)
   const fRgb = sampleGradientSrgb(numFeatures <= 1 ? 0 : featureIdx / (numFeatures - 1))
-  return lerpWhite(t, fRgb)
+  const base = isDark.value ? DARK_BASE : WHITE_BASE
+  const [r0, g0, b0] = base
+  return `rgb(${Math.round(r0 + (fRgb[0] - r0) * t)},${Math.round(g0 + (fRgb[1] - g0) * t)},${Math.round(b0 + (fRgb[2] - b0) * t)})`
 }
 
 /**
  * Border for feature-colored IO neurons:
- * v = 0 → text-primary; v = 2 → ~60% of feature color (darker).
+ * v = 0 → neutral; v = 2 → feature color.
  */
 export function neuronFeatureBorderRgb(v: number, featureIdx: number, numFeatures: number): string {
   const t = Math.min(1, Math.abs(v) / 2)
   const [fr, fg, fb] = sampleGradientSrgb(numFeatures <= 1 ? 0 : featureIdx / (numFeatures - 1))
-  const r1 = Math.round(fr * 0.58), g1 = Math.round(fg * 0.58), b1 = Math.round(fb * 0.58)
-  const [r0, g0, b0] = FEATURE_BORDER_ZERO_RGB
-  return `rgb(${Math.round(r0 + (r1 - r0) * t)},${Math.round(g0 + (g1 - g0) * t)},${Math.round(b0 + (b1 - b0) * t)})`
+  const [r0, g0, b0] = isDark.value ? FEATURE_BORDER_ZERO_RGB_DARK : FEATURE_BORDER_ZERO_RGB_LIGHT
+  return `rgb(${Math.round(r0 + (fr - r0) * t)},${Math.round(g0 + (fg - g0) * t)},${Math.round(b0 + (fb - b0) * t)})`
 }
 
 /** Color used for the min-angle statistics chart line (pink, mid-gradient) */

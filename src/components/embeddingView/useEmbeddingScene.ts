@@ -6,24 +6,29 @@ import type {AutoencoderServiceType} from '../../services/AutoencoderService'
 import type {SelectionServiceType, SelectionTarget} from '../../services/SelectionService'
 import {effectiveHover} from '../../services/SelectionService'
 import {featureColorRGB, EMBEDDING_POINT_COLOR_HEX} from '../../utils/featureColor'
-import {showEmbeddingPoint} from '../../services/SettingsService'
+import {showEmbeddingPoint, isDark} from '../../services/SettingsService'
 import type {VecVis, SceneCtx} from './types'
 import {featureVec, makeAxisLabel, disposeMesh, setCylinderEnds} from './sceneHelpers'
 import {useOverlayManager} from './useOverlayManager'
 import {
     CAMERA_FOV, CAMERA_MARGIN, CAMERA_3D_DIR, CAMERA_MIN_DIST, CAMERA_MAX_DIST, CAMERA_DAMPING,
-    AXIS_LEN, AXIS_LABEL_PERP, AXIS_COLOR, AXIS_OPACITY, AXIS_TICK_OPACITY, AXIS_TICK_SIZE,
+    AXIS_LEN, AXIS_LABEL_PERP, AXIS_OPACITY, AXIS_TICK_OPACITY, AXIS_TICK_SIZE,
     AXIS_SHAFT_RADIUS, AXIS_SHAFT_SEGMENTS, AXIS_ARROW_HEAD_LEN, AXIS_ARROW_HEAD_W,
     AXIS_HIT_RADIUS, ORIGIN_RADIUS,
     AXIS_LABELS, AXIS_DIRECTIONS,
     ARROW_HEAD_MAX_LEN, ARROW_HEAD_MAX_W, ARROW_HEAD_LEN_FRAC, ARROW_HEAD_W_FRAC,
     ARROW_SHAFT_RADIUS, ARROW_SHAFT_SEGMENTS, VEC_HIT_RADIUS, VEC_HIT_EXTRA,
-    DIM_COLOR_HEX, DIM_OPACITY,
-    AXIS_HIGHLIGHT_COLOR, AXIS_LABEL_COLOR_DEFAULT, AXIS_LABEL_COLOR_HIGHLIGHT,
+    DIM_OPACITY,
+    AXIS_COLOR_LIGHT, AXIS_COLOR_DARK,
+    DIM_COLOR_HEX, DIM_COLOR_HEX_DARK,
+    AXIS_HIGHLIGHT_COLOR_LIGHT, AXIS_HIGHLIGHT_COLOR_DARK,
+    AXIS_LABEL_COLOR_DEFAULT_LIGHT, AXIS_LABEL_COLOR_DEFAULT_DARK,
+    AXIS_LABEL_COLOR_HIGHLIGHT_LIGHT, AXIS_LABEL_COLOR_HIGHLIGHT_DARK,
 } from './constants'
 
 const Y_UP = new THREE.Vector3(0, 1, 0)
 const DIM_COLOR = new THREE.Color(DIM_COLOR_HEX)
+const DIM_COLOR_DARK = new THREE.Color(DIM_COLOR_HEX_DARK)
 
 const AXIS_HIGHLIGHT_OPACITY = 1.0
 
@@ -223,7 +228,7 @@ export function useEmbeddingScene(
             const mats: THREE.Material[] = []
 
             // Main axis cylinder
-            const lineMat = new THREE.MeshBasicMaterial({color: AXIS_COLOR, opacity: AXIS_OPACITY, transparent: true})
+            const lineMat = new THREE.MeshBasicMaterial({color: AXIS_COLOR_LIGHT, opacity: AXIS_OPACITY, transparent: true})
             mats.push(lineMat)
 
             const lineGeom = new THREE.CylinderGeometry(AXIS_SHAFT_RADIUS, AXIS_SHAFT_RADIUS, 1, AXIS_SHAFT_SEGMENTS)
@@ -237,7 +242,7 @@ export function useEmbeddingScene(
             // Arrowhead cones at both ends (no shaft — the cylinder covers that)
             for (const d of [dir, negDir]) {
                 const coneMat = new THREE.MeshBasicMaterial({
-                    color: AXIS_COLOR, opacity: AXIS_OPACITY, transparent: true,
+                    color: AXIS_COLOR_LIGHT, opacity: AXIS_OPACITY, transparent: true,
                 })
                 mats.push(coneMat)
                 const cone = new THREE.Mesh(
@@ -255,7 +260,7 @@ export function useEmbeddingScene(
             const perp = a === 0 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0)
             for (const s of [1, -1] as const) {
                 const tickMat = new THREE.MeshBasicMaterial({
-                    color: AXIS_COLOR, opacity: AXIS_TICK_OPACITY, transparent: true,
+                    color: AXIS_COLOR_LIGHT, opacity: AXIS_TICK_OPACITY, transparent: true,
                 })
                 mats.push(tickMat)
                 const tickGeom = new THREE.CylinderGeometry(AXIS_SHAFT_RADIUS, AXIS_SHAFT_RADIUS, 1, 6)
@@ -289,7 +294,7 @@ export function useEmbeddingScene(
 
         grp.add(new THREE.Mesh(
             new THREE.SphereGeometry(ORIGIN_RADIUS, 10, 10),
-            new THREE.MeshBasicMaterial({color: AXIS_COLOR}),
+            new THREE.MeshBasicMaterial({color: AXIS_COLOR_LIGHT}),
         ))
     }
 
@@ -492,7 +497,8 @@ export function useEmbeddingScene(
 
         for (const vv of vecs) {
             const isLit = !dimVecs || (litVecSet !== null && litVecSet.has(vv.idx))
-            const col = isLit ? vv.color : DIM_COLOR
+            const dimCol = isDark.value ? DIM_COLOR_DARK : DIM_COLOR
+            const col = isLit ? vv.color : dimCol
             const opacity = isLit ? 1.0 : (isOutputActive ? HALF_DIM_OPACITY : DIM_OPACITY)
             const sm = vv.shaft.material
             const hm = vv.head.material
@@ -518,13 +524,20 @@ export function useEmbeddingScene(
 
         for (let a = 0; a < axisMaterials.length; a++) {
             const highlight = litAxisIdx === a
+            const dark = isDark.value
+            const axisCol = highlight
+                ? (dark ? AXIS_HIGHLIGHT_COLOR_DARK : AXIS_HIGHLIGHT_COLOR_LIGHT)
+                : (dark ? AXIS_COLOR_DARK : AXIS_COLOR_LIGHT)
             for (const mat of axisMaterials[a]) {
                 const m = mat as THREE.MeshBasicMaterial
-                m.color.setHex(highlight ? AXIS_HIGHLIGHT_COLOR : AXIS_COLOR)
+                m.color.setHex(axisCol)
                 m.opacity = highlight ? AXIS_HIGHLIGHT_OPACITY : AXIS_OPACITY
             }
             if (axisLabels[a]) {
-                axisLabels[a].element.style.color = highlight ? AXIS_LABEL_COLOR_HIGHLIGHT : AXIS_LABEL_COLOR_DEFAULT
+                const labelCol = highlight
+                    ? (dark ? AXIS_LABEL_COLOR_HIGHLIGHT_DARK : AXIS_LABEL_COLOR_HIGHLIGHT_LIGHT)
+                    : (dark ? AXIS_LABEL_COLOR_DEFAULT_DARK : AXIS_LABEL_COLOR_DEFAULT_LIGHT)
+                axisLabels[a].element.style.color = labelCol
             }
         }
     }
