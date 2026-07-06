@@ -167,6 +167,7 @@ watch(isMobile, (mobile) => {
     background-color: white;
     padding: 1rem 0.75rem;
     overflow-y: auto;
+    padding-bottom: 25vh;
   }
 
   .viz-panel-open {

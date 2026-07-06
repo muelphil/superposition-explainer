@@ -73,7 +73,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
           <div class="setting-row">
             <label class="setting-label" for="setting-emb-point">
-              Show input point in Embedding Space
+              Show embedding of current input as purple dot in Embedding Space
             </label>
             <input
               id="setting-emb-point"
@@ -85,7 +85,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
           </div>
           <div class="setting-row">
             <label class="setting-label" for="setting-feature-colors">
-              Color input/output neurons by feature
+              Color input/output neurons using feature color instead of orange/blue for activation strength
             </label>
             <input
               id="setting-feature-colors"
@@ -167,6 +167,9 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
 .modal-body {
   padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .setting-group {

@@ -182,7 +182,7 @@ const visibleTabs = computed(() => {
   }
 
   .emb-canvas {
-    max-height: 240px !important;
+    max-height: 300px !important;
     aspect-ratio: initial !important;
   }
 }
