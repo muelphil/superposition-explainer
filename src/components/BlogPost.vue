@@ -528,8 +528,7 @@ onUnmounted(() => stopWatch?.())
       <div class="post-section text-section acknowlegements">
         <h2>Acknowledgements</h2>
         <p>
-          This work was conducted at the Helmholtz-Zentrum Dresden-Rossendorf (HZDR), whose support in the form of
-          institutional resources and dedicated research time made it possible.
+          This work was conducted at the Helmholtz-Zentrum Dresden-Rossendorf (HZDR), whose support in the form of institutional resources and dedicated research time made it possible. Helmholtz AI provided a fruitful community context for this effort.
         </p>
       </div>
 
