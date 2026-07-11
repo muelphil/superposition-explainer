@@ -1,7 +1,8 @@
 import * as THREE from 'three'
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { createLatexElement } from '../../utils/latex'
-import { AXIS_LABEL_COLOR_DEFAULT } from './constants'
+import { AXIS_LABEL_COLOR_DEFAULT_LIGHT, AXIS_LABEL_COLOR_DEFAULT_DARK } from './constants'
+import { isDark } from '../../services/SettingsService'
 
 /**
  * Returns the i-th feature vector (column i of W) as a THREE.Vector3
@@ -22,8 +23,9 @@ export function featureVec(
 
 /** Creates a CSS2DObject wrapping a KaTeX-rendered formula for use as an axis label. */
 export function makeAxisLabel(formula: string): CSS2DObject {
+  const labelColor = isDark.value ? AXIS_LABEL_COLOR_DEFAULT_DARK : AXIS_LABEL_COLOR_DEFAULT_LIGHT
   const el = createLatexElement(formula, {
-    color: AXIS_LABEL_COLOR_DEFAULT,
+    color: labelColor,
     fontSize: '0.78rem',
     pointerEvents: 'none',
     userSelect: 'none',

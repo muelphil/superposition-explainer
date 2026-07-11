@@ -59,6 +59,7 @@ export function useEmbeddingScene(
     let axisMaterials: THREE.Material[][] = []
     // Per-axis CSS2DObject labels for text color highlighting
     let axisLabels: import('three/examples/jsm/renderers/CSS2DRenderer.js').CSS2DObject[] = []
+    let originDotMat: THREE.MeshBasicMaterial | null = null
     let embPointMesh: THREE.Mesh | null = null
     let needsVecUpdate = false
     let lastHoverKey = ''
@@ -104,6 +105,7 @@ export function useEmbeddingScene(
         axisHitMeshes = []
         axisMaterials = []
         axisLabels = []
+        originDotMat = null
         axisGroup = null
         if (embPointMesh) {
             scene?.remove(embPointMesh)
@@ -236,7 +238,8 @@ export function useEmbeddingScene(
             const mats: THREE.Material[] = []
 
             // Main axis cylinder
-            const lineMat = new THREE.MeshBasicMaterial({color: AXIS_COLOR_LIGHT, opacity: AXIS_OPACITY, transparent: true})
+            const axisColor = isDark.value ? AXIS_COLOR_DARK : AXIS_COLOR_LIGHT
+            const lineMat = new THREE.MeshBasicMaterial({color: axisColor, opacity: AXIS_OPACITY, transparent: true})
             mats.push(lineMat)
 
             const lineGeom = new THREE.CylinderGeometry(AXIS_SHAFT_RADIUS, AXIS_SHAFT_RADIUS, 1, AXIS_SHAFT_SEGMENTS)
@@ -250,7 +253,7 @@ export function useEmbeddingScene(
             // Arrowhead cones at both ends (no shaft — the cylinder covers that)
             for (const d of [dir, negDir]) {
                 const coneMat = new THREE.MeshBasicMaterial({
-                    color: AXIS_COLOR_LIGHT, opacity: AXIS_OPACITY, transparent: true,
+                    color: axisColor, opacity: AXIS_OPACITY, transparent: true,
                 })
                 mats.push(coneMat)
                 const cone = new THREE.Mesh(
@@ -268,7 +271,7 @@ export function useEmbeddingScene(
             const perp = a === 0 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0)
             for (const s of [1, -1] as const) {
                 const tickMat = new THREE.MeshBasicMaterial({
-                    color: AXIS_COLOR_LIGHT, opacity: AXIS_TICK_OPACITY, transparent: true,
+                    color: axisColor, opacity: AXIS_TICK_OPACITY, transparent: true,
                 })
                 mats.push(tickMat)
                 const tickGeom = new THREE.CylinderGeometry(AXIS_SHAFT_RADIUS, AXIS_SHAFT_RADIUS, 1, 6)
@@ -300,10 +303,8 @@ export function useEmbeddingScene(
             axisMaterials.push(mats)
         }
 
-        grp.add(new THREE.Mesh(
-            new THREE.SphereGeometry(ORIGIN_RADIUS, 10, 10),
-            new THREE.MeshBasicMaterial({color: AXIS_COLOR_LIGHT}),
-        ))
+        originDotMat = new THREE.MeshBasicMaterial({color: isDark.value ? AXIS_COLOR_DARK : AXIS_COLOR_LIGHT})
+        grp.add(new THREE.Mesh(new THREE.SphereGeometry(ORIGIN_RADIUS, 10, 10), originDotMat))
     }
 
     // ── Feature vectors ───────────────────────────────────────────
@@ -548,6 +549,12 @@ export function useEmbeddingScene(
                 axisLabels[a].element.style.color = labelCol
             }
         }
+
+        // Origin dot
+        if (originDotMat) {
+            const dotDark = isDark.value
+            originDotMat.color.setHex(dotDark ? AXIS_COLOR_DARK : AXIS_COLOR_LIGHT)
+        }
     }
 
     // ── Render loop ───────────────────────────────────────────────
@@ -706,6 +713,9 @@ export function useEmbeddingScene(
     }, {flush: 'sync'})
     watch(showEmbeddingPoint, v => {
         if (embPointMesh) embPointMesh.visible = v
+    })
+    watch(isDark, () => {
+        applyVisualState(selSvc.selected.value, selSvc.hovered.value)
     })
 
     function setStaticOverlay(target: SelectionTarget | null) {

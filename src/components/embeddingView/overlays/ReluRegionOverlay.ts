@@ -145,7 +145,30 @@ export class ReluRegionOverlay implements SceneOverlay {
     this.update()
   }
 
-  tick() { this.update() }
+  tick() {
+    this.updateThemeColors()
+    this.update()
+  }
+
+  private updateThemeColors() {
+    const dark = isDark.value
+    const regionColor = dark ? RELU_REGION_COLOR_DARK : RELU_REGION_COLOR_LIGHT
+    this.regionMat.color.setHex(regionColor)
+    this.surfaceMat.color.setHex(regionColor)
+
+    const labelColor = dark ? RELU_LABEL_COLOR_DARK : RELU_LABEL_COLOR_LIGHT
+    const labelBorderColor = dark ? RELU_LABEL_BORDER_COLOR_DARK : RELU_LABEL_BORDER_COLOR_LIGHT
+    const labelBg = dark ? RELU_LABEL_BG_DARK : RELU_LABEL_BG_LIGHT
+    this.labelInner.style.color = labelColor
+    this.labelInner.style.border = `1px solid ${labelBorderColor}`
+    this.labelInner.style.background = labelBg
+
+    // Update 3D fade texture map if needed
+    if (this.ctx.svc.config.embeddingDim >= 3) {
+      this.regionMat.map = getFadeTexture()
+      this.regionMat.needsUpdate = true
+    }
+  }
 
   dispose() {
     this.ctx.scene.remove(this.regionMesh)
