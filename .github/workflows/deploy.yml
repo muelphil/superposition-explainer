@@ -25,6 +25,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          check-latest: true
+      - name: Allow deprecated Node 20
+        run: echo "ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true" >> "$GITHUB_ENV"
 
       - name: Install dependencies
         run: npm ci
