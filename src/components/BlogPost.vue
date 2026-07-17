@@ -532,6 +532,16 @@ onUnmounted(() => stopWatch?.())
         </p>
       </div>
 
+      <!-- ── About This Project ────────────────────────────────── -->
+      <div class="post-section text-section about-project">
+        <h2>About This Project</h2>
+        <p>
+          This project and its interactive demo are open source. The code is available on GitHub at
+          <a href="https://github.com/muelphil/superposition-explainer" target="_blank" rel="noopener">github.com/muelphil/superposition-explainer</a>.
+          If you find any bugs, have questions, or want to share feedback, please open an issue there.
+        </p>
+      </div>
+
       <!-- ── Section 7: References ─────────────────────────────── -->
       <References/>
 
