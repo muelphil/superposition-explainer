@@ -1,6 +1,9 @@
 import {ref, onMounted, onUnmounted, watch, type Ref} from 'vue'
 import { emitActiveBlockSeen, clearActiveBlock } from './activeBlockBus'
 
+/** Active-block focal line, as a fraction of viewport height from the top. */
+export const FOCAL_RATIO = 0.4
+
 /**
  * Tracks which text-block element is closest to the vertical center of the
  * viewport and exposes the index as a reactive ref.
@@ -38,7 +41,7 @@ export function useScrollActiveBlock(
         const els = blockRefs.value
         if (!els || els.length === 0) return
 
-        const viewportFocal = window.innerHeight * 0.4
+        const viewportFocal = window.innerHeight * FOCAL_RATIO
 
         const valid: HTMLElement[] = els.filter((el): el is HTMLElement => el !== null)
         if (valid.length === 0) return
@@ -91,12 +94,20 @@ export function useScrollActiveBlock(
         // Ignore clicks on the currently active block
         const idxInRefs = blockRefs.value.indexOf(el)
         if (idxInRefs === activeBlockIndex.value) return
-        const viewportFocal = window.innerHeight * 0.4
-        const rect = el.getBoundingClientRect()
-        const elCenter = rect.top + rect.height / 2
-        const delta = elCenter - viewportFocal
-        window.scrollBy({top: delta, behavior: 'smooth'})
+        scrollElementToFocal(el)
     }
 
     return {activeBlockIndex, scrollToBlock}
+}
+
+/**
+ * Smooth-scroll so the element's vertical center sits on the active-block
+ * focal line (40% of viewport height) — guarantees it becomes the active block.
+ */
+export function scrollElementToFocal(el: HTMLElement) {
+    const viewportFocal = window.innerHeight * FOCAL_RATIO
+    const rect = el.getBoundingClientRect()
+    const elCenter = rect.top + rect.height / 2
+    const delta = elCenter - viewportFocal
+    window.scrollBy({top: delta, behavior: 'smooth'})
 }

@@ -401,6 +401,7 @@ useParagraphRanges(ranges, activeBlockIndex)
 
         <!-- ═══ Block 'architecture' — reveals input+output neurons ═══ -->
         <div
+            id="toy-autoencoder-start"
             :ref="(el) => paragraphRefs[blockIdx('architecture')] = el as HTMLElement"
             @click="scrollToBlock($event.currentTarget)" class="text-block"
             :class="{ 'active-block': activeBlockIndex === blockIdx('architecture') }"

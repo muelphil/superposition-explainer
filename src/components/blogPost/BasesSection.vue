@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, provide, onUnmounted } from 'vue'
 import { createBasesService, type MappingStage, type CoordinateStage } from '../../services/BasesService'
-import { useScrollActiveBlock } from './useScrollActiveParagraph'
+import { useScrollActiveBlock, FOCAL_RATIO } from './useScrollActiveParagraph'
 import { useParagraphRanges, type ParagraphRange } from './useParagraphRanges'
 
 import { TaskList, TaskEventBus, TASK_EVENT_BUS_KEY } from './taskSystem'
@@ -121,6 +121,15 @@ const ranges: ParagraphRange[] = [
 ]
 
 useParagraphRanges(ranges, activeBlockIndex)
+
+// Skip the 2D example: stop just before the first block of "The Toy Autoencoder" activates,
+// i.e. with its top edge slightly below the focal line, so the next scroll activates it.
+function skipToAutoencoder() {
+  const el = document.getElementById('toy-autoencoder-start')
+  if (!el) return
+  const delta = el.getBoundingClientRect().top - (window.innerHeight * FOCAL_RATIO + 24)
+  window.scrollBy({top: delta, behavior: 'smooth'})
+}
 </script>
 
 <template>
@@ -286,6 +295,14 @@ useParagraphRanges(ranges, activeBlockIndex)
           given set of feature directions deviates from this ideal.
         </p>
       </div>
+
+      <!-- Shortcut for readers who want to reach the experiments sooner -->
+      <p class="skip-ahead">
+        The 2D example below builds this intuition step by step. If you are already comfortable
+        with orthogonal and orthonormal bases, you can skip ahead to the toy autoencoder; it only
+        relies on the notation introduced above.
+        <button class="skip-ahead-btn" @click="skipToAutoencoder">Skip to The Toy Autoencoder ↓</button>
+      </p>
 
       <!-- ── The 2D Example ───────────────────────────────────── -->
       <h3>The 2D example</h3>
@@ -608,4 +625,31 @@ useParagraphRanges(ranges, activeBlockIndex)
 
 <style scoped>
 /* Layout handled by VizSection wrapper. Interaction styles in BlogPost.vue. */
+
+.skip-ahead {
+  color: var(--color-text-label);
+  font-style: italic;
+}
+
+.skip-ahead-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.3rem 0.9rem;
+  font-family: var(--font-family-label);
+  font-size: 0.85rem;
+  font-style: normal;
+  color: var(--color-interactive);
+  background: transparent;
+  border: 1px solid var(--color-interactive);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.skip-ahead-btn:hover {
+  background: var(--color-bg-subtle);
+}
 </style>

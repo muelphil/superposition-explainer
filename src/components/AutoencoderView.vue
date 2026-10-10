@@ -496,10 +496,9 @@ function toggleInput(i: number) {
   opacity: var(--dim-opacity, 0.5);
 }
 
-:deep(.input-value.half-dimmed),
 .cell-hover-zone.half-dimmed,
 .output-value.half-dimmed {
-  opacity: var(--dim-opacity, 0);
+  opacity: var(--dim-opacity, 0.5);
 }
 
 .neuron-wrap,
