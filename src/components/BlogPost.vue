@@ -7,7 +7,13 @@ import InterferenceIllustration from './blogPost/InterferenceIllustration.vue'
 import EmbeddingSuperpositionIllustration from "./EmbeddingSuperpositionIllustration.vue";
 import ParamScaleChart from './ParamScaleChart.vue'
 import References from './References.vue'
+import OptionalExperimentBox from './blogPost/OptionalExperimentBox.vue'
 import { activeBlockElement } from './blogPost/activeBlockBus'
+
+/** Smooth-scroll to the free-play autoencoder at the top of the page. */
+function scrollToTop() {
+  window.scrollTo({top: 0, behavior: 'smooth'})
+}
 
 // Dim top-level post-body sections that don't contain the currently active
 // text-block. Implemented via direct classList toggling (driven by scroll,
@@ -416,6 +422,45 @@ onUnmounted(() => stopWatch?.())
           <katex-element expression="66\times"/>
           the dimension).
         </p>
+
+        <OptionalExperimentBox title="Optional · Explore in 3D">
+          <p>
+            In Experiment 4, the model arranged five features in two dimensions, spaced about
+            <katex-element expression="72^\circ"/>
+            apart. How many features could share <strong>three</strong> dimensions with that same spacing?
+          </p>
+          <ol>
+            <li>
+              <strong>Theory.</strong> Hover over the chart above at
+              <katex-element expression="72^\circ"/>
+              and read off how many unit vectors fit for
+              <katex-element expression="d = 3"/>
+              .
+            </li>
+            <li>
+              <strong>Practice.</strong> Go to the
+              <a href="#" @click.prevent="scrollToTop">interactive autoencoder at the top of the page</a>.
+              Use the + buttons to set as many input features as the chart predicts, and 3 embedding dimensions.
+            </li>
+            <li>
+              In the <em>Training</em> tab, set importance
+              <katex-element expression="\alpha = 1.0"/>
+              and sparsity
+              <katex-element expression="S = 0.95"/>
+              , then start training. Rotate the 3D embedding space as the feature directions spread out.
+            </li>
+            <li>
+              Once training settles, open the <em>Statistics</em> tab. Does <em>Feature Presence</em> reach the
+              predicted count? <em>Min Angle</em> will not necessarily read exactly
+              <katex-element expression="72^\circ"/>
+              : the chart shows the same number of vectors fitting for any angle from about
+              <katex-element expression="71^\circ"/>
+              upward, so any value above
+              <katex-element expression="71^\circ"/>
+              is expected.
+            </li>
+          </ol>
+        </OptionalExperimentBox>
 
         <p>
           No closed-form formula exists for the exact packing number in general, but numerical
