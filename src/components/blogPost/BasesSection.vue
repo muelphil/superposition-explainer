@@ -270,7 +270,14 @@ function skipToAutoencoder() {
           :class="{ 'active-block': activeBlockIndex === blockIdx('gram-matrix') }"
       >
         <p>
-          The matrix
+          <strong>In short:</strong> recovering a feature by projection only works perfectly when the
+          feature directions are perpendicular to each other and have unit length. Whenever two
+          directions overlap, meaning their dot product is not zero, one feature leaks into the
+          readout of the other. This leakage is called <strong>interference</strong>, and it is the
+          key quantity to watch for in the rest of this article.
+        </p>
+        <p>
+          <em>For the mathematically inclined:</em> the matrix
           <katex-element expression="W^T W \in \mathbb{R}^{n \times n}"/>
           is the
           <strong>Gram matrix</strong> of the feature directions. Its entries
@@ -283,7 +290,7 @@ function skipToAutoencoder() {
           <katex-element expression="i \neq j"/>
           ) quantify the <strong>cross-talk</strong>
           between features: when nonzero, projecting onto one feature direction picks up
-          contributions from others — this is <strong>interference</strong>.
+          contributions from others — this is the interference described above.
         </p>
         <p>
           If
