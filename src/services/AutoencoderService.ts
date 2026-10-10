@@ -464,6 +464,30 @@ export function createAutoencoderService() {
     _eventBus?.emit('training-reset')
   }
 
+  /**
+   * Load fixed weights + biases (e.g. a pre-converged example): stop & clear training,
+   * then record one metrics point so the stats view shows the loaded model's values.
+   */
+  function loadWeights(newW: number[][], newB: number[]) {
+    resetTraining()
+    W.value = newW.map(row => [...row])
+    b.value = [...newB]
+
+    // Batch-averaged loss, as in stepTrain()
+    const batch = _generateBatch(config.batchSize)
+    let batchLoss = 0
+    for (const x of batch) {
+      const h = matVecMul(W.value, x)
+      const Wth = matTransVecMul(W.value, h)
+      const xHat = Wth.map((val, i) => relu(val + b.value[i]))
+      batchLoss += _computeLoss(x, xHat)
+    }
+    loss.value = batchLoss / batch.length
+
+    _forwardPass(currentInput.value)
+    _recordMetrics()
+  }
+
   // ─── Input shelving (for output neuron visualization) ──────────────────────
 
   let shelvedInput: number[] | null = null
@@ -571,6 +595,7 @@ export function createAutoencoderService() {
     startTraining,
     stopTraining,
     pauseTraining,
+    loadWeights,
     initialize,
     resetWeights,
     trainingStartStep,

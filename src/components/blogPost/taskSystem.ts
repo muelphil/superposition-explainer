@@ -60,6 +60,8 @@ export interface TaskHandler {
   onEvent?: (eventName: string, payload?: any) => void
   progress?: () => { current: number; total: number } | null
   cleanup?: () => void
+  /** Optional — invoked when a `[data-note-action]` link inside the task's note is clicked. */
+  noteAction?: () => void
 }
 
 /**
@@ -98,6 +100,8 @@ export interface TaskState {
   optional: boolean
   /** Progress indicator for multi-step tasks (e.g. { current: 1, total: 3 }). */
   progress: { current: number; total: number } | null
+  /** Click handler for a `[data-note-action]` link inside the note. */
+  noteAction?: () => void
 }
 
 /**
@@ -323,6 +327,7 @@ export class TaskList {
         blocked: !isDone && depsUnmet,
         optional: spec.optional ?? false,
         progress: (!isDone && !depsUnmet && handler?.progress?.()) ?? null,
+        noteAction: handler?.noteAction,
       }
     })
 

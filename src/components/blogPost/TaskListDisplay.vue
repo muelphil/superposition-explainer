@@ -19,6 +19,15 @@ const mandatoryTasks = computed(() =>
 const optionalTasks = computed(() =>
   props.taskList.tasks.value.filter((t: TaskState) => t.optional)
 )
+
+/** Notes are v-html, so action links are handled by delegation via `[data-note-action]`. */
+function onNoteClick(event: MouseEvent, task: TaskState) {
+  if (!task.noteAction || !(event.target as HTMLElement).closest('[data-note-action]')) return
+  event.preventDefault()
+  if (task.blocked) return  // action disabled until the task's prerequisites are met
+  event.stopPropagation()  // don't trigger the surrounding text-block's scroll-to-block
+  task.noteAction()
+}
 </script>
 
 <template>
@@ -41,7 +50,7 @@ const optionalTasks = computed(() =>
         <TaskCheckbox :completed="task.completed" :blocked="task.blocked" />
         <span class="task-body">
           <span class="task-label" v-html="task.label"></span>
-          <span v-if="task.note" class="task-note" v-html="task.note"></span>
+          <span v-if="task.note" class="task-note" v-html="task.note" @click="onNoteClick($event, task)"></span>
         </span>
         <span v-if="task.progress" class="task-badge task-progress">{{ task.progress.current }}/{{ task.progress.total }}</span>
       </li>
@@ -63,7 +72,7 @@ const optionalTasks = computed(() =>
           <TaskCheckbox :completed="task.completed" :blocked="task.blocked" />
           <span class="task-body">
             <span class="task-label" v-html="task.label"></span>
-            <span v-if="task.note" class="task-note" v-html="task.note"></span>
+            <span v-if="task.note" class="task-note" v-html="task.note" @click="onNoteClick($event, task)"></span>
           </span>
           <span v-if="task.progress" class="task-badge task-progress">{{ task.progress.current }}/{{ task.progress.total }}</span>
         </li>
@@ -164,6 +173,18 @@ const optionalTasks = computed(() =>
 .task-progress {
   font-variant-numeric: tabular-nums;
   text-transform: none;
+}
+
+.task-note [data-note-action] {
+  font-style: normal;
+  color: var(--color-interactive);
+  cursor: pointer;
+}
+
+.task-blocked .task-note [data-note-action] {
+  color: var(--color-task-blocked);
+  cursor: default;
+  text-decoration: none;
 }
 
 /* ── Inline resample button icon (visual reference in task text) ── */
