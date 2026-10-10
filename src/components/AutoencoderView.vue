@@ -792,6 +792,17 @@ function toggleInput(i: number) {
 .col-loss-label .mobile-lb {
   display: none;
 }
+
+/* Larger loss labels on desktop only — mobile columns are too narrow */
+@media (min-width: 769px) {
+  .out-err {
+    font-size: 0.75rem;
+  }
+
+  .col-loss-label {
+    font-size: 0.7rem;
+  }
+}
 @media (max-width: 768px) {
   .col-loss-label .mobile-lb {
     display: inline;

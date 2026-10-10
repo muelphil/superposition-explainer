@@ -651,9 +651,14 @@ onUnmounted(() => stopWatch?.())
   color: var(--color-text-primary);
 }
 
+.post-body {
+  counter-reset: figure;
+}
+
 .post-body figure.post-figure {
   margin: 3em 0;
   text-align: center;
+  counter-increment: figure;
 }
 
 .post-body figure.post-figure img {
@@ -664,10 +669,17 @@ onUnmounted(() => stopWatch?.())
 }
 
 .post-body figure.post-figure figcaption {
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
+  margin-top: 0.75rem;
+  font-size: 0.92rem;
   color: var(--color-text-label);
   line-height: 1.5;
+}
+
+/* "Figure N." label ties the (now larger) caption to its figure, distinct from prose */
+.post-body figure.post-figure figcaption::before {
+  content: "Figure " counter(figure) ". ";
+  font-weight: 600;
+  color: var(--color-text-primary);
 }
 
 .post-body blockquote {
