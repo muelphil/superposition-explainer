@@ -468,17 +468,14 @@ onUnmounted(() => stopWatch?.())
         </p>
 
         <p>
-          A striking demonstration comes from
-          <a href="https://youtu.be/9-Jl0dxWQs8?si=1JIOc0Yfg0T_H5iJ&t=1025" target="_blank" rel="noopener"><em>How might
-            LLMs store facts</em> by Grant Sanderson (Chapter 7)</a>.
-          In the video, he constructs 10,000 vectors in a 100-dimensional space and uses an algorithm
-          to iteratively adjust their directions, gradually increasing their separation. The result is
-          remarkable: the pairwise angles between all 10,000 vectors range between
-          <katex-element expression="89^\circ"/>
-          and
-          <katex-element expression="91^\circ"/>
-          , making them virtually orthogonal despite outnumbering the available dimensions by a factor
-          of 100.
+          At the scale of real language models, the numbers become staggering. In explorations by
+          Nick Yoder, reported in the 3Blue1Brown lesson
+          <em>How might LLMs store facts</em> (<a href="#Sanderson2024">Sanderson, 2024</a>),
+          the 12,288-dimensional embedding space of GPT-3 holds well over 40 billion vectors whose
+          pairwise angles are all at least
+          <katex-element expression="85^\circ"/>
+          : nearly orthogonal, despite outnumbering the available dimensions by a factor of more
+          than three million.
         </p>
 
         <p>
