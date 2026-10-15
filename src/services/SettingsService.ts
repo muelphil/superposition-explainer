@@ -11,6 +11,9 @@ export const useFeatureColorsForIO = ref(true)
 /** Whether hovering a neuron dims the other neurons and their input values (default: off). */
 export const dimNeuronsOnHover = ref(true)
 
+/** Slowly auto-rotate the 3D embedding camera (used by the promo page; default: off). */
+export const autoRotate3D = ref(false)
+
 /** Theme mode: 'system' | 'dark' | 'light' — persisted in localStorage. */
 const STORAGE_KEY = 'app-theme-mode'
 

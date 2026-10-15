@@ -6,7 +6,7 @@ import type {AutoencoderServiceType} from '../../services/AutoencoderService'
 import type {SelectionServiceType, SelectionTarget} from '../../services/SelectionService'
 import {effectiveHover} from '../../services/SelectionService'
 import {featureColorRGB, EMBEDDING_POINT_COLOR_HEX} from '../../utils/featureColor'
-import {showEmbeddingPoint, isDark} from '../../services/SettingsService'
+import {showEmbeddingPoint, isDark, autoRotate3D} from '../../services/SettingsService'
 import type {VecVis, SceneCtx} from './types'
 import {featureVec, makeAxisLabel, disposeMesh, setCylinderEnds} from './sceneHelpers'
 import {useOverlayManager} from './useOverlayManager'
@@ -562,6 +562,10 @@ export function useEmbeddingScene(
         if (!isVisible) return  // paused; IntersectionObserver restarts it once visible again
         rafId = requestAnimationFrame(renderLoop)
         if (!renderer || !scene || !camera) return
+        if (controls) {
+            controls.autoRotate = autoRotate3D.value && svc.config.embeddingDim === 3
+            controls.autoRotateSpeed = 3
+        }
         controls?.update()
 
         if (needsVecUpdate) {
