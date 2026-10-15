@@ -23,6 +23,11 @@
         <em>Zoom In: An Introduction to Circuits.</em> Distill.
         <a href="https://distill.pub/2020/circuits/zoom-in/" target="_blank" rel="noopener">distill.pub</a>
       </li>
+      <li id="Sanderson2024">
+        Sanderson, G. (2024). <em>How might LLMs store facts.</em> Deep Learning, Chapter 7.
+        3Blue1Brown (text adaptation by J. Sun; includes explorations by N. Yoder).
+        <a href="https://www.3blue1brown.com/lessons/mlp" target="_blank" rel="noopener">3blue1brown.com/lessons/mlp</a>
+      </li>
       <li id="Johnson1984">
         Johnson, W. B., &amp; Lindenstrauss, J. (1984). Extensions of Lipschitz mappings into a
         Hilbert space. <em>Contemporary Mathematics</em>, 26, 189–206. See also:
