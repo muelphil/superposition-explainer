@@ -381,7 +381,7 @@ useParagraphRanges(ranges, activeBlockIndex)
 <template>
   <VizSection heading="The Toy Autoencoder">
     <template #heading>
-      <h2 class="section-heading full-span">The Toy Autoencoder</h2>
+      <h2 class="section-heading full-span" data-promo-cue="toy-ae">The Toy Autoencoder</h2>
     </template>
     <template #text>
       <div class="text-column" :class="{ 'has-active': activeBlockIndex >= 0 }">
@@ -713,7 +713,7 @@ useParagraphRanges(ranges, activeBlockIndex)
         <!-- Section 4: Experiments                                                 -->
         <!-- ═══════════════════════════════════════════════════════════════════════ -->
 
-        <h2 class="section-heading full-span experiments-heading">Experiments</h2>
+        <h2 class="section-heading full-span experiments-heading" data-promo-cue="experiments">Experiments</h2>
 
         <!-- ═══ Experiments intro (no text-block — not activatable) ═══ -->
 
@@ -870,7 +870,7 @@ useParagraphRanges(ranges, activeBlockIndex)
 
         <!-- ═══ Block 'exp4': Experiment 4 — Beyond doubling ═══ -->
         <h3>Experiment 4: Beyond Doubling</h3>
-        <div
+        <div data-promo-cue="exp4"
             :ref="(el) => paragraphRefs[blockIdx('exp4')] = el as HTMLElement"
             @click="scrollToBlock($event.currentTarget)" class="text-block"
             :class="{ 'active-block': activeBlockIndex === blockIdx('exp4') }"

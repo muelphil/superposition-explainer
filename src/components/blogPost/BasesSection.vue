@@ -135,7 +135,7 @@ function skipToAutoencoder() {
 <template>
   <VizSection heading="Geometric Foundations: Bases and Feature Representation">
     <template #heading>
-      <h2 class="section-heading full-span">Geometric Foundations: Bases and Feature Representation</h2>
+      <h2 class="section-heading full-span" data-promo-cue="bases">Geometric Foundations: Bases and Feature Representation</h2>
     </template>
     <template #text>
     <!-- Text column -->
@@ -312,7 +312,7 @@ function skipToAutoencoder() {
       </p>
 
       <!-- ── The 2D Example ───────────────────────────────────── -->
-      <h3>The 2D example</h3>
+      <h3 data-promo-cue="basis-2d">The 2D example</h3>
 
       <p>
         To build this intuition concretely, we walk through three progressively structured
@@ -558,7 +558,7 @@ function skipToAutoencoder() {
       <!-- ── Orthonormal Basis ────────────────────────────────── -->
         <h3>Orthonormal basis</h3>
 
-       <div
+       <div data-promo-cue="compromise"
            :ref="(el) => blockRefs[blockIdx('orthonormal-basis')] = el as HTMLElement"
            @click="scrollToBlock($event.currentTarget)" class="text-block"
            :class="{ 'active-block': activeBlockIndex === blockIdx('orthonormal-basis') }"

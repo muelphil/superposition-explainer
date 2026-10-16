@@ -72,7 +72,7 @@ onUnmounted(() => stopWatch?.())
 
       <!-- ── Section 1: Introduction & Motivation ──────────────── -->
       <div class="post-section text-section">
-        <h2>Introduction</h2>
+        <h2 data-promo-cue="intro">Introduction</h2>
 
         <p>
           This article is an interactive explorable explanation of <em>superposition</em> — a geometric
@@ -127,7 +127,7 @@ onUnmounted(() => stopWatch?.())
           dominant layers, and with it memory, training cost, and inference cost.
         </p>
 
-        <figure class="post-figure">
+        <figure class="post-figure" data-promo-cue="fig-params">
           <ParamScaleChart/>
           <figcaption>
             Parameter count for a GPT-style dense decoder transformer (L = 96 layers, V = 50,257
@@ -190,7 +190,7 @@ onUnmounted(() => stopWatch?.())
           feature would quickly exceed the available space.
         </p>
 
-        <figure class="post-figure">
+        <figure class="post-figure" data-promo-cue="fig-mismatch">
           <EmbeddingSuperpositionIllustration></EmbeddingSuperpositionIllustration>
           <figcaption>
             A model with a few thousand embedding dimensions (e.g. 4096) must represent hundreds
@@ -303,7 +303,7 @@ onUnmounted(() => stopWatch?.())
           the model chose this particular bias value.
         </p>
 
-        <figure class="post-figure">
+        <figure class="post-figure" data-promo-cue="fig-bias">
           <InterferenceIllustration/>
           <figcaption>
             With one active feature, the projection of the embedding onto each other feature
@@ -389,7 +389,7 @@ onUnmounted(() => stopWatch?.())
           , the achievable count rises dramatically.
         </p>
 
-        <figure class="post-figure">
+        <figure class="post-figure" data-promo-cue="fig-spherical">
           <SphericalCodesChart/>
           <figcaption>
             Maximum number of unit vectors that can be simultaneously placed in a
@@ -497,7 +497,7 @@ onUnmounted(() => stopWatch?.())
           dramatically larger number of nearly-orthogonal directions.
         </p>
 
-        <h3>What this means for neural networks</h3>
+        <h3 data-promo-cue="outlook">What this means for neural networks</h3>
 
         <p>
           Superposition is one contributing explanation for how language models (or any other overparameterized model)
